@@ -2,14 +2,15 @@ import { NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const { nodes } = await req.json()
     const { db } = await connectToDatabase()
 
     const result = await db
       .collection('workflows')
-      .findOneAndUpdate({ _id: new ObjectId(params.id) }, { $set: { nodes } }, { returnDocument: 'after' })
+      .findOneAndUpdate({ _id: new ObjectId(id) }, { $set: { nodes } }, { returnDocument: 'after' })
 
     if (!result) {
       return NextResponse.json({ error: 'Workflow not found' }, { status: 404 })
