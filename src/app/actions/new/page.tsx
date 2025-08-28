@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useConnections } from "@integration-app/react"
-import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
+import { useConnections } from "@membranehq/react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function NewActionPage() {
-  const router = useRouter()
-  const { items: connections } = useConnections()
+  const router = useRouter();
+  const { items: connections } = useConnections();
 
   return (
     <div className="px-4 py-6 sm:px-0">
@@ -14,10 +14,7 @@ export default function NewActionPage() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           New Action
         </h1>
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/actions")}
-        >
+        <Button variant="ghost" onClick={() => router.push("/actions")}>
           Cancel
         </Button>
       </div>
@@ -27,7 +24,11 @@ export default function NewActionPage() {
           <div
             key={connection.id}
             className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-            onClick={() => router.push(`/actions/new/${connection.integration.key}/${connection.id}`)}
+            onClick={() =>
+              router.push(
+                `/actions/new/${connection.integration.key}/${connection.id}`
+              )
+            }
           >
             <div className="flex items-center space-x-4">
               {connection?.integration?.logoUri ? (
@@ -55,5 +56,5 @@ export default function NewActionPage() {
         ))}
       </div>
     </div>
-  )
-} 
+  );
+}

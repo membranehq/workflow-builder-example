@@ -1,148 +1,149 @@
-"use client"
+"use client";
 
-import { useConnections, useIntegrationApp, DataInput} from "@integration-app/react"
+import {
+  useConnections,
+  useIntegrationApp,
+  DataInput,
+} from "@membranehq/react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { useState } from "react"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 interface AddActionDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
-
 
 export function AddActionDialog({ open, onOpenChange }: AddActionDialogProps) {
-  const { items: connections } = useConnections()
-  const integrationApp = useIntegrationApp()
-  const [selectedConnection, setSelectedConnection] = useState<any>(null)
-  const [dataCollections, setDataCollections] = useState<any[]>([])
-  const [selectedCollection, setSelectedCollection] = useState<any>(null)
-  const [collectionSpec, setCollectionSpec] = useState<any>(null)
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
-  const [isLoadingCollections, setIsLoadingCollections] = useState(false)
-  const [isLoadingSpec, setIsLoadingSpec] = useState(false)
-
+  const { items: connections } = useConnections();
+  const integrationApp = useIntegrationApp();
+  const [selectedConnection, setSelectedConnection] = useState<any>(null);
+  const [dataCollections, setDataCollections] = useState<any[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState<any>(null);
+  const [collectionSpec, setCollectionSpec] = useState<any>(null);
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [isLoadingCollections, setIsLoadingCollections] = useState(false);
+  const [isLoadingSpec, setIsLoadingSpec] = useState(false);
 
   const METHODS = {
-  "list": {
-    inputSchema: {
-      type: "object",
-      properties: {
-        cursor: {
-          type: "string",
-        }
-      }
-    }
-  },
-  "create": {
-    inputSchema: {
-      type: "object",
-      properties: {
-        fields : collectionSpec?.fieldsSchema
-      }
-    }
-  },
-  "update": {
-    inputSchema: {
-      type: "object",
-      properties: {
-        fields : collectionSpec?.fieldsSchema
-      }
-    }
-  },
-  "delete": {
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" }
-      }
-    }
-  },
-  "search" : {
-    inputSchema: {
-      type: "object",
-      properties: {
-        query: { type: "string" },
-        cursor: { type: "string" }
-      }
-    }
-  },
+    list: {
+      inputSchema: {
+        type: "object",
+        properties: {
+          cursor: {
+            type: "string",
+          },
+        },
+      },
+    },
+    create: {
+      inputSchema: {
+        type: "object",
+        properties: {
+          fields: collectionSpec?.fieldsSchema,
+        },
+      },
+    },
+    update: {
+      inputSchema: {
+        type: "object",
+        properties: {
+          fields: collectionSpec?.fieldsSchema,
+        },
+      },
+    },
+    delete: {
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+        },
+      },
+    },
+    search: {
+      inputSchema: {
+        type: "object",
+        properties: {
+          query: { type: "string" },
+          cursor: { type: "string" },
+        },
+      },
+    },
     "find-by-id": {
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" }
-      }
-    }
-    }
-    
-}
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+        },
+      },
+    },
+  };
 
   const handleSelectConnection = async (connection: any) => {
     try {
-      setSelectedConnection(connection)
-      setIsLoadingCollections(true)
+      setSelectedConnection(connection);
+      setIsLoadingCollections(true);
       const collections = await integrationApp
         .integration(connection.integration.key)
-        .getDataCollections()
-      setDataCollections(collections)
+        .getDataCollections();
+      setDataCollections(collections);
     } catch (error) {
-      console.error("Failed to fetch collections:", error)
+      console.error("Failed to fetch collections:", error);
     } finally {
-      setIsLoadingCollections(false)
+      setIsLoadingCollections(false);
     }
-  }
+  };
 
   const handleSelectCollection = async (collection: any) => {
     try {
-      setSelectedCollection(collection)
-      setIsLoadingSpec(true)
+      setSelectedCollection(collection);
+      setIsLoadingSpec(true);
       const spec = await integrationApp
         .integration(selectedConnection.integration.key)
-        .getDataCollection(collection.key)
-      setCollectionSpec(spec)
+        .getDataCollection(collection.key);
+      setCollectionSpec(spec);
     } catch (error) {
-      console.error("Failed to fetch collection spec:", error)
+      console.error("Failed to fetch collection spec:", error);
     } finally {
-      setIsLoadingSpec(false)
+      setIsLoadingSpec(false);
     }
-  }
+  };
 
   const handleSelectMethod = (methodKey: string) => {
-    setSelectedMethod(methodKey)
-  }
+    setSelectedMethod(methodKey);
+  };
 
   const handleBack = () => {
     if (selectedMethod) {
-      setSelectedMethod(null)
+      setSelectedMethod(null);
     } else if (selectedCollection) {
-      setSelectedCollection(null)
-      setCollectionSpec(null)
+      setSelectedCollection(null);
+      setCollectionSpec(null);
     } else {
-      setSelectedConnection(null)
-      setDataCollections([])
+      setSelectedConnection(null);
+      setDataCollections([]);
     }
-  }
+  };
 
   const getDialogTitle = () => {
     if (selectedMethod) {
-      return `${selectedConnection.name} ${selectedCollection.name} | ${selectedMethod} Configuration`
+      return `${selectedConnection.name} ${selectedCollection.name} | ${selectedMethod} Configuration`;
     }
     if (selectedCollection) {
-      return `${selectedConnection.name} ${selectedCollection.name}`
+      return `${selectedConnection.name} ${selectedCollection.name}`;
     }
     if (selectedConnection) {
-      return `${selectedConnection.name} Collections`
+      return `${selectedConnection.name} Collections`;
     }
-    return "Select Integration"
-  }
+    return "Select Integration";
+  };
 
   const renderMethodSpec = () => {
-    const methodSpec = METHODS[selectedMethod as keyof typeof METHODS]
+    const methodSpec = METHODS[selectedMethod as keyof typeof METHODS];
     return (
       <div className="space-y-4 relative">
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
@@ -158,23 +159,22 @@ export function AddActionDialog({ open, onOpenChange }: AddActionDialogProps) {
             />
           </div>
         </div>
-        
       </div>
-    )
-  }
+    );
+  };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onOpenChange={(isOpen) => {
         if (!isOpen) {
-          setSelectedConnection(null)
-          setDataCollections([])
-          setSelectedCollection(null)
-          setCollectionSpec(null)
-          setSelectedMethod(null)
+          setSelectedConnection(null);
+          setDataCollections([]);
+          setSelectedCollection(null);
+          setCollectionSpec(null);
+          setSelectedMethod(null);
         }
-        onOpenChange(isOpen)
+        onOpenChange(isOpen);
       }}
     >
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col relative z-50">
@@ -196,7 +196,7 @@ export function AddActionDialog({ open, onOpenChange }: AddActionDialogProps) {
             {!selectedConnection && "Select Integration"}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid gap-4 mt-4 overflow-y-auto pr-2 relative">
           {selectedMethod ? (
             renderMethodSpec()
@@ -209,7 +209,7 @@ export function AddActionDialog({ open, onOpenChange }: AddActionDialogProps) {
             ) : (
               <div className="space-y-4">
                 {Object.keys(collectionSpec)
-                  .filter(key => Object.keys(METHODS).includes(key))
+                  .filter((key) => Object.keys(METHODS).includes(key))
                   .map((method) => (
                     <div
                       key={method}
@@ -288,5 +288,5 @@ export function AddActionDialog({ open, onOpenChange }: AddActionDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
-  )
-} 
+  );
+}

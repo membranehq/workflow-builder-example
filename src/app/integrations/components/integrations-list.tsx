@@ -1,36 +1,36 @@
-"use client"
+"use client";
 
-import { useIntegrationApp, useIntegrations } from "@integration-app/react"
-import type { Integration as IntegrationAppIntegration } from "@integration-app/sdk"
-import { useRouter } from "next/navigation"
+import { useIntegrationApp, useIntegrations } from "@membranehq/react";
+import type { Integration as IntegrationAppIntegration } from "@membranehq/sdk";
+import { useRouter } from "next/navigation";
 
 export function IntegrationList() {
-  const router = useRouter()
-  const integrationApp = useIntegrationApp()
-  const { integrations, refresh } = useIntegrations()
+  const router = useRouter();
+  const integrationApp = useIntegrationApp();
+  const { integrations, refresh } = useIntegrations();
 
   const handleConnect = async (integration: IntegrationAppIntegration) => {
     try {
-      await integrationApp.integration(integration.key).openNewConnection()
-      refresh()
+      await integrationApp.integration(integration.key).openNewConnection();
+      refresh();
     } catch (error) {
-      console.error("Failed to connect:", error)
+      console.error("Failed to connect:", error);
     }
-  }
+  };
 
   const handleDisconnect = async (integration: IntegrationAppIntegration) => {
-    if (!integration.connection?.id) return
+    if (!integration.connection?.id) return;
     try {
-      await integrationApp.connection(integration.connection.id).archive()
-      refresh()
+      await integrationApp.connection(integration.connection.id).archive();
+      refresh();
     } catch (error) {
-      console.error("Failed to disconnect:", error)
+      console.error("Failed to disconnect:", error);
     }
-  }
+  };
 
   const handleConfigure = (integration: IntegrationAppIntegration) => {
-    router.push(`/integrations/${integration.key}`)
-  }
+    router.push(`/integrations/${integration.key}`);
+  };
 
   return (
     <ul className="space-y-4 mt-8">
@@ -85,5 +85,5 @@ export function IntegrationList() {
         </li>
       ))}
     </ul>
-  )
+  );
 }

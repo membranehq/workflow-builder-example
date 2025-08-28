@@ -1,123 +1,121 @@
-"use client"
+"use client";
 
-import { useIntegrationApp, DataInput } from "@integration-app/react"
-import { Button } from "@/components/ui/button"
-import { useRouter, useParams } from "next/navigation"
-import { useEffect, useState } from "react"
-import '@integration-app/react/styles.css'
-import { JsonViewer } from "@/components/ui/json-viewer"
-import ReactDOM from "react-dom/client"
-import { TestResultDialog } from "@/app/actions/components/test-result-dialog"
+import { useIntegrationApp, DataInput } from "@membranehq/react";
+import { Button } from "@/components/ui/button";
+import { useRouter, useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import "@membranehq/react/styles.css";
+import { JsonViewer } from "@/components/ui/json-viewer";
+import ReactDOM from "react-dom/client";
+import { TestResultDialog } from "@/app/actions/components/test-result-dialog";
 
 const METHODS = {
-  "list": {
+  list: {
     inputSchema: {
       type: "object",
       properties: {
         cursor: {
           type: "string",
-        }
-      }
-    }
+        },
+      },
+    },
   },
-  "create": {
+  create: {
     inputSchema: {
       type: "object",
       properties: {
-        fields: {} // Will be populated with collection fields schema
-      }
-    }
+        fields: {}, // Will be populated with collection fields schema
+      },
+    },
   },
-  "update": {
+  update: {
     inputSchema: {
       type: "object",
       properties: {
-        fields: {} // Will be populated with collection fields schema
-      }
-    }
+        fields: {}, // Will be populated with collection fields schema
+      },
+    },
   },
-  "delete": {
+  delete: {
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string" }
-      }
-    }
+        id: { type: "string" },
+      },
+    },
   },
-  "search": {
+  search: {
     inputSchema: {
       type: "object",
       properties: {
         query: { type: "string" },
-        cursor: { type: "string" }
-      }
-    }
+        cursor: { type: "string" },
+      },
+    },
   },
   "find-by-id": {
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string" }
-      }
-    }
-  }
-}
+        id: { type: "string" },
+      },
+    },
+  },
+};
 
 export default function ConfigureMethodPage() {
-  const router = useRouter()
-  const { integrationKey, connectionId, collectionKey, method } = useParams()
-  const integrationApp = useIntegrationApp()
-  const [collectionSpec, setCollectionSpec] = useState<any>(null)
-  const [connection, setConnection] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isTestRunning, setIsTestRunning] = useState(false)
-  const [inputValue, setInputValue] = useState<any>({})
-  const [parameters, setParameters] = useState<Record<string, any>>({})
-  const [testResult, setTestResult] = useState<any>(null)
-  const [testError, setTestError] = useState<any>(null)
-  const [isTestDialogOpen, setIsTestDialogOpen] = useState(false)
+  const router = useRouter();
+  const { integrationKey, connectionId, collectionKey, method } = useParams();
+  const integrationApp = useIntegrationApp();
+  const [collectionSpec, setCollectionSpec] = useState<any>(null);
+  const [connection, setConnection] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isTestRunning, setIsTestRunning] = useState(false);
+  const [inputValue, setInputValue] = useState<any>({});
+  const [parameters, setParameters] = useState<Record<string, any>>({});
+  const [testResult, setTestResult] = useState<any>(null);
+  const [testError, setTestError] = useState<any>(null);
+  const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
 
   const fetchCollectionSpec = async (params = parameters) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       const [spec, conn] = await Promise.all([
         integrationApp
           .integration(integrationKey as string)
           .getDataCollection(collectionKey as string),
-        integrationApp
-          .connection(connectionId as string)
-          .get()
-      ])
-      setCollectionSpec(spec)
-      setConnection(conn)
+        integrationApp.connection(connectionId as string).get(),
+      ]);
+      setCollectionSpec(spec);
+      setConnection(conn);
     } catch (error) {
-      console.error("Failed to fetch data:", error)
+      console.error("Failed to fetch data:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchCollectionSpec()
-  }, [integrationKey, collectionKey, connectionId])
+    fetchCollectionSpec();
+  }, [integrationKey, collectionKey, connectionId]);
 
   const handleParametersChange = (newParameters: Record<string, any>) => {
-    setParameters(newParameters)
-  }
+    setParameters(newParameters);
+  };
 
   const getMethodSchema = () => {
-    const methodSpec = METHODS[method as keyof typeof METHODS]
-    if (method === 'create' || method === 'update') {
+    const methodSpec = METHODS[method as keyof typeof METHODS];
+    if (method === "create" || method === "update") {
       return {
         ...methodSpec.inputSchema,
         properties: {
           ...methodSpec.inputSchema.properties,
-          fields: collectionSpec?.fieldsSchema
-        }
-      }
+          fields: collectionSpec?.fieldsSchema,
+        },
+      };
     }
-    return methodSpec.inputSchema
-  }
+    return methodSpec.inputSchema;
+  };
 
   const handleSave = async () => {
     try {
@@ -131,42 +129,44 @@ export default function ConfigureMethodPage() {
           collectionKey,
           method,
           input: inputValue,
-          parameters
+          parameters,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to save action")
+        throw new Error("Failed to save action");
       }
 
-      router.push("/actions")
+      router.push("/actions");
     } catch (error) {
-      console.error("Failed to save action:", error)
+      console.error("Failed to save action:", error);
       // You might want to show an error toast here
     }
-  }
+  };
 
   const handleTest = async () => {
     try {
-      const connection = integrationApp.connection(connectionId as string)
-      const dataCollection = connection.dataCollection(collectionKey as string)
-      
+      const connection = integrationApp.connection(connectionId as string);
+      const dataCollection = connection.dataCollection(collectionKey as string);
+
       // Type assertion to handle method as a key
-      const methodFn = dataCollection[method as keyof typeof dataCollection] as Function
-      if (typeof methodFn !== 'function') {
-        throw new Error(`Method ${method} not found`)
+      const methodFn = dataCollection[
+        method as keyof typeof dataCollection
+      ] as Function;
+      if (typeof methodFn !== "function") {
+        throw new Error(`Method ${method} not found`);
       }
 
-      const response = await methodFn(inputValue)
-      
-      setTestResult(response)
-      setIsTestDialogOpen(true)
+      const response = await methodFn(inputValue);
+
+      setTestResult(response);
+      setIsTestDialogOpen(true);
     } catch (error) {
-      console.error("Test failed:", error)
-      setTestError(error)
-      setIsTestDialogOpen(true)
+      console.error("Test failed:", error);
+      setTestError(error);
+      setIsTestDialogOpen(true);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -179,7 +179,7 @@ export default function ConfigureMethodPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -213,17 +213,10 @@ export default function ConfigureMethodPage() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              onClick={() => router.back()}
-            >
+            <Button variant="ghost" onClick={() => router.back()}>
               Back
             </Button>
-            <Button
-              onClick={handleSave}
-            >
-              Save Action
-            </Button>
+            <Button onClick={handleSave}>Save Action</Button>
             <Button
               variant="outline"
               onClick={handleTest}
@@ -231,14 +224,30 @@ export default function ConfigureMethodPage() {
             >
               {isTestRunning ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Running...
                 </>
               ) : (
-                'Test Run'
+                "Test Run"
               )}
             </Button>
           </div>
@@ -254,24 +263,25 @@ export default function ConfigureMethodPage() {
               <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                 Input Configuration
               </h2>
-                <div className="relative">
-                  {collectionSpec?.parametersSchema ? (
-                    <>
-                      <div className="mb-4">
-                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Parameters
-                        </h3>
-                        <DataInput
-                          schema={collectionSpec?.parametersSchema}
-                          value={parameters}
-                          variablesSchema={{}}
-                          onChange={handleParametersChange}
-                        />
-                      </div>
-                    </>
-                  ) :(<></>)}
-                 
-                  Input:
+              <div className="relative">
+                {collectionSpec?.parametersSchema ? (
+                  <>
+                    <div className="mb-4">
+                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Parameters
+                      </h3>
+                      <DataInput
+                        schema={collectionSpec?.parametersSchema}
+                        value={parameters}
+                        variablesSchema={{}}
+                        onChange={handleParametersChange}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <></>
+                )}
+                Input:
                 <DataInput
                   schema={getMethodSchema()}
                   value={inputValue}
@@ -287,13 +297,13 @@ export default function ConfigureMethodPage() {
       <TestResultDialog
         isOpen={isTestDialogOpen}
         onClose={() => {
-          setIsTestDialogOpen(false)
-          setTestResult(null)
-          setTestError(null)
+          setIsTestDialogOpen(false);
+          setTestResult(null);
+          setTestError(null);
         }}
         result={testResult}
         error={testError}
       />
     </>
-  )
-} 
+  );
+}

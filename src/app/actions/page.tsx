@@ -1,57 +1,57 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { useIntegrationApp } from "@integration-app/react"
-import { TestResultDialog } from "./components/test-result-dialog"
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useIntegrationApp } from "@membranehq/react";
+import { TestResultDialog } from "./components/test-result-dialog";
 
 export default function ActionsPage() {
-  const router = useRouter()
-  const integrationApp = useIntegrationApp()
-  const [actions, setActions] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [runningActionId, setRunningActionId] = useState<string | null>(null)
-  const [testResult, setTestResult] = useState<any>(null)
-  const [testError, setTestError] = useState<any>(null)
-  const [isTestDialogOpen, setIsTestDialogOpen] = useState(false)
+  const router = useRouter();
+  const integrationApp = useIntegrationApp();
+  const [actions, setActions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [runningActionId, setRunningActionId] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<any>(null);
+  const [testError, setTestError] = useState<any>(null);
+  const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchActions = async () => {
       try {
-        const response = await fetch("/api/actions")
-        if (!response.ok) throw new Error("Failed to fetch actions")
-        const data = await response.json()
-        setActions(data)
+        const response = await fetch("/api/actions");
+        if (!response.ok) throw new Error("Failed to fetch actions");
+        const data = await response.json();
+        setActions(data);
       } catch (error) {
-        console.error("Failed to fetch actions:", error)
+        console.error("Failed to fetch actions:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchActions()
-  }, [])
+    fetchActions();
+  }, []);
 
   const handleRunAction = async (action: any) => {
     try {
-      setRunningActionId(action._id)
-      setTestError(null)
-      
+      setRunningActionId(action._id);
+      setTestError(null);
+
       const response = await integrationApp
         .connection(action.connectionId)
         .dataCollection(action.collectionKey, action.parameters || {})
-        [action.method](action.input)
+        [action.method](action.input);
 
-      setTestResult(response)
-      setIsTestDialogOpen(true)
+      setTestResult(response);
+      setIsTestDialogOpen(true);
     } catch (error) {
-      setTestError(error)
-      setIsTestDialogOpen(true)
+      setTestError(error);
+      setIsTestDialogOpen(true);
     } finally {
-      setRunningActionId(null)
+      setRunningActionId(null);
     }
-  }
+  };
 
   return (
     <div className="px-4 py-6 sm:px-0">
@@ -59,9 +59,7 @@ export default function ActionsPage() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Actions
         </h1>
-        <Button onClick={() => router.push("/actions/new")}>
-          Add Action
-        </Button>
+        <Button onClick={() => router.push("/actions/new")}>Add Action</Button>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -98,14 +96,30 @@ export default function ActionsPage() {
                 >
                   {runningActionId === action._id ? (
                     <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Running...
                     </>
                   ) : (
-                    'Run'
+                    "Run"
                   )}
                 </Button>
               </div>
@@ -117,13 +131,13 @@ export default function ActionsPage() {
       <TestResultDialog
         isOpen={isTestDialogOpen}
         onClose={() => {
-          setIsTestDialogOpen(false)
-          setTestResult(null)
-          setTestError(null)
+          setIsTestDialogOpen(false);
+          setTestResult(null);
+          setTestError(null);
         }}
         result={testResult}
         error={testError}
       />
     </div>
-  )
-} 
+  );
+}

@@ -1,34 +1,34 @@
-"use client"
+"use client";
 
-import { useIntegrationApp, useIntegration } from "@integration-app/react"
-import { useParams, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react"
+import { useIntegrationApp, useIntegration } from "@membranehq/react";
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 
 export default function CollectionDetailPage() {
-  const router = useRouter()
-  const { key, collectionKey } = useParams()
-  const integrationApp = useIntegrationApp()
-  const { integration } = useIntegration(key as string)
-  const [collectionSpec, setCollectionSpec] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter();
+  const { key, collectionKey } = useParams();
+  const integrationApp = useIntegrationApp();
+  const { integration } = useIntegration(key as string);
+  const [collectionSpec, setCollectionSpec] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchCollectionSpec = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         const spec = await integrationApp
           .integration(key as string)
-          .getDataCollection(collectionKey as string)
-        setCollectionSpec(spec)
+          .getDataCollection(collectionKey as string);
+        setCollectionSpec(spec);
       } catch (error) {
-        console.error("Failed to fetch collection spec:", error)
+        console.error("Failed to fetch collection spec:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-    fetchCollectionSpec()
-  }, [key, collectionKey, integrationApp])
+    };
+    fetchCollectionSpec();
+  }, [key, collectionKey, integrationApp]);
 
   if (isLoading) {
     return (
@@ -38,11 +38,11 @@ export default function CollectionDetailPage() {
           <div className="h-32 bg-gray-200 rounded animate-pulse" />
         </div>
       </div>
-    )
+    );
   }
 
   if (!collectionSpec) {
-    return null
+    return null;
   }
 
   return (
@@ -72,5 +72,5 @@ export default function CollectionDetailPage() {
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

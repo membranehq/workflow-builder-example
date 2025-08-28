@@ -1,70 +1,69 @@
-"use client"
+"use client";
 
-import { useIntegrationApp, useIntegration } from "@integration-app/react"
-import { useParams, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react"
-import Link from "next/link"
+import { useIntegrationApp, useIntegration } from "@membranehq/react";
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
 // Helper function to add delay between requests
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function IntegrationConfigPage() {
-  const router = useRouter()
-  const { key } = useParams()
-  const integrationApp = useIntegrationApp()
-  const { integration, loading: isLoading } = useIntegration(key as string)
-  const [dataCollections, setDataCollections] = useState<any[]>([])
-  const [isLoadingCollections, setIsLoadingCollections] = useState(true)
-  const [selectedCollection, setSelectedCollection] = useState<any>(null)
-  const [isLoadingSpec, setIsLoadingSpec] = useState(false)
-  const [collectionSpec, setCollectionSpec] = useState<any>(null)
+  const router = useRouter();
+  const { key } = useParams();
+  const integrationApp = useIntegrationApp();
+  const { integration, loading: isLoading } = useIntegration(key as string);
+  const [dataCollections, setDataCollections] = useState<any[]>([]);
+  const [isLoadingCollections, setIsLoadingCollections] = useState(true);
+  const [selectedCollection, setSelectedCollection] = useState<any>(null);
+  const [isLoadingSpec, setIsLoadingSpec] = useState(false);
+  const [collectionSpec, setCollectionSpec] = useState<any>(null);
 
   useEffect(() => {
     const fetchDataCollections = async () => {
       try {
-        setIsLoadingCollections(true)
+        setIsLoadingCollections(true);
         const collections = await integrationApp
           .integration(key as string)
-          .getDataCollections()
-       
-        
-        setDataCollections(collections)
+          .getDataCollections();
+
+        setDataCollections(collections);
       } catch (error) {
-        console.error("Failed to fetch collections:", error)
+        console.error("Failed to fetch collections:", error);
       } finally {
-        setIsLoadingCollections(false)
+        setIsLoadingCollections(false);
       }
-    }
-    fetchDataCollections()
-  }, [key, integrationApp])
+    };
+    fetchDataCollections();
+  }, [key, integrationApp]);
 
   useEffect(() => {
     if (!isLoading && integration && !integration.connection) {
-      router.push("/integrations")
+      router.push("/integrations");
     }
-  }, [integration, isLoading, router])
+  }, [integration, isLoading, router]);
 
   const handleViewCollection = async (collection: any) => {
     try {
-      setSelectedCollection(collection)
-      setIsLoadingSpec(true)
+      setSelectedCollection(collection);
+      setIsLoadingSpec(true);
       const spec = await integrationApp
         .integration(key as string)
-        .getDataCollection(collection.key)
-      setCollectionSpec(spec)
+        .getDataCollection(collection.key);
+      setCollectionSpec(spec);
     } catch (error) {
-      console.error("Failed to fetch collection spec:", error)
+      console.error("Failed to fetch collection spec:", error);
     } finally {
-      setIsLoadingSpec(false)
+      setIsLoadingSpec(false);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -74,11 +73,11 @@ export default function IntegrationConfigPage() {
           <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
         </div>
       </div>
-    )
+    );
   }
 
   if (!integration?.connection) {
-    return null
+    return null;
   }
 
   return (
@@ -102,10 +101,7 @@ export default function IntegrationConfigPage() {
               {integration.name} Configuration
             </h1>
           </div>
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/integrations")}
-          >
+          <Button variant="ghost" onClick={() => router.push("/integrations")}>
             Back to Integrations
           </Button>
         </div>
@@ -120,7 +116,6 @@ export default function IntegrationConfigPage() {
                 Connection ID: {integration.connection.id}
               </p>
             </div>
-            
           </div>
         </div>
 
@@ -168,18 +163,16 @@ export default function IntegrationConfigPage() {
         open={!!selectedCollection}
         onOpenChange={(open) => {
           if (!open) {
-            setSelectedCollection(null)
-            setCollectionSpec(null)
+            setSelectedCollection(null);
+            setCollectionSpec(null);
           }
         }}
       >
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>
-              {selectedCollection?.name} Specification
-            </DialogTitle>
+            <DialogTitle>{selectedCollection?.name} Specification</DialogTitle>
           </DialogHeader>
-          
+
           {isLoadingSpec ? (
             <div className="space-y-4">
               <div className="h-8 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
@@ -195,5 +188,5 @@ export default function IntegrationConfigPage() {
         </DialogContent>
       </Dialog>
     </>
-  )
-} 
+  );
+}

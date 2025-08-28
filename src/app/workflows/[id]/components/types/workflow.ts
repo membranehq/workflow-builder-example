@@ -1,10 +1,10 @@
-import { Node, Edge } from '@xyflow/react';
-import { DataSchema } from '@integration-app/sdk';
+import { Node, Edge } from "@xyflow/react";
+import { DataSchema } from "@membranehq/sdk";
 
 export interface WorkflowNode {
   id: string;
   name: string;
-  type: 'trigger' | 'action';
+  type: "trigger" | "action";
   integrationKey: string;
   connectionId: string;
   flowKey: string;
@@ -31,11 +31,11 @@ export interface WorkflowEdge extends Edge {
 }
 
 export interface NodeDialogProps {
-  mode: 'create' | 'configure';
+  mode: "create" | "configure";
   node?: WorkflowNode | null;
   open: boolean;
   onClose: () => void;
-  onSubmit: (node: Omit<WorkflowNode, 'id'>) => void;
+  onSubmit: (node: Omit<WorkflowNode, "id">) => void;
 }
 
 export interface PlusNodeProps {
@@ -67,4 +67,4 @@ export interface Action {
   key: string;
   name: string;
   inputSchema?: DataSchema;
-} 
+}
