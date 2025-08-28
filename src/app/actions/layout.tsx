@@ -1,13 +1,9 @@
-import { Metadata } from "next"
+import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: "Actions",
+  title: 'Actions',
 }
 
-export default function ActionsLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function ActionsLayout({ children }: { children: React.ReactNode }) {
   return children
-} 
+}

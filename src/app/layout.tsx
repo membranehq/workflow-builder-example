@@ -1,21 +1,21 @@
-import "./globals.css";
-import "@membranehq/react/styles.css";
+import './globals.css'
+import '@membranehq/react/styles.css'
 
-import { AuthProvider } from "./auth-provider";
-import { RootLayout } from "@/components/root-layout";
-import { IntegrationProvider } from "./integration-provider";
+import { AuthProvider } from './auth-provider'
+import { RootLayout } from '@/components/root-layout'
+import { IntegrationProvider } from './integration-provider'
 
 export const metadata = {
   title: {
-    default: "Integration App",
-    template: "%s | Integration App",
+    default: 'Integration App',
+    template: '%s | Integration App',
   },
-  description: "Integration App",
-};
+  description: 'Integration App',
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang='en' suppressHydrationWarning>
       <body>
         <AuthProvider>
           <IntegrationProvider>
@@ -24,5 +24,5 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </AuthProvider>
       </body>
     </html>
-  );
+  )
 }

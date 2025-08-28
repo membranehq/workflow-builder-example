@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { createContext, useContext, useEffect, useState } from "react"
-import type { AuthCustomer } from "@/lib/auth"
-import { ensureAuth, storeAuth } from "@/lib/auth"
+import { createContext, useContext, useEffect, useState } from 'react'
+import type { AuthCustomer } from '@/lib/auth'
+import { ensureAuth, storeAuth } from '@/lib/auth'
 
 interface AuthContextType {
   customerId: string | null
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function getAuthHeaders(): HeadersInit {
   const auth = ensureAuth()
   return {
-    "x-auth-id": auth.customerId,
-    "x-customer-name": auth.customerName || "",
+    'x-auth-id': auth.customerId,
+    'x-customer-name': auth.customerName || '',
   }
 }

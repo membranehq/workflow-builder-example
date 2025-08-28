@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { useRouter, useParams } from "next/navigation"
-import { useEffect, useState } from "react"
-import { WorkflowEditor } from "./components/workflow-editor"
-import { Input } from "@/components/ui/input"
-import { Pencil, Trash2, Save, X } from "lucide-react"
+import { Button } from '@/components/ui/button'
+import { useRouter, useParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { WorkflowEditor } from './components/workflow-editor'
+import { Input } from '@/components/ui/input'
+import { Pencil, Trash2, Save, X } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +15,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog'
 
 export default function WorkflowDetailPage() {
   const router = useRouter()
@@ -23,7 +23,7 @@ export default function WorkflowDetailPage() {
   const [workflow, setWorkflow] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
-  const [editedName, setEditedName] = useState("")
+  const [editedName, setEditedName] = useState('')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -31,12 +31,12 @@ export default function WorkflowDetailPage() {
     const fetchWorkflow = async () => {
       try {
         const response = await fetch(`/api/workflows/${id}`)
-        if (!response.ok) throw new Error("Failed to fetch workflow")
+        if (!response.ok) throw new Error('Failed to fetch workflow')
         const data = await response.json()
         setWorkflow(data)
         setEditedName(data.name)
       } catch (error) {
-        console.error("Failed to fetch workflow:", error)
+        console.error('Failed to fetch workflow:', error)
       } finally {
         setIsLoading(false)
       }
@@ -49,20 +49,20 @@ export default function WorkflowDetailPage() {
     try {
       setIsSaving(true)
       const response = await fetch(`/api/workflows/${id}`, {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name: editedName }),
       })
 
-      if (!response.ok) throw new Error("Failed to update workflow")
-      
+      if (!response.ok) throw new Error('Failed to update workflow')
+
       const updatedWorkflow = await response.json()
       setWorkflow(updatedWorkflow)
       setIsEditing(false)
     } catch (error) {
-      console.error("Failed to update workflow:", error)
+      console.error('Failed to update workflow:', error)
     } finally {
       setIsSaving(false)
     }
@@ -71,36 +71,31 @@ export default function WorkflowDetailPage() {
   const handleDelete = async () => {
     try {
       const response = await fetch(`/api/workflows/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       })
 
-      if (!response.ok) throw new Error("Failed to delete workflow")
-      
-      router.push("/workflows")
+      if (!response.ok) throw new Error('Failed to delete workflow')
+
+      router.push('/workflows')
     } catch (error) {
-      console.error("Failed to delete workflow:", error)
+      console.error('Failed to delete workflow:', error)
     }
   }
 
   if (isLoading) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+      <div className='h-[calc(100vh-4rem)] flex items-center justify-center'>
+        <div className='h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse' />
       </div>
     )
   }
 
   if (!workflow) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-            Workflow not found
-          </h2>
-          <Button
-            className="mt-4"
-            onClick={() => router.push("/workflows")}
-          >
+      <div className='h-[calc(100vh-4rem)] flex items-center justify-center'>
+        <div className='text-center'>
+          <h2 className='text-lg font-medium text-gray-900 dark:text-white'>Workflow not found</h2>
+          <Button className='mt-4' onClick={() => router.push('/workflows')}>
             Back to Workflows
           </Button>
         </div>
@@ -109,73 +104,72 @@ export default function WorkflowDetailPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
-      <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
-        <div className="flex h-14 items-center justify-between px-4 space-x-4 max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <div className="flex items-center ">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push("/workflows")}
-            >
+    <div className='h-[calc(100vh-4rem)] flex flex-col'>
+      <div className='border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950'>
+        <div className='flex h-14 items-center justify-between px-4 space-x-4 max-w-7xl mx-auto sm:px-6 lg:px-8'>
+          <div className='flex items-center '>
+            <Button variant='ghost' size='sm' onClick={() => router.push('/workflows')}>
               ← Back
             </Button>
             {isEditing ? (
-              <div className="flex items-center space-x-2">
+              <div className='flex items-center space-x-2'>
                 <Input
                   value={editedName}
                   onChange={(e) => setEditedName(e.target.value)}
-                  className="h-8 w-64"
-                  placeholder="Enter workflow name"
+                  className='h-8 w-64'
+                  placeholder='Enter workflow name'
                 />
-                <Button
-                  size="sm"
-                  onClick={handleSaveName}
-                  disabled={!editedName || isSaving}
-                >
-                  <Save className="h-4 w-4 mr-1" />
-                  {isSaving ? "Saving..." : "Save"}
+                <Button size='sm' onClick={handleSaveName} disabled={!editedName || isSaving}>
+                  <Save className='h-4 w-4 mr-1' />
+                  {isSaving ? 'Saving...' : 'Save'}
                 </Button>
                 <Button
-                  size="sm"
-                  variant="ghost"
+                  size='sm'
+                  variant='ghost'
                   onClick={() => {
                     setIsEditing(false)
                     setEditedName(workflow.name)
                   }}
                 >
-                  <X className="h-4 w-4 mr-1" />
+                  <X className='h-4 w-4 mr-1' />
                   Cancel
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
-                <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {workflow.name}
-                </h1>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Pencil className="h-4 w-4" />
+              <div className='flex items-center space-x-2'>
+                <h1 className='text-lg font-semibold text-gray-900 dark:text-white'>{workflow.name}</h1>
+                <Button size='sm' variant='ghost' onClick={() => setIsEditing(true)}>
+                  <Pencil className='h-4 w-4' />
                 </Button>
               </div>
             )}
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsDeleteDialogOpen(true)}
-            className="text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400"
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Delete
-          </Button>
+          <div className='flex items-center space-x-2'>
+            <Button
+              size='sm'
+              variant='default'
+              onClick={() => {
+                // TODO: Implement workflow execution
+                console.log('Run workflow clicked')
+              }}
+              className='bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
+            >
+              Run Workflow
+            </Button>
+            <Button
+              size='sm'
+              variant='ghost'
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className='text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400'
+            >
+              <Trash2 className='h-4 w-4 mr-1' />
+              Delete
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 relative bg-gray-50 dark:bg-gray-900">
+      <div className='flex-1 relative bg-gray-50 dark:bg-gray-900'>
         <WorkflowEditor />
       </div>
 
@@ -191,7 +185,7 @@ export default function WorkflowDetailPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+              className='bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700'
             >
               Delete
             </AlertDialogAction>
@@ -200,4 +194,4 @@ export default function WorkflowDetailPage() {
       </AlertDialog>
     </div>
   )
-} 
+}

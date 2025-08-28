@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { usePathname } from "next/navigation"
-import { Header } from "@/components/header"
+import { usePathname } from 'next/navigation'
+import { Header } from '@/components/header'
 
 export function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -18,4 +18,4 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
       </main>
     </>
   )
-} 
+}

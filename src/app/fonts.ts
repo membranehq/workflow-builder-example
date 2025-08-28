@@ -4,4 +4,3 @@ export const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
 })
-

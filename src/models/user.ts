@@ -1,11 +1,11 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 export interface IUser {
-  userId: string;
-  userName: string | null;
-  customerId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  userId: string
+  userName: string | null
+  customerId: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 const userSchema = new mongoose.Schema<IUser>(
@@ -30,11 +30,11 @@ const userSchema = new mongoose.Schema<IUser>(
   },
   {
     timestamps: true,
-  }
-);
+  },
+)
 
 // Create compound indices for common queries
-userSchema.index({ customerId: 1, createdAt: -1 });
-userSchema.index({ userId: 1 }, { unique: true });
+userSchema.index({ customerId: 1, createdAt: -1 })
+userSchema.index({ userId: 1 }, { unique: true })
 
-export const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema); 
+export const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema)
