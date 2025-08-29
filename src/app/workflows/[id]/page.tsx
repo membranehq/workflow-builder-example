@@ -148,9 +148,19 @@ export default function WorkflowDetailPage() {
             <Button
               size='sm'
               variant='default'
-              onClick={() => {
-                // TODO: Implement workflow execution
-                console.log('Run workflow clicked')
+              onClick={async () => {
+                try {
+                  const response = await fetch(`/api/workflows/${id}/run`, {
+                    method: 'POST',
+                  })
+
+                  if (!response.ok) throw new Error('Failed to run workflow')
+
+                  const result = await response.json()
+                  console.log('Workflow execution result:', result)
+                } catch (error) {
+                  console.error('Failed to run workflow:', error)
+                }
               }}
               className='bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
             >
