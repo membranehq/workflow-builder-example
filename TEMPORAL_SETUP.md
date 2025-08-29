@@ -27,21 +27,15 @@ Copy `temporal.config.example` to `.env.local` and configure:
 TEMPORAL_HOST=localhost
 TEMPORAL_PORT=7233
 TEMPORAL_NAMESPACE=default
-
-# For Temporal Cloud
-# TEMPORAL_CLOUD_URL=your-namespace.tmprl.cloud
-# TEMPORAL_CLOUD_CERT_PATH=/path/to/cert.pem
-# TEMPORAL_CLOUD_KEY_PATH=/path/to/key.pem
 ```
 
 ### 2. Running Temporal Locally
 
 #### Option A: Using Docker Compose (Recommended)
 
-Create `docker-compose.temporal.yml`:
+The `docker-compose.temporal.yml` file is already configured with:
 
 ```yaml
-version: '3.8'
 services:
   temporal:
     image: temporalio/auto-setup:1.22.3
@@ -53,14 +47,9 @@ services:
       - POSTGRES_USER=temporal
       - POSTGRES_PWD=temporal
       - POSTGRES_DB=temporal
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
-    volumes:
-      - ./temporal-config:/etc/temporal/config/dynamicconfig
+      - POSTGRES_SEEDS=postgresql
     depends_on:
       - postgresql
-      - elasticsearch
-    networks:
-      - temporal-network
 
   postgresql:
     image: postgres:13
@@ -70,49 +59,12 @@ services:
       - POSTGRES_DB=temporal
     ports:
       - '5432:5432'
-    volumes:
-      - postgresql-data:/var/lib/postgresql/data
-    networks:
-      - temporal-network
-
-  elasticsearch:
-    image: opensearch:1.3.0
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    ports:
-      - '9200:9200'
-      - '9600:9600'
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    networks:
-      - temporal-network
-
-  temporal-web:
-    image: temporalio/web:1.15.0
-    environment:
-      - TEMPORAL_GRPC_ENDPOINT=temporal:7233
-      - TEMPORAL_PERMIT_WRITE_API=true
-    ports:
-      - '8088:8088'
-    depends_on:
-      - temporal
-    networks:
-      - temporal-network
-
-volumes:
-  postgresql-data:
-  elasticsearch-data:
-
-networks:
-  temporal-network:
-    driver: bridge
 ```
 
 Run with:
 
 ```bash
-docker-compose -f docker-compose.temporal.yml up -d
+npm run temporal:start
 ```
 
 #### Option B: Using Temporal CLI
@@ -135,7 +87,7 @@ temporal server start-dev
 ### 3. Verify Installation
 
 - Temporal server: http://localhost:7233
-- Temporal Web UI: http://localhost:8088
+- PostgreSQL: localhost:5432
 
 ## Current Setup
 
@@ -156,23 +108,20 @@ temporal server start-dev
 
 ## Testing the Connection
 
-You can test that Temporal is working by creating a simple test script:
+You can test that Temporal is working using the npm scripts:
 
-```typescript
-// test-temporal-connection.ts
-import { getTemporalClient } from './src/lib/temporal'
+```bash
+# Start Temporal services
+npm run temporal:start
 
-async function testConnection() {
-  try {
-    const client = await getTemporalClient()
-    console.log('✅ Successfully connected to Temporal!')
-    console.log('Client namespace:', client.namespace)
-  } catch (error) {
-    console.error('❌ Failed to connect to Temporal:', error)
-  }
-}
+# Test the connection
+npm run temporal:test
 
-testConnection()
+# View logs if needed
+npm run temporal:logs
+
+# Stop services when done
+npm run temporal:stop
 ```
 
 ## Next Steps
@@ -210,4 +159,3 @@ LOG_LEVEL=debug
 - [Temporal Documentation](https://docs.temporal.io/)
 - [Temporal TypeScript SDK](https://typescript.temporal.io/)
 - [Temporal Samples](https://github.com/temporalio/samples-typescript)
-- [Temporal Web UI](https://github.com/temporalio/web)

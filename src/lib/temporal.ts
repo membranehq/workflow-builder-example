@@ -2,14 +2,20 @@ import { Client, Connection } from '@temporalio/client'
 
 // Temporal connection configuration
 const TEMPORAL_HOST = process.env.TEMPORAL_HOST || 'localhost'
-const TEMPORAL_PORT = process.env.TEMPORAL_PORT || '7233'
+const TEMPORAL_PORT = parseInt(process.env.TEMPORAL_PORT || '7233', 10)
 const TEMPORAL_NAMESPACE = process.env.TEMPORAL_NAMESPACE || 'default'
 
 // Create Temporal connection
 export async function createTemporalConnection(): Promise<Connection> {
-  return await Connection.connect({
-    address: `${TEMPORAL_HOST}:${TEMPORAL_PORT}`,
-  })
+  try {
+    return await Connection.connect({
+      address: `${TEMPORAL_HOST}:${TEMPORAL_PORT}`,
+    })
+  } catch (error) {
+    throw new Error(
+      `Failed to connect to Temporal at ${TEMPORAL_HOST}:${TEMPORAL_PORT}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    )
+  }
 }
 
 // Create Temporal client
