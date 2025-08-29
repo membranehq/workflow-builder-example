@@ -1,10 +1,10 @@
 services:
   temporal:
-    image: temporalio/auto-setup:1.22.3
+    image: temporalio/auto-setup:1.28.1
     ports:
       - '7233:7233'
     environment:
-      - DB=postgresql
+      - DB=postgres12
       - DB_PORT=5432
       - POSTGRES_USER=temporal
       - POSTGRES_PWD=temporal
@@ -12,6 +12,18 @@ services:
       - POSTGRES_SEEDS=postgresql
     depends_on:
       - postgresql
+    networks:
+      - temporal-network
+
+  temporal-web:
+    image: temporalio/web:1.15.0
+    ports:
+      - '8088:8088'
+    environment:
+      - TEMPORAL_GRPC_ENDPOINT=temporal:7233
+      - TEMPORAL_PERMIT_WRITE_API=true
+    depends_on:
+      - temporal
     networks:
       - temporal-network
 

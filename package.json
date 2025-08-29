@@ -12,7 +12,8 @@
     "temporal:start": "./start-temporal.sh",
     "temporal:test": "ts-node ./test-temporal-connection.mjs",
     "temporal:stop": "docker-compose -f docker-compose.temporal.yml down",
-    "temporal:logs": "docker-compose -f docker-compose.temporal.yml logs -f"
+    "temporal:logs": "docker-compose -f docker-compose.temporal.yml logs -f",
+    "temporal:web": "open http://localhost:8088"
   },
   "dependencies": {
     "@membranehq/react": "^0.5.4",
