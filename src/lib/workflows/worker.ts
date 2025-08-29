@@ -1,12 +1,14 @@
 import { Worker } from '@temporalio/worker'
 import { createTemporalConnection } from '../temporal'
-import { helloWorldWorkflow } from './index'
+import * as activities from './activities'
+import { helloWorldWorkflow } from './hello-world'
 
 export async function runWorker(): Promise<void> {
-  await createTemporalConnection()
+  const connection = await createTemporalConnection()
 
   const worker = await Worker.create({
     workflowsPath: require.resolve('./index'),
+    activities,
     taskQueue: 'hello-world-queue',
   })
 
@@ -15,4 +17,12 @@ export async function runWorker(): Promise<void> {
 }
 
 // Export for use in other parts of the application
-export { helloWorldWorkflow }
+export { helloWorldWorkflow, activities }
+
+// Run the worker only when this very file is executed
+if (import.meta.url === `file://${process.argv[1]}`) {
+  runWorker().catch((error) => {
+    console.error('Worker failed to start:', error)
+    process.exit(1)
+  })
+}
