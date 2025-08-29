@@ -15,9 +15,6 @@ if ! command -v docker-compose &> /dev/null; then
     exit 1
 fi
 
-# Create temporal-config directory if it doesn't exist
-mkdir -p temporal-config
-
 # Start services
 echo "Starting Temporal and PostgreSQL..."
 docker-compose -f docker-compose.temporal.yml up -d

@@ -9,8 +9,8 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "temporal:start": "./scripts/start-temporal.sh",
-    "temporal:test": "ts-node ./scripts/test-temporal-connection.mjs",
+    "temporal:start": "./start-temporal.sh",
+    "temporal:test": "ts-node ./test-temporal-connection.mjs",
     "temporal:stop": "docker-compose -f docker-compose.temporal.yml down",
     "temporal:logs": "docker-compose -f docker-compose.temporal.yml logs -f"
   },
@@ -51,6 +51,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.2.1",
     "eslint": "^9",
     "eslint-config-next": "15.1.3",
     "postcss": "^8",

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Simple test script to verify Temporal connection
-import { getTemporalClient } from '../src/lib/temporal.ts'
+import { getTemporalClient } from './src/lib/temporal.ts'
 
 async function testConnection() {
   console.log('🔌 Testing Temporal connection...')
