@@ -1,0 +1,7 @@
+# Temporal Configuration
+# Copy this file to .env.local and update the values
+
+# Temporal Server Configuration (REQUIRED)
+TEMPORAL_HOST=localhost
+TEMPORAL_PORT=7233
+TEMPORAL_NAMESPACE=default
