@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { getTemporalClient } from '@/lib/temporal'
-import { helloWorldWorkflow } from '@/lib/workflows/hello-world'
+import { helloWorldWorkflow } from '@/lib/workflows/index'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

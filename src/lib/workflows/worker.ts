@@ -1,14 +1,12 @@
 import { Worker } from '@temporalio/worker'
 import { createTemporalConnection } from '../temporal'
-import * as activities from './activities'
-import { helloWorldWorkflow } from './hello-world'
+import { helloWorldWorkflow } from './index'
 
 export async function runWorker(): Promise<void> {
-  const connection = await createTemporalConnection()
+  await createTemporalConnection()
 
   const worker = await Worker.create({
-    workflowsPath: require.resolve('./hello-world'),
-    activities,
+    workflowsPath: require.resolve('./index'),
     taskQueue: 'hello-world-queue',
   })
 
@@ -17,4 +15,4 @@ export async function runWorker(): Promise<void> {
 }
 
 // Export for use in other parts of the application
-export { helloWorldWorkflow, activities }
+export { helloWorldWorkflow }
