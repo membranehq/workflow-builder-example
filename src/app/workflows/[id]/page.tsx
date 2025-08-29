@@ -20,12 +20,14 @@ import {
 export default function WorkflowDetailPage() {
   const router = useRouter()
   const { id } = useParams()
-  const [workflow, setWorkflow] = useState<any>(null)
+  const [workflow, setWorkflow] = useState<{ _id: string; name: string } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [editedName, setEditedName] = useState('')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [workflowResult, setWorkflowResult] = useState<string | null>(null)
+  const [isRunning, setIsRunning] = useState(false)
 
   useEffect(() => {
     const fetchWorkflow = async () => {
@@ -148,8 +150,12 @@ export default function WorkflowDetailPage() {
             <Button
               size='sm'
               variant='default'
+              disabled={isRunning}
               onClick={async () => {
                 try {
+                  setIsRunning(true)
+                  setWorkflowResult(null)
+
                   const response = await fetch(`/api/workflows/${id}/run`, {
                     method: 'POST',
                   })
@@ -158,13 +164,17 @@ export default function WorkflowDetailPage() {
 
                   const result = await response.json()
                   console.log('Workflow execution result:', result)
+                  setWorkflowResult(result.result)
                 } catch (error) {
                   console.error('Failed to run workflow:', error)
+                  setWorkflowResult('Error: Failed to run workflow')
+                } finally {
+                  setIsRunning(false)
                 }
               }}
               className='bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
             >
-              Run Workflow
+              {isRunning ? 'Running...' : 'Run Workflow'}
             </Button>
             <Button
               size='sm'
@@ -178,6 +188,17 @@ export default function WorkflowDetailPage() {
           </div>
         </div>
       </div>
+
+      {workflowResult && (
+        <div className='border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 py-3'>
+          <div className='max-w-7xl mx-auto'>
+            <h3 className='text-sm font-medium text-gray-900 dark:text-white mb-2'>Workflow Result:</h3>
+            <div className='bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-3'>
+              <p className='text-green-800 dark:text-green-200 font-mono text-sm'>{workflowResult}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className='flex-1 relative bg-gray-50 dark:bg-gray-900'>
         <WorkflowEditor />

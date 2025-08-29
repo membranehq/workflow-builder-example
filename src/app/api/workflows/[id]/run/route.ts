@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
+import { getTemporalClient } from '@/lib/temporal'
+import { helloWorldWorkflow } from '@/lib/workflows/hello-world'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -13,12 +15,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Workflow not found' }, { status: 404 })
     }
 
-    // TODO: Implement actual workflow execution logic
-    console.log('Running workflow:', id)
+    // Get Temporal client and execute the workflow
+    const client = await getTemporalClient()
+
+    const handle = await client.workflow.start(helloWorldWorkflow, {
+      taskQueue: 'hello-world-queue',
+      workflowId: `hello-world-${id}-${Date.now()}`,
+    })
+
+    // Wait for the workflow to complete and get the result
+    const result = await handle.result()
 
     return NextResponse.json({
-      message: 'Workflow execution started',
+      message: 'Workflow executed successfully',
       workflowId: id,
+      executionId: handle.workflowId,
+      result: result,
     })
   } catch (error) {
     console.error('Error running workflow:', error)

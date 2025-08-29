@@ -10,6 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "temporal:start": "./start-temporal.sh",
+    "temporal:worker": "ts-node src/lib/workflows/start-worker.ts",
     "temporal:test": "ts-node ./test-temporal-connection.mjs",
     "temporal:stop": "docker-compose -f docker-compose.temporal.yml down",
     "temporal:logs": "docker-compose -f docker-compose.temporal.yml logs -f",
