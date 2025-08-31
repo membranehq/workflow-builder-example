@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
+// import connectDB from '@/lib/mongodb'
 import { User } from '@/models/user'
 import { getAuthFromRequest } from '@/lib/server-auth'
 
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await connectDB()
+    // await connectDB()
 
     // Filter users by customerId
     const users = await User.find({ customerId: auth.customerId })

@@ -38,6 +38,20 @@ export default function ActionsPage() {
       setRunningActionId(action._id)
       setTestError(null)
 
+      console.log('Action', action)
+
+      /**
+       * {
+    "_id": "68b039bfc90b4020627bdce8",
+    "connectionId": "68aedcb07a5946dd195fbbb5",
+    "collectionKey": "users",
+    "method": "list",
+    "input": {},
+    "parameters": {},
+    "createdAt": "2025-08-28T11:13:03.964Z"
+}
+       */
+
       const response = await integrationApp
         .connection(action.connectionId)
         .dataCollection(action.collectionKey, action.parameters || {})

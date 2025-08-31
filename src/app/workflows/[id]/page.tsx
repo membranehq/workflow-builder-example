@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { getAuthHeaders } from '@/lib/fetch-utils'
 
 export default function WorkflowDetailPage() {
   const router = useRouter()
@@ -26,7 +27,7 @@ export default function WorkflowDetailPage() {
   const [editedName, setEditedName] = useState('')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [workflowResult, setWorkflowResult] = useState<string | null>(null)
+  const [workflowResult, setWorkflowResult] = useState<any>(null)
   const [isRunning, setIsRunning] = useState(false)
 
   useEffect(() => {
@@ -156,15 +157,18 @@ export default function WorkflowDetailPage() {
                   setIsRunning(true)
                   setWorkflowResult(null)
 
+                  const authHeaders = getAuthHeaders()
+
                   const response = await fetch(`/api/workflows/${id}/run`, {
                     method: 'POST',
+                    headers: authHeaders,
                   })
 
                   if (!response.ok) throw new Error('Failed to run workflow')
 
                   const result = await response.json()
                   console.log('Workflow execution result:', result)
-                  setWorkflowResult(result.result)
+                  setWorkflowResult(result)
                 } catch (error) {
                   console.error('Failed to run workflow:', error)
                   setWorkflowResult('Error: Failed to run workflow')
@@ -194,7 +198,9 @@ export default function WorkflowDetailPage() {
           <div className='max-w-7xl mx-auto'>
             <h3 className='text-sm font-medium text-gray-900 dark:text-white mb-2'>Workflow Result:</h3>
             <div className='bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-3'>
-              <p className='text-green-800 dark:text-green-200 font-mono text-sm'>{workflowResult}</p>
+              <pre className='text-green-800 dark:text-green-200 font-mono text-sm overflow-auto'>
+                {JSON.stringify(workflowResult, null, 2)}
+              </pre>
             </div>
           </div>
         </div>

@@ -171,6 +171,16 @@ export function NodeDialog({ mode, node, open, onClose, onSubmit }: NodeDialogPr
                       ))}
                     </select>
                   </div>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium'>Collection Key</label>
+                    <input
+                      type='text'
+                      value={formData.flowKey}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, flowKey: e.target.value }))}
+                      className='w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2'
+                      placeholder='Enter collection key (e.g., users, orders)'
+                    />
+                  </div>
                 </>
               ) : (
                 <>
@@ -219,7 +229,10 @@ export function NodeDialog({ mode, node, open, onClose, onSubmit }: NodeDialogPr
               </Button>
               <Button
                 onClick={() => onSubmit(formData)}
-                disabled={!formData.name || (mode === 'create' && (!formData.connectionId || !formData.actionKey))}
+                disabled={
+                  !formData.name ||
+                  (mode === 'create' && (!formData.connectionId || !formData.actionKey || !formData.flowKey))
+                }
               >
                 {mode === 'create' ? 'Create' : 'Save Changes'}
               </Button>
