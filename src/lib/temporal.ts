@@ -35,6 +35,7 @@ export async function getTemporalClient(): Promise<Client> {
   if (!temporalClient) {
     temporalClient = await createTemporalClient()
   }
+
   return temporalClient
 }
 

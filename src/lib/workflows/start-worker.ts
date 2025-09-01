@@ -1,5 +1,6 @@
 import { runWorker } from './worker'
 
+// TODO: this file is not being used...
 async function main() {
   try {
     console.log('Starting Temporal worker...')
