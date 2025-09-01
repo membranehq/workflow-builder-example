@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Connection, DataSchema, IntegrationAppClient, resolveFormulas } from '@membranehq/sdk'
+import { DataSchema, resolveFormulas } from '@membranehq/sdk'
 
-import { useIntegrationApp, useConnection } from '@membranehq/react'
+import { useIntegrationApp } from '@membranehq/react'
 
 /**
  * Hook that resolves dynamic parts of the data schema.
