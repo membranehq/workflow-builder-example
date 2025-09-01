@@ -1,19 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import {
-  useConnections,
-  useIntegrationApp,
-  useAction,
-  IntegrationElementProvider,
-  DataInput,
-  IntegrationAppProvider,
-  IntegrationAppClientProvider,
-  DropdownPortal,
-} from '@membranehq/react'
-import { useDynamicDataSchema } from '@/hooks/resolveSchema'
+import { useConnections, useIntegrationApp, useAction, IntegrationElementProvider, DataInput } from '@membranehq/react'
 import type { NodeDialogProps, WorkflowNode, Action } from '../types/workflow'
-import { getActionName, getIntegrationName } from '../utils'
+import { getIntegrationName } from '../utils'
 
 export function NodeDialog({ mode, node, open, onClose, onSubmit }: NodeDialogProps) {
   const { connections, loading: isLoadingConnections } = useConnections()
@@ -201,23 +191,22 @@ export function NodeDialog({ mode, node, open, onClose, onSubmit }: NodeDialogPr
               {action?.inputSchema && formData.connectionId && (
                 <div className='space-y-2'>
                   <label className='text-sm font-medium'>Input Schema</label>
-                  <IntegrationAppClientProvider client={integrationApp}>
-                    <IntegrationElementProvider
-                      integrationId={formData.integrationKey}
-                      connectionId={formData.connectionId}
-                    >
-                      <DataInput
-                        schema={action?.inputSchema}
-                        value={formData.inputMapping}
-                        onChange={(value) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            inputMapping: value,
-                          }))
-                        }
-                      />
-                    </IntegrationElementProvider>
-                  </IntegrationAppClientProvider>
+
+                  <IntegrationElementProvider
+                    integrationId={formData.integrationKey}
+                    connectionId={formData.connectionId}
+                  >
+                    <DataInput
+                      schema={action?.inputSchema}
+                      value={formData.inputMapping}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          inputMapping: value,
+                        }))
+                      }
+                    />
+                  </IntegrationElementProvider>
                 </div>
               )}
             </div>
