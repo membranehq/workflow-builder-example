@@ -24,8 +24,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Wait for the workflow to complete and get the result
     const result = await actionRunResponse.result()
 
-    console.log('Result', result)
-
     await client.connection.close()
 
     return NextResponse.json({

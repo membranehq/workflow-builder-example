@@ -4,8 +4,6 @@ import { IntegrationAppProvider } from '@membranehq/react'
 import { getAuthHeaders } from './auth-provider'
 
 export function IntegrationProvider({ children }: { children: React.ReactNode }) {
-  console.log('Integration Provider')
-
   const fetchToken = async () => {
     const response = await fetch('/api/integration-token', {
       headers: getAuthHeaders(),

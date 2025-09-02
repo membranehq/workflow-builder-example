@@ -167,7 +167,7 @@ export default function WorkflowDetailPage() {
                   if (!response.ok) throw new Error('Failed to run workflow')
 
                   const result = await response.json()
-                  console.log('Workflow execution result:', result)
+
                   setWorkflowResult(result)
                 } catch (error) {
                   console.error('Failed to run workflow:', error)
