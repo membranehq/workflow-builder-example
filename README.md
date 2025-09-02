@@ -1,11 +1,13 @@
 # Integration Use Case Template
 
-This is a template for an application showcasing integration capabilities using [Integration.app](https://integration.app). The app is built with Next.js and demonstrates how to implement user authentication and integration token generation.
+This is a template for an application showcasing Workflow Execution capabilities using [Integration.app](https://integration.app) and [temporal.io](https://temporal.io). The app is built with Next.js.
 
 ## Prerequisites
 
 - Node.js 18+ installed
 - Integration.app workspace credentials (Workspace Key and Secret)
+- mongoDB (for local workflow storage)
+- Docker installed (to host temporal server)
 
 ## Setup
 
@@ -31,13 +33,7 @@ yarn install
 cp .env-sample .env
 ```
 
-4. Edit `.env` and add your Integration.app credentials:
-
-```env
-INTEGRATION_APP_WORKSPACE_KEY=your_workspace_key_here
-INTEGRATION_APP_WORKSPACE_SECRET=your_workspace_secret_here
-MONGODB_URI=your_mongodb_connection_string
-```
+4. Edit `.env` and add your Integration.app credentials and other settings
 
 You can find these credentials in your Integration.app workspace settings.
 
@@ -51,44 +47,25 @@ npm run dev
 yarn dev
 ```
 
-2. Open [http://localhost:3000](http://localhost:3000) in your browser.
+2. Start temporal server:
 
-## Project Structure
+```bash
+npm run temporal:start
+# or
+yarn temporal:start
+```
 
-- `/src/app` - Next.js app router pages and API routes
-  - `/users` - Example implementation of external data import
-  - `/api` - Backend API routes for users and integration token management
-- `/src/components` - Reusable React components
-- `/src/lib` - Utility functions and helpers
-- `/src/models` - Data models and types
-- `/public` - Static assets
+3. Start temporal worker:
 
-## Template Features
+```bash
+npm run temporal:worker
+# or
+yarn temporal:worker
+```
 
-### Authentication
+4. Open [http://localhost:3000](http://localhost:3000) in your browser, to start the NextJS app.
 
-The template implements a simple authentication mechanism using a randomly generated UUID as the customer ID. This simulates a real-world scenario where your application would have proper user authentication. The customer ID is used to:
-
-- Identify the user/customer in the integration platform
-- Generate integration tokens for external app connections
-- Associate imported data with specific customers
-
-### Users Example
-
-The template includes a complete example of importing and managing users from an external application:
-
-- User data model and TypeScript types
-- API routes for user import and retrieval
-- React components for displaying user data
-- Integration with SWR for efficient data fetching
-- Example of using the Integration.app client for data import
-
-## Available Scripts
-
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build the application for production
-- `npm run start` - Start the production server
-- `npm run lint` - Run ESLint to check code quality
+5. Open [http://localhost:8080](http://localhost:8080) in your browser, to see temporal dashboard.
 
 ## License
 

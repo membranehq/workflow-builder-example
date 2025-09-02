@@ -9,11 +9,12 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "temporal:start": "./start-temporal.sh",
     "temporal:worker": "node scripts/start-workers.mjs",
-    "temporal:test": "ts-node ./test-temporal-connection.mjs",
+    "temporal:start": "docker-compose -f docker-compose.temporal.yml up -d",
+    "temporal:test": "npx tsx ./scripts/test-temporal-connection.ts",
     "temporal:stop": "docker-compose -f docker-compose.temporal.yml down",
     "temporal:logs": "docker-compose -f docker-compose.temporal.yml logs -f",
+    "temporal:start-web": "docker-compose -f docker-compose.temporal.yml up -d",
     "temporal:web": "open http://localhost:8088"
   },
   "dependencies": {
