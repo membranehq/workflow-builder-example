@@ -1,7 +1,6 @@
 import { NativeConnection, Worker } from '@temporalio/worker'
 import * as activities from './activities'
 import { TEMPORAL_CONFIG } from './config'
-import { integrationWorkflow } from './workflows'
 
 export async function runWorker(): Promise<void> {
   const connection = await NativeConnection.connect({
@@ -25,10 +24,6 @@ export async function runWorker(): Promise<void> {
     await connection.close()
   }
 }
-
-// TODO: have single export for all workflows
-// Export for use in other parts of the application
-export { activities, integrationWorkflow }
 
 // Run the worker only when this very file is executed
 if (import.meta.url === `file://${process.argv[1]}`) {
