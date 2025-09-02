@@ -1,19 +1,22 @@
 import { Client, Connection } from '@temporalio/client'
 
 // Temporal connection configuration
-const TEMPORAL_HOST = process.env.TEMPORAL_HOST || 'localhost'
-const TEMPORAL_PORT = parseInt(process.env.TEMPORAL_PORT || '7233', 10)
+// TODO: add zod schema and add loading env variables in one place and reusing
+const TEMPORAL_HOST = process.env.TEMPORAL_SERVER_HOST || 'localhost'
 const TEMPORAL_NAMESPACE = process.env.TEMPORAL_NAMESPACE || 'default'
+const TEMPORAL_TASK_QUEUE_NAME = process.env.TEMPORAL_TASK_QUEUE_NAME || 'workflow-queue'
+
+const TEMPORAL_ADDRESS = `${TEMPORAL_HOST}:7233`
 
 // Create Temporal connection
-export async function createTemporalConnection(): Promise<Connection> {
+async function createTemporalConnection(): Promise<Connection> {
   try {
     return await Connection.connect({
-      address: `${TEMPORAL_HOST}:${TEMPORAL_PORT}`,
+      address: TEMPORAL_ADDRESS,
     })
   } catch (error) {
     throw new Error(
-      `Failed to connect to Temporal at ${TEMPORAL_HOST}:${TEMPORAL_PORT}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `Failed to connect to Temporal at ${TEMPORAL_ADDRESS} - ${error instanceof Error ? error.message : 'Unknown error'}`,
     )
   }
 }
@@ -24,7 +27,6 @@ export async function createTemporalClient(): Promise<Client> {
 
   return new Client({
     connection,
-    namespace: TEMPORAL_NAMESPACE,
   })
 }
 
@@ -50,6 +52,6 @@ export async function closeTemporalConnection(): Promise<void> {
 // Basic Temporal configuration constants
 export const TEMPORAL_CONFIG = {
   NAMESPACE: TEMPORAL_NAMESPACE,
-  HOST: TEMPORAL_HOST,
-  PORT: TEMPORAL_PORT,
+  ADDRESS: TEMPORAL_ADDRESS,
+  TASK_QUEUE_NAME: TEMPORAL_TASK_QUEUE_NAME,
 } as const

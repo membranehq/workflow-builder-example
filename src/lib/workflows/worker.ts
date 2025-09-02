@@ -5,7 +5,7 @@ import { integrationWorkflow } from './integration-workflow'
 
 export async function runWorker(): Promise<void> {
   const connection = await NativeConnection.connect({
-    address: `${TEMPORAL_CONFIG.HOST}:${TEMPORAL_CONFIG.PORT}`,
+    address: TEMPORAL_CONFIG.ADDRESS,
   })
 
   try {
@@ -13,11 +13,11 @@ export async function runWorker(): Promise<void> {
       connection,
       workflowsPath: require.resolve('./integration-workflow'),
       activities,
-      // TODO: have this queue be configurable
-      taskQueue: 'workflow-queue',
+      taskQueue: TEMPORAL_CONFIG.TASK_QUEUE_NAME,
     })
 
     console.log('Worker started. Listening for tasks...')
+
     await worker.run()
   } catch (error) {
     console.error('Worker failed to start:', error)
