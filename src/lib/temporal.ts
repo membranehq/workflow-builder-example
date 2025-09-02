@@ -30,25 +30,6 @@ export async function createTemporalClient(): Promise<Client> {
   })
 }
 
-// Get Temporal client instance (singleton pattern)
-let temporalClient: Client | null = null
-
-export async function getTemporalClient(): Promise<Client> {
-  if (!temporalClient) {
-    temporalClient = await createTemporalClient()
-  }
-
-  return temporalClient
-}
-
-// Close Temporal connection
-export async function closeTemporalConnection(): Promise<void> {
-  if (temporalClient) {
-    await temporalClient.connection.close()
-    temporalClient = null
-  }
-}
-
 // Basic Temporal configuration constants
 export const TEMPORAL_CONFIG = {
   NAMESPACE: TEMPORAL_NAMESPACE,

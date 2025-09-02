@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTemporalClient } from '@/lib/temporal'
+import { createTemporalClient } from '@/lib/temporal'
 import { getAuthFromRequest } from '@/lib/server-auth'
 import { integrationWorkflow } from '@/lib/workflows/integration-workflow'
 
@@ -9,8 +9,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const auth = getAuthFromRequest(request)
 
-    // Get Temporal client and start the workflow
-    const client = await getTemporalClient()
+    // Create Temporal client and start the workflow
+    const client = await createTemporalClient()
 
     // Start the named workflow function
     const handle = await client.workflow.start(integrationWorkflow, {
@@ -24,6 +24,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const result = await handle.result()
 
     console.log('Result', result)
+
+    await client.connection.close()
 
     return NextResponse.json({
       message: 'Workflow executed successfully',
