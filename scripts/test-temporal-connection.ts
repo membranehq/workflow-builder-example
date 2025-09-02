@@ -1,27 +1,28 @@
 #!/usr/bin/env node
 
 // Simple test script to verify Temporal connection
-import { getTemporalClient } from './src/lib/temporal.ts'
+import { createTemporalClient } from '../src/lib/temporal/client'
 
 async function testConnection() {
   console.log('🔌 Testing Temporal connection...')
 
   try {
-    const client = await getTemporalClient()
-    console.log('✅ Successfully connected to Temporal!')
-    console.log('📊 Client namespace:', client.namespace)
-    console.log('🌐 Connection established')
+    const client = await createTemporalClient()
+    console.log('✅ Successfully created Temporal client!')
 
-    // Test basic client functionality
-    console.log('🔍 Testing client methods...')
-    console.log('   - Client instance:', typeof client)
-    console.log('   - Workflow methods available:', typeof client.workflow)
-    console.log('   - Connection status:', client.connection ? 'Connected' : 'Not connected')
+    // Test actual connection health
+    console.log('🔍 Testing connection health...')
+
+    await client.connection.ensureConnected()
+
+    console.log('✅ Connection verified and healthy!')
 
     console.log('\n🎉 Temporal is ready to use!')
+
+    client.connection.close()
   } catch (error) {
     console.error('❌ Failed to connect to Temporal:')
-    console.error('   Error:', error.message)
+    console.error('   Error:', error instanceof Error ? error.message : 'Unknown error')
     console.error('\n🔧 Troubleshooting tips:')
     console.error('   1. Make sure Temporal server is running')
     console.error('   2. Check your environment variables')
