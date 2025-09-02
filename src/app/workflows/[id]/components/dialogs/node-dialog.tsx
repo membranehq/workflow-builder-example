@@ -97,8 +97,6 @@ export function NodeDialog({ mode, node, open, onClose, onSubmit }: NodeDialogPr
     }
   }, [open, mode, node])
 
-  console.log('Actions:', { actions })
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className='max-w-[800px] w-[800px] max-h-[90vh] flex flex-col p-0 overflow-auto'>

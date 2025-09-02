@@ -38,8 +38,6 @@ export default function ActionsPage() {
       setRunningActionId(action._id)
       setTestError(null)
 
-      console.log('Action', action)
-
       /**
        * {
     "_id": "68b039bfc90b4020627bdce8",

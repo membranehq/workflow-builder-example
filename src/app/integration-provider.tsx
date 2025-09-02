@@ -14,7 +14,6 @@ export function IntegrationProvider({ children }: { children: React.ReactNode })
     })
     const data = await response.json()
 
-    console.log('Data', data)
     if (!response.ok) {
       throw new Error(data.error || 'Failed to fetch integration token')
     }
