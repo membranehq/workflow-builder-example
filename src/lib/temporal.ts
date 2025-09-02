@@ -3,7 +3,6 @@ import { Client, Connection } from '@temporalio/client'
 // Temporal connection configuration
 // TODO: add zod schema and add loading env variables in one place and reusing
 const TEMPORAL_HOST = process.env.TEMPORAL_SERVER_HOST || 'localhost'
-const TEMPORAL_NAMESPACE = process.env.TEMPORAL_NAMESPACE || 'default'
 const TEMPORAL_TASK_QUEUE_NAME = process.env.TEMPORAL_TASK_QUEUE_NAME || 'workflow-queue'
 
 const TEMPORAL_ADDRESS = `${TEMPORAL_HOST}:7233`
@@ -32,7 +31,6 @@ export async function createTemporalClient(): Promise<Client> {
 
 // Basic Temporal configuration constants
 export const TEMPORAL_CONFIG = {
-  NAMESPACE: TEMPORAL_NAMESPACE,
   ADDRESS: TEMPORAL_ADDRESS,
   TASK_QUEUE_NAME: TEMPORAL_TASK_QUEUE_NAME,
 } as const
