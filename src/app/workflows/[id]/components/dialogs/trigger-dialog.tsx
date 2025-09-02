@@ -34,6 +34,7 @@ const initialState: TriggerState = {
 }
 
 export function TriggerDialog({ open, onClose, onSubmit, node, mode = 'create' }: TriggerDialogProps) {
+  // TODO: change 'state' to use useReducer for better state management
   const [state, setState] = useState<TriggerState>(initialState)
   const { items: connections } = useConnections()
   const integrationApp = useIntegrationApp()
@@ -53,9 +54,11 @@ export function TriggerDialog({ open, onClose, onSubmit, node, mode = 'create' }
       if (!connection?.integration?.id) return
 
       try {
-        const triggersList = await integrationApp.integration(connection.integration.id).flows.list()
+        const flowsList = await integrationApp.integration(connection.integration.id).flows.list()
 
         if (!mounted) return
+
+        const triggersList = flowsList.items
 
         // In edit mode, also load the trigger parameters
         if (mode === 'edit' && node?.flowKey) {
@@ -68,7 +71,7 @@ export function TriggerDialog({ open, onClose, onSubmit, node, mode = 'create' }
 
               setState({
                 connection,
-                triggers: triggersList as Flow[],
+                triggers: triggersList,
                 flow: trigger,
                 parameters: customerFlow.parameters || {},
                 name: node.name,
@@ -80,7 +83,7 @@ export function TriggerDialog({ open, onClose, onSubmit, node, mode = 'create' }
                 setState((prev) => ({
                   ...prev,
                   connection,
-                  triggers: triggersList as Flow[],
+                  triggers: triggersList,
                 }))
               }
             }
@@ -89,7 +92,7 @@ export function TriggerDialog({ open, onClose, onSubmit, node, mode = 'create' }
           // In create mode or when changing connection, just update the triggers
           setState((prev) => ({
             ...prev,
-            triggers: triggersList as Flow[],
+            triggers: triggersList,
           }))
         }
       } catch (error) {
