@@ -1,23 +1,22 @@
 import { NativeConnection, Worker } from '@temporalio/worker'
 import * as activities from './activities'
-import { TEMPORAL_CONFIG } from '../temporal'
-import { integrationWorkflow } from './integration-workflow'
+import { TEMPORAL_CONFIG } from './config'
 
 export async function runWorker(): Promise<void> {
   const connection = await NativeConnection.connect({
-    address: `${TEMPORAL_CONFIG.HOST}:${TEMPORAL_CONFIG.PORT}`,
+    address: TEMPORAL_CONFIG.ADDRESS,
   })
 
   try {
     const worker = await Worker.create({
       connection,
-      workflowsPath: require.resolve('./integration-workflow'),
+      workflowsPath: require.resolve('./workflows'),
       activities,
-      // TODO: have this queue be configurable
-      taskQueue: 'workflow-queue',
+      taskQueue: TEMPORAL_CONFIG.TASK_QUEUE_NAME,
     })
 
     console.log('Worker started. Listening for tasks...')
+
     await worker.run()
   } catch (error) {
     console.error('Worker failed to start:', error)
@@ -25,10 +24,6 @@ export async function runWorker(): Promise<void> {
     await connection.close()
   }
 }
-
-// TODO: have single export for all workflows
-// Export for use in other parts of the application
-export { activities, integrationWorkflow }
 
 // Run the worker only when this very file is executed
 if (import.meta.url === `file://${process.argv[1]}`) {

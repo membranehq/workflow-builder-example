@@ -1,6 +1,6 @@
 services:
   temporal:
-    image: temporalio/auto-setup:${TEMPORAL_VERSION}
+    image: temporalio/auto-setup:1.26.3
     depends_on:
       - postgresql
     environment:
@@ -18,19 +18,18 @@ services:
       - temporal-network
 
   temporal-ui:
-    image: temporalio/ui:${TEMPORAL_UI_VERSION}
+    image: temporalio/ui:2.34.0
     depends_on:
       - temporal
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
     ports:
       - 8080:8080
     networks:
       - temporal-network
 
   postgresql:
-    image: postgres:${TEMPORAL_POSTGRESQL_VERSION}
+    image: postgres:16
     environment:
       - POSTGRES_PASSWORD=${TEMPORAL_POSTGRESQL_PASSWORD}
       - POSTGRES_USER=${TEMPORAL_POSTGRESQL_USER}

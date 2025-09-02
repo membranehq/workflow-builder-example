@@ -1,7 +1,9 @@
 import type { ActionRunResponse } from '@membranehq/sdk'
-import type { AuthCustomer } from '../auth'
-import type * as activities from './activities'
 import { proxyActivities } from '@temporalio/workflow'
+
+import type { AuthCustomer } from '../auth'
+
+import type * as activities from './activities'
 
 const { fetchWorkflow, executeNode } = proxyActivities<typeof activities>({
   startToCloseTimeout: '1 minute',
