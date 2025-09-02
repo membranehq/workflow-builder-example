@@ -1,7 +1,7 @@
 import { NativeConnection, Worker } from '@temporalio/worker'
 import * as activities from './activities'
-import { TEMPORAL_CONFIG } from '../temporal'
-import { integrationWorkflow } from './integration-workflow'
+import { TEMPORAL_CONFIG } from './config'
+import { integrationWorkflow } from './workflows'
 
 export async function runWorker(): Promise<void> {
   const connection = await NativeConnection.connect({
@@ -11,7 +11,7 @@ export async function runWorker(): Promise<void> {
   try {
     const worker = await Worker.create({
       connection,
-      workflowsPath: require.resolve('./integration-workflow'),
+      workflowsPath: require.resolve('./workflows'),
       activities,
       taskQueue: TEMPORAL_CONFIG.TASK_QUEUE_NAME,
     })

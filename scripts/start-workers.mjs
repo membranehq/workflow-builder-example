@@ -30,7 +30,7 @@ async function main() {
     console.log('2. Starting Temporal workers...')
 
     // Get the path to the worker source file
-    const workerPath = join(__dirname, '..', 'src', 'lib', 'workflows', 'worker.ts')
+    const workerPath = join(__dirname, '..', 'src', 'lib', 'temporal', 'worker.ts')
 
     // Start the worker using tsx
     console.log('Starting worker with tsx...')

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createTemporalClient } from '@/lib/temporal'
+import { createTemporalClient } from '@/lib/temporal/client'
 import { getAuthFromRequest } from '@/lib/server-auth'
-import { integrationWorkflow } from '@/lib/workflows/integration-workflow'
+import { integrationWorkflow } from '@/lib/temporal/workflows'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

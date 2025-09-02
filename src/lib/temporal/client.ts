@@ -1,20 +1,6 @@
 import { Client, Connection } from '@temporalio/client'
-import { z } from 'zod'
+import { TEMPORAL_CONFIG } from './config'
 
-const temporalEnvVarsSchema = z.object({
-  TEMPORAL_SERVER_HOST: z.string().default('localhost'),
-  TEMPORAL_TASK_QUEUE_NAME: z.string().default('workflow-queue'),
-})
-
-const envVars = temporalEnvVarsSchema.parse(process.env)
-
-// Basic Temporal configuration constants
-export const TEMPORAL_CONFIG = {
-  ADDRESS: `${envVars.TEMPORAL_SERVER_HOST}:7233`,
-  TASK_QUEUE_NAME: envVars.TEMPORAL_TASK_QUEUE_NAME,
-} as const
-
-// Create Temporal connection
 async function createTemporalConnection(): Promise<Connection> {
   try {
     return await Connection.connect({
@@ -27,7 +13,6 @@ async function createTemporalConnection(): Promise<Connection> {
   }
 }
 
-// Create Temporal client
 export async function createTemporalClient(): Promise<Client> {
   const connection = await createTemporalConnection()
 
