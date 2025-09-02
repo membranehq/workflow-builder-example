@@ -7,13 +7,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const { id: workflowId } = await params
 
+    // Auth will be used in the workflow with Membrane SDK
     const auth = getAuthFromRequest(request)
 
     // Create Temporal client and start the workflow
     const client = await createTemporalClient()
 
     // Start the named workflow function
-    const handle = await client.workflow.start(integrationWorkflow, {
+    const actionRunResponse = await client.workflow.start(integrationWorkflow, {
       // TODO: introduce args type
       args: [auth, workflowId],
       taskQueue: 'workflow-queue',
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
 
     // Wait for the workflow to complete and get the result
-    const result = await handle.result()
+    const result = await actionRunResponse.result()
 
     console.log('Result', result)
 
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({
       message: 'Workflow executed successfully',
       workflowId,
-      executionId: handle.workflowId,
+      executionId: actionRunResponse.workflowId,
       result: result,
     })
   } catch (error) {
