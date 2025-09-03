@@ -12,8 +12,10 @@ export function NodeDialog({ mode, node, open, onClose, onSubmit }: NodeDialogPr
   const [isLoadingActions, setIsLoadingActions] = useState(false)
   const [formData, setFormData] = useState<Omit<WorkflowNode, 'id'>>({
     name: '',
+    type: 'action',
     integrationKey: '',
     connectionId: '',
+    flowKey: '',
     actionKey: '',
     inputMapping: {},
   })
@@ -80,15 +82,19 @@ export function NodeDialog({ mode, node, open, onClose, onSubmit }: NodeDialogPr
         mode === 'configure' && node
           ? {
               name: node.name,
+              type: node.type,
               integrationKey: node.integrationKey,
               connectionId: node.connectionId,
+              flowKey: node.flowKey,
               actionKey: node.actionKey,
               inputMapping: node.inputMapping,
             }
           : {
               name: '',
+              type: 'action',
               integrationKey: '',
               connectionId: '',
+              flowKey: '',
               actionKey: '',
               inputMapping: {},
             },
