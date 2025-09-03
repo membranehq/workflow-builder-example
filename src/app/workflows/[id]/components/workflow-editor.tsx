@@ -25,7 +25,7 @@ import { TriggerNode } from './nodes/trigger-node'
 import { ConnectionEdge } from './nodes/connection-edge'
 import { SimpleEdge } from './nodes/simple-edge'
 import { NodeDialog } from './dialogs/node-dialog'
-import { TriggerDialog } from './dialogs/trigger-dialog'
+import { TriggerDialog } from './dialogs/trigger/trigger-dialog'
 import type { WorkflowNode, FlowNode, WorkflowEdge } from './types/workflow'
 import {
   NODE_WIDTH,
