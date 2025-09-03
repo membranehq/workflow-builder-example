@@ -293,7 +293,7 @@ function WorkflowEditorInner() {
       <TriggerDialog
         mode={selectedTrigger ? 'edit' : 'create'}
         node={selectedTrigger || undefined}
-        open={showTriggerDialog}
+        isOpen={showTriggerDialog}
         onClose={() => {
           setShowTriggerDialog(false)
           setSelectedTrigger(null)

@@ -11,22 +11,22 @@ import { TriggerForm } from './trigger-dialog.components'
 import { WorkflowNode } from '../../types/workflow'
 
 export interface TriggerDialogProps {
-  open: boolean
+  isOpen: boolean
   onClose: () => void
   onSubmit: (node: Omit<WorkflowNode, 'id'>) => void
   node?: WorkflowNode
   mode?: 'create' | 'edit'
 }
 
-export function TriggerDialog({ open, onClose, onSubmit, node, mode = 'create' }: TriggerDialogProps) {
+export function TriggerDialog({ isOpen, onClose, onSubmit, node, mode = 'create' }: TriggerDialogProps) {
   const { state, dispatch } = useTriggerDialogState()
   const { connections, integrationApp } = useTriggerDialogData()
-  const { loadFlows, loadFlowParameters } = useTriggerDialogActions(integrationApp, dispatch)
+  const { loadFlows, loadFlowParameters } = useTriggerDialogActions({ integrationApp, dispatch })
 
-  useTriggerDialogEffects(open, mode, node, connections, state, dispatch, loadFlows, loadFlowParameters)
+  useTriggerDialogEffects({ isOpen, mode, node, connections, state, dispatch, loadFlows, loadFlowParameters })
 
   const { handleIntegrationChange, handleTriggerChange, handleParameterChange, handleSubmit } =
-    useTriggerDialogHandlers(
+    useTriggerDialogHandlers({
       mode,
       connections,
       state,
@@ -36,10 +36,10 @@ export function TriggerDialog({ open, onClose, onSubmit, node, mode = 'create' }
       integrationApp,
       node,
       onSubmit,
-    )
+    })
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className='max-w-[800px] w-[800px] max-h-[90vh] flex flex-col p-0 overflow-auto'>
         <DialogHeader className='p-6 pb-0'>
           <DialogTitle>{mode === 'edit' ? 'Edit Trigger' : 'Add Trigger'}</DialogTitle>

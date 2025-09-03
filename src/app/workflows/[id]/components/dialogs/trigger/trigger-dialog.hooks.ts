@@ -18,29 +18,41 @@ export function useTriggerDialogData() {
   return { connections, integrationApp }
 }
 
-export function useTriggerDialogActions(
-  integrationApp: ReturnType<typeof useIntegrationApp>,
-  dispatch: React.Dispatch<Action>,
-) {
+export function useTriggerDialogActions({
+  integrationApp,
+  dispatch,
+}: {
+  integrationApp: ReturnType<typeof useIntegrationApp>
+  dispatch: React.Dispatch<Action>
+}) {
   return useTriggerActions(integrationApp, dispatch)
 }
 
-export function useTriggerDialogEffects(
-  open: boolean,
-  mode: 'create' | 'edit',
-  node: WorkflowNode | undefined,
-  connections: Connection[],
-  state: State,
-  dispatch: React.Dispatch<Action>,
-  loadFlows: (connection: Connection) => Promise<void>,
-  loadFlowParameters: (connection: Connection, flow: Flow) => Promise<void>,
-) {
+export function useTriggerDialogEffects({
+  isOpen,
+  mode,
+  node,
+  connections,
+  state,
+  dispatch,
+  loadFlows,
+  loadFlowParameters,
+}: {
+  isOpen: boolean
+  mode: 'create' | 'edit'
+  node: WorkflowNode | undefined
+  connections: Connection[]
+  state: State
+  dispatch: React.Dispatch<Action>
+  loadFlows: (connection: Connection) => Promise<void>
+  loadFlowParameters: (connection: Connection, flow: Flow) => Promise<void>
+}) {
   // Reset state when dialog closes
   useEffect(() => {
-    if (!open) {
+    if (!isOpen) {
       dispatch({ type: 'STATE_RESET' })
     }
-  }, [dispatch, open])
+  }, [dispatch, isOpen])
 
   // Load initial data in edit mode
   useEffect(() => {
@@ -66,17 +78,27 @@ export function useTriggerDialogEffects(
   }, [mode, node?.flowKey, state.flows, state.connection, loadFlowParameters, dispatch])
 }
 
-export function useTriggerDialogHandlers(
-  mode: 'create' | 'edit',
-  connections: Connection[],
-  state: State,
-  dispatch: React.Dispatch<Action>,
-  loadFlows: (connection: Connection) => Promise<void>,
-  loadFlowParameters: (connection: Connection, flow: Flow) => Promise<void>,
-  integrationApp: ReturnType<typeof useIntegrationApp>,
-  node: WorkflowNode | undefined,
-  onSubmit: (node: Omit<WorkflowNode, 'id'>) => void,
-) {
+export function useTriggerDialogHandlers({
+  mode,
+  connections,
+  state,
+  dispatch,
+  loadFlows,
+  loadFlowParameters,
+  integrationApp,
+  node,
+  onSubmit,
+}: {
+  mode: 'create' | 'edit'
+  connections: Connection[]
+  state: State
+  dispatch: React.Dispatch<Action>
+  loadFlows: (connection: Connection) => Promise<void>
+  loadFlowParameters: (connection: Connection, flow: Flow) => Promise<void>
+  integrationApp: ReturnType<typeof useIntegrationApp>
+  node: WorkflowNode | undefined
+  onSubmit: (node: Omit<WorkflowNode, 'id'>) => void
+}) {
   const handleIntegrationChange = (connectionId: string) => {
     console.log('handleIntegrationChange', connectionId)
 
