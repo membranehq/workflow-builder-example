@@ -16,7 +16,7 @@ export function TestResultDialog({ isOpen, onClose, result, error }: TestResultD
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className='max-w-4xl max-h-[85vh] flex flex-col gap-0'>
-        <DialogHeader className='flex-shrink-0'>
+        <DialogHeader className='shrink-0'>
           <div className='flex items-center justify-between'>
             <DialogTitle className={error ? 'text-red-600 dark:text-red-400' : ''}>
               {error ? 'Error' : 'Test Run Result'}
@@ -28,7 +28,7 @@ export function TestResultDialog({ isOpen, onClose, result, error }: TestResultD
           <ScrollArea className='h-[calc(85vh-8rem)]'>
             {error ? (
               <div className='flex items-start space-x-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg'>
-                <XCircle className='w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5' />
+                <XCircle className='w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5' />
                 <div className='flex-1'>
                   <div className='font-medium text-red-600 dark:text-red-400'>
                     {error instanceof Error ? error.name : 'Error'}

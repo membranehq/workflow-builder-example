@@ -24,7 +24,7 @@ export function PlusNode({ data }: PlusNodeProps) {
         <Handle
           type='target'
           position={Position.Top}
-          className='!opacity-0 !top-0 !pointer-events-none'
+          className='opacity-0! top-0! pointer-events-none!'
           style={{
             top: 0,
             left: '50%',

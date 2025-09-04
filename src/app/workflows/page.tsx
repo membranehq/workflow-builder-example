@@ -35,7 +35,7 @@ export default function WorkflowsPage() {
         <Button onClick={() => setIsCreateDialogOpen(true)}>Create Workflow</Button>
       </div>
 
-      <div className='bg-white dark:bg-gray-800 rounded-lg shadow'>
+      <div className='bg-white dark:bg-gray-800 rounded-lg shadow-sm'>
         {isLoading ? (
           <div className='p-6 space-y-4'>
             <div className='h-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse' />
