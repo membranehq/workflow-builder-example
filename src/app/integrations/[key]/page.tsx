@@ -91,7 +91,7 @@ export default function IntegrationConfigPage() {
           </Button>
         </div>
 
-        <div className='bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-5'>
+        <div className='bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-5'>
           <div className='space-y-4'>
             <div>
               <h2 className='text-xl font-semibold text-gray-900 dark:text-white mb-2'>Connection Details</h2>
@@ -100,7 +100,7 @@ export default function IntegrationConfigPage() {
           </div>
         </div>
 
-        <div className='bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-5'>
+        <div className='bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-5'>
           <div className='space-y-4'>
             <div>
               <h2 className='text-xl font-semibold text-gray-900 dark:text-white mb-2'>Data Collections:</h2>

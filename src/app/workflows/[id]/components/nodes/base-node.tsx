@@ -42,7 +42,7 @@ export function BaseNode({
         <Handle
           type='target'
           position={Position.Top}
-          className='!opacity-0 !top-0 !pointer-events-none'
+          className='opacity-0! top-0! pointer-events-none!'
           style={{
             top: 0,
             left: '50%',
@@ -58,8 +58,8 @@ export function BaseNode({
       <div className={baseClasses} onClick={onClick}>
         <div className={'flex items-center justify-between w-full'}>
           <div className='flex items-center gap-3'>
-            <div className='flex-shrink-0'>{icon}</div>
-            <div className='flex-grow'>
+            <div className='shrink-0'>{icon}</div>
+            <div className='grow'>
               <div className='text-sm font-medium text-gray-900'>{title}</div>
               {subtitle && <div className='text-sm text-gray-500'>{subtitle}</div>}
             </div>
@@ -83,7 +83,7 @@ export function BaseNode({
         <Handle
           type='source'
           position={Position.Bottom}
-          className='!opacity-0 !bottom-0 !pointer-events-none'
+          className='opacity-0! bottom-0! pointer-events-none!'
           style={{
             bottom: 0,
             left: '50%',

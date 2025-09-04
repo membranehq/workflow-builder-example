@@ -16,11 +16,11 @@ export function Header() {
   }, [])
 
   return (
-    <header className='bg-white dark:bg-gray-800 shadow-sm'>
+    <header className='bg-white dark:bg-gray-800 shadow-xs'>
       <nav className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         <div className='flex justify-between h-16'>
           <div className='flex'>
-            <div className='flex-shrink-0 flex items-center'>
+            <div className='shrink-0 flex items-center'>
               <Image src='/logo.svg' alt='Logo' width={32} height={32} className='dark:invert' />
             </div>
             <div className='hidden sm:ml-6 sm:flex sm:space-x-8'>

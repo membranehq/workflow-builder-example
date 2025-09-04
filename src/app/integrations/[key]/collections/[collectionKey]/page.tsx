@@ -52,7 +52,7 @@ export default function CollectionDetailPage() {
         </Button>
       </div>
 
-      <div className='bg-white dark:bg-gray-800 rounded-lg shadow p-6'>
+      <div className='bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6'>
         <div className='space-y-6'>
           <div>
             <h2 className='text-xl font-semibold text-gray-900 dark:text-white mb-2'>Collection Specification</h2>
