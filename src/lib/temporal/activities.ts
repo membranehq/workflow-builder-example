@@ -1,9 +1,7 @@
 import { ObjectId } from 'mongodb'
-import type { DataSchema } from '@membranehq/sdk'
 
 import { connectToDatabase } from '../mongodb'
-import type { AuthCustomer } from '../auth'
-import { getIntegrationClient } from '../integration-app-client'
+import type { WorkflowNode, HttpNodeInput } from './types'
 
 export async function fetchWorkflow(workflowId: string) {
   const { db } = await connectToDatabase()
@@ -17,25 +15,127 @@ export async function fetchWorkflow(workflowId: string) {
   return workflow
 }
 
-// TODO: place types in some central place; this is good for now
-type ActionNode = {
-  id: string
-  name: string
-  // TODO: see why `type` is not being stored in the DB, perhaps needs to be passed when node is created
-  type: 'trigger' | 'action'
-  integrationKey: string
-  connectionId: string
-  flowKey: string
-  parametersSchema?: DataSchema
-  instanceKey?: string
-  // TODO: for actionKey to be optional, we need to introduce a new type for nodes that don't have an action
-  actionKey: string
-  inputMapping: Record<string, unknown>
+export async function executeNode(node: WorkflowNode) {
+  // Simple node execution - this is where you would integrate with your specific workflow system
+  // For Temporal, this might call other activities
+  // For AWS Step Functions, this might invoke a Lambda
+  // For custom systems, this might call a function or API
+
+  // For now, return a mock result based on the node type
+  const baseOutput = {
+    message: `Executed ${node.type} node: ${node.name}`,
+    nodeId: node.id,
+    inputData: node.inputMapping,
+  }
+
+  // Add type-specific output
+  switch (node.type) {
+    case 'trigger':
+      return {
+        output: {
+          ...baseOutput,
+          triggerData: { timestamp: new Date().toISOString() },
+        },
+      }
+    case 'condition':
+      return {
+        output: {
+          ...baseOutput,
+          conditionResult: { passed: true },
+        },
+      }
+    case 'transform':
+      return {
+        output: {
+          ...baseOutput,
+          transformedData: node.inputMapping,
+        },
+      }
+    case 'http':
+      return await executeHttpNode(node)
+    default:
+      return {
+        output: baseOutput,
+      }
+  }
 }
 
-export async function executeNode({ auth, node }: { auth: AuthCustomer; node: ActionNode }) {
-  // TODO: add support for try/catch and termination, see how temporal handles it
-  const integrationClient = await getIntegrationClient(auth)
+/**
+ * Executes an HTTP node by making an HTTP request
+ */
+async function executeHttpNode(node: WorkflowNode) {
+  const httpInput = node.inputMapping as unknown as HttpNodeInput
 
-  return await integrationClient.connection(node.integrationKey).action(node.actionKey).run(node.inputMapping)
+  // Validate required fields
+  if (!httpInput.uri) {
+    throw new Error('HTTP node requires uri in inputMapping')
+  }
+  if (!httpInput.method) {
+    throw new Error('HTTP node requires method in inputMapping')
+  }
+
+  // Prepare request options
+  const requestOptions: RequestInit = {
+    method: httpInput.method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...httpInput.headers,
+    },
+  }
+
+  // Add payload for methods that require it
+  if ('payload' in httpInput) {
+    requestOptions.body = JSON.stringify(httpInput.payload)
+  }
+
+  try {
+    // Make the HTTP request
+    const response = await fetch(httpInput.uri, requestOptions)
+
+    // Parse response
+    const responseText = await response.text()
+    let responseData: unknown
+
+    try {
+      responseData = JSON.parse(responseText)
+    } catch {
+      responseData = responseText
+    }
+
+    return {
+      output: {
+        message: `HTTP ${httpInput.method} request completed`,
+        nodeId: node.id,
+        request: {
+          uri: httpInput.uri,
+          method: httpInput.method,
+          headers: httpInput.headers,
+          ...('payload' in httpInput ? { payload: httpInput.payload } : {}),
+        },
+        response: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          data: responseData,
+        },
+      },
+    }
+  } catch (error) {
+    return {
+      output: {
+        message: `HTTP ${httpInput.method} request failed`,
+        nodeId: node.id,
+        request: {
+          uri: httpInput.uri,
+          method: httpInput.method,
+          headers: httpInput.headers,
+          ...('payload' in httpInput ? { payload: httpInput.payload } : {}),
+        },
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          type: 'HTTP_REQUEST_ERROR',
+        },
+      },
+    }
+  }
 }
