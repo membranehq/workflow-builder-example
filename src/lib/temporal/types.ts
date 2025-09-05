@@ -18,33 +18,25 @@ export interface WorkflowNode {
   inputMapping: Record<string, unknown>
 }
 
-/**
- * Input data for HTTP nodes
- */
-export type HttpNodeInput =
-  | {
-      /** The URI to make the HTTP request to */
-      uri: string
+export type HttpMethodWithPayload = Extract<HttpMethod, 'POST' | 'PUT' | 'PATCH'>
 
-      /** HTTP method that requires payload */
-      method: Extract<HttpMethod, 'POST' | 'PUT' | 'PATCH'>
+export type HttpMethodWithoutPayload = Extract<HttpMethod, 'GET' | 'DELETE' | 'HEAD' | 'OPTIONS'>
 
-      /** HTTP headers to include in the request */
-      headers?: Record<string, string>
+export type HttpNodeInputBase = {
+  uri: string
+  headers?: Record<string, string>
+}
 
-      /** Request payload/body (required for POST, PUT, PATCH) */
-      payload: unknown
-    }
-  | {
-      /** The URI to make the HTTP request to */
-      uri: string
+export type HttpNodeInputWithPayload = HttpNodeInputBase & {
+  method: HttpMethodWithPayload
+  payload: unknown
+}
 
-      /** HTTP method that doesn't require payload */
-      method: Extract<HttpMethod, 'GET' | 'DELETE' | 'HEAD' | 'OPTIONS'>
+export type HttpNodeInputWithoutPayload = HttpNodeInputBase & {
+  method: HttpMethodWithoutPayload
+}
 
-      /** HTTP headers to include in the request */
-      headers?: Record<string, string>
-    }
+export type HttpNodeInput = HttpNodeInputWithPayload | HttpNodeInputWithoutPayload
 
 /**
  * Workflow definition containing nodes
@@ -147,6 +139,67 @@ export type NodeValidator = (node: WorkflowNode) => boolean
 export type WorkflowValidator = (definition: WorkflowDefinition) => {
   valid: boolean
   errors: string[]
+}
+
+/**
+ * Universal activity result type for all node executions
+ */
+export interface ActivityResult {
+  /** Unique identifier for the node that was executed */
+  nodeId: string
+
+  /** Human-readable message describing the execution result */
+  message: string
+
+  /** Input data that was provided to the node */
+  input: Record<string, unknown>
+
+  /** Output data from successful execution */
+  output?: Record<string, unknown>
+
+  /** Error information if execution failed */
+  error?: {
+    message: string
+    type: string
+    details?: unknown
+  }
+}
+
+/**
+ * HTTP-specific activity result
+ */
+export interface HttpActivityResult extends ActivityResult {
+  input: {
+    request: {
+      uri: string
+      method: string
+      headers?: Record<string, string>
+      queryParameters?: Array<{ key: string; value: string }>
+    }
+  }
+  output?: {
+    response: {
+      status: number
+      statusText: string
+      headers: Record<string, string>
+      data: unknown
+    }
+  }
+}
+
+/**
+ * Filter-specific activity result
+ */
+export interface FilterActivityResult extends ActivityResult {
+  input: {
+    dataPath: string
+    condition: string
+    originalCount?: number
+  }
+  output?: {
+    filteredData: unknown[]
+    filteredCount: number
+  }
 }
 
 /**

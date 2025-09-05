@@ -1,8 +1,9 @@
 import { proxyActivities } from '@temporalio/workflow'
 
-import type { WorkflowNode, WorkflowDefinition, NodeExecutionResult } from './types'
+import type { NodeExecutionResult, ActivityResult } from './types'
 
 import type * as activities from './activities'
+import { NativeNodeData } from '@/app/workflows/[id]/components/types/workflow'
 
 const { fetchWorkflow, executeNode } = proxyActivities<typeof activities>({
   startToCloseTimeout: '1 minute',
@@ -18,22 +19,15 @@ export async function executeWorkflow(workflowId: string): Promise<NodeExecution
   // Fetch workflow definition from database
   const definition = await fetchWorkflow(workflowId)
 
-  // Convert MongoDB document to WorkflowDefinition
-  const workflowDefinition: WorkflowDefinition = {
-    id: definition._id.toString(),
-    name: definition.name || 'Unnamed Workflow',
-    nodes: definition.nodes || [],
-  }
+  // The nodes are already in NativeNodeData format
+  const nodes: NativeNodeData[] = definition.nodes || []
 
   const results: NodeExecutionResult[] = []
   let previousData: unknown = null
 
-  for (const node of workflowDefinition.nodes) {
-    // Pass previous data directly as input to the next node
-    const nodeWithData = { ...node, inputMapping: (previousData as Record<string, unknown>) || node.inputMapping }
-
-    // Execute the node
-    const result = await executeWorkflowNode(nodeWithData)
+  for (const node of nodes) {
+    // Execute the node with previous data as context
+    const result = await executeWorkflowNode(node, previousData)
 
     results.push(result)
     // Pass just the output data to the next node
@@ -47,16 +41,23 @@ export async function executeWorkflow(workflowId: string): Promise<NodeExecution
  * Executes a single workflow node
  * This is a placeholder that would be adapted for different workflow systems
  */
-async function executeWorkflowNode(node: WorkflowNode): Promise<NodeExecutionResult> {
+async function executeWorkflowNode(node: NativeNodeData, previousData: unknown): Promise<NodeExecutionResult> {
   try {
-    // Execute the node through Temporal activity
-    const output = await executeNode(node)
+    // Execute the node through Temporal activity with previous data as context
+    const activityResult: ActivityResult = await executeNode(node, { data: previousData })
 
     return {
       id: `${node.id}-${Date.now()}`,
       nodeId: node.id,
-      success: true,
-      output: output.output,
+      success: !activityResult.error,
+      output: activityResult.output,
+      error: activityResult.error
+        ? {
+            message: activityResult.error.message,
+            code: activityResult.error.type,
+            details: activityResult.error.details,
+          }
+        : undefined,
     }
   } catch (error) {
     return {

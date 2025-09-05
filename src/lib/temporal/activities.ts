@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb'
 
 import { connectToDatabase } from '../mongodb'
 import { HttpNodeData, FilterNodeData, NativeNodeData } from '@/app/workflows/[id]/components/types/workflow'
+import { HttpMethodWithPayload, ActivityResult, HttpActivityResult, FilterActivityResult } from './types'
 
 export async function fetchWorkflow(workflowId: string) {
   const { db } = await connectToDatabase()
@@ -15,47 +16,49 @@ export async function fetchWorkflow(workflowId: string) {
   return workflow
 }
 
-export async function executeNode(node: NativeNodeData) {
+export async function executeNode(node: NativeNodeData, context?: { data?: unknown }): Promise<ActivityResult> {
   // Simple node execution - this is where you would integrate with your specific workflow system
   // For Temporal, this might call other activities
   // For AWS Step Functions, this might invoke a Lambda
   // For custom systems, this might call a function or API
 
-  // For now, return a mock result based on the node type
-  const baseOutput = {
-    message: `Executed ${node.type} node: ${node.name}`,
-    nodeId: node.id,
-  }
-
   // Add type-specific output
   switch (node.type) {
     case 'trigger':
       return {
+        nodeId: node.id,
+        message: `Executed ${node.type} node: ${node.name}`,
+        input: { nodeType: node.type, nodeName: node.name },
         output: {
-          ...baseOutput,
           triggerData: { timestamp: new Date().toISOString() },
         },
       }
     case 'condition':
       return {
+        nodeId: node.id,
+        message: `Executed ${node.type} node: ${node.name}`,
+        input: { nodeType: node.type, nodeName: node.name },
         output: {
-          ...baseOutput,
           conditionResult: { passed: true },
         },
       }
     case 'transform':
       return {
-        output: {
-          ...baseOutput,
-        },
+        nodeId: node.id,
+        message: `Executed ${node.type} node: ${node.name}`,
+        input: { nodeType: node.type, nodeName: node.name },
+        output: {},
       }
     case 'http':
-      return await executeHttpNode(node as HttpNodeData)
+      return await executeHttpNode(node as HttpNodeData, context)
     case 'filter':
-      return await executeFilterNode(node as FilterNodeData)
+      return await executeFilterNode(node as FilterNodeData, context)
     default:
       return {
-        output: baseOutput,
+        nodeId: node.id,
+        message: `Executed ${node.type} node: ${node.name}`,
+        input: { nodeType: node.type, nodeName: node.name },
+        output: {},
       }
   }
 }
@@ -63,7 +66,7 @@ export async function executeNode(node: NativeNodeData) {
 /**
  * Executes an HTTP node by making an HTTP request
  */
-async function executeHttpNode(node: HttpNodeData) {
+async function executeHttpNode(node: HttpNodeData, context?: { data?: unknown }): Promise<HttpActivityResult> {
   // TODO: Add zod validation of the node. Same schema should be used on CRUD operations for HttpNode.
 
   // Validate required fields
@@ -96,7 +99,19 @@ async function executeHttpNode(node: HttpNodeData) {
     },
   }
 
-  // TODO: add payload for methods that require it. Payload will come from previous node (result of running it).
+  // Add payload for methods that require it
+  if (isMethodWithPayload(node.configuration.method)) {
+    if (context?.data) {
+      requestOptions.body = JSON.stringify(context.data)
+    }
+  }
+
+  const requestData = {
+    uri: requestUrl,
+    method: node.configuration.method,
+    headers: node.configuration.headers,
+    ...(node.configuration.queryParameters ? { queryParameters: node.configuration.queryParameters } : {}),
+  }
 
   try {
     // Make the HTTP request
@@ -113,30 +128,26 @@ async function executeHttpNode(node: HttpNodeData) {
     }
 
     return {
-      message: `HTTP ${node.configuration.method} request completed`,
       nodeId: node.id,
-      request: {
-        uri: requestUrl,
-        method: node.configuration.method,
-        headers: node.configuration.headers,
-        ...(node.configuration.queryParameters ? { queryParameters: node.configuration.queryParameters } : {}),
+      message: `HTTP ${node.configuration.method} request completed`,
+      input: {
+        request: requestData,
       },
-      response: {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        data: responseData,
+      output: {
+        response: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          data: responseData,
+        },
       },
     }
   } catch (error) {
     return {
-      message: `HTTP ${node.configuration.method} request failed`,
       nodeId: node.id,
-      request: {
-        uri: requestUrl,
-        method: node.configuration.method,
-        headers: node.configuration.headers,
-        ...(node.configuration.queryParameters ? { queryParameters: node.configuration.queryParameters } : {}),
+      message: `HTTP ${node.configuration.method} request failed`,
+      input: {
+        request: requestData,
       },
       error: {
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -149,7 +160,7 @@ async function executeHttpNode(node: HttpNodeData) {
 /**
  * Executes a Filter node by filtering data based on a condition
  */
-async function executeFilterNode(node: FilterNodeData) {
+async function executeFilterNode(node: FilterNodeData, context?: { data?: unknown }): Promise<FilterActivityResult> {
   // Validate required fields
   if (!node.configuration.condition) {
     throw new Error('Filter node requires condition in configuration')
@@ -158,33 +169,38 @@ async function executeFilterNode(node: FilterNodeData) {
     throw new Error('Filter node requires dataPath in configuration')
   }
 
+  const inputData = {
+    dataPath: node.configuration.dataPath,
+    condition: node.configuration.condition,
+  }
+
   try {
-    // TODO: In a real implementation, this would receive data from the previous node
-    // For now, we'll use mock data to demonstrate the filtering logic
-    const mockData = {
-      items: [
-        { id: 1, name: 'John', age: 25, status: 'active' },
-        { id: 2, name: 'Jane', age: 17, status: 'inactive' },
-        { id: 3, name: 'Bob', age: 30, status: 'active' },
-        { id: 4, name: 'Alice', age: 16, status: 'pending' },
-      ],
+    // Get data from the execution context
+    const contextData = context?.data || {}
+
+    if (!contextData || Object.keys(contextData).length === 0) {
+      throw new Error('No input data provided to filter node')
     }
 
     // Extract data using the dataPath (simple implementation for demo)
     // In a real implementation, you'd use a proper JSONPath library
-    const dataToFilter = getValueByPath(mockData, node.configuration.dataPath)
+    const dataToFilter = getValueByPath(contextData, node.configuration.dataPath)
+
+    if (dataToFilter === undefined) {
+      throw new Error(`No data found at path "${node.configuration.dataPath}" in input data`)
+    }
 
     if (!Array.isArray(dataToFilter)) {
-      throw new Error(`Data at path "${node.configuration.dataPath}" is not an array`)
+      throw new Error(`Data at path "${node.configuration.dataPath}" is not an array. Found: ${typeof dataToFilter}`)
     }
 
     // Filter the data using the condition
     const filteredData = dataToFilter.filter((item) => {
       try {
         // Create a safe evaluation context
-        const context = { item }
+        const evaluationContext = { item }
         // Simple evaluation - in production, use a proper expression evaluator
-        return evaluateCondition(node.configuration.condition, context)
+        return evaluateCondition(node.configuration.condition, evaluationContext)
       } catch (error) {
         console.warn(`Error evaluating condition for item:`, error)
         return false
@@ -192,11 +208,10 @@ async function executeFilterNode(node: FilterNodeData) {
     })
 
     return {
-      message: `Filtered ${dataToFilter.length} items to ${filteredData.length} items`,
       nodeId: node.id,
+      message: `Filtered ${dataToFilter.length} items to ${filteredData.length} items`,
       input: {
-        dataPath: node.configuration.dataPath,
-        condition: node.configuration.condition,
+        ...inputData,
         originalCount: dataToFilter.length,
       },
       output: {
@@ -206,12 +221,9 @@ async function executeFilterNode(node: FilterNodeData) {
     }
   } catch (error) {
     return {
-      message: `Filter operation failed`,
       nodeId: node.id,
-      input: {
-        dataPath: node.configuration.dataPath,
-        condition: node.configuration.condition,
-      },
+      message: `Filter operation failed`,
+      input: inputData,
       error: {
         message: error instanceof Error ? error.message : 'Unknown error',
         type: 'FILTER_ERROR',
@@ -252,4 +264,9 @@ function evaluateCondition(condition: string, context: Record<string, unknown>):
   } catch (error) {
     throw new Error(`Invalid condition expression: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
+}
+
+function isMethodWithPayload(method: string): method is HttpMethodWithPayload {
+  const methodsWithPayload: HttpMethodWithPayload[] = ['POST', 'PUT', 'PATCH']
+  return methodsWithPayload.includes(method as HttpMethodWithPayload)
 }
