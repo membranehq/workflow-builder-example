@@ -3,7 +3,7 @@ import { WorkflowNode } from '@/lib/temporal/types'
 type NodeType = Pick<WorkflowNode, 'type'>
 type NodeTypeSelectorProps = NodeType & { onChange: ({ type }: NodeType) => void }
 
-const nodeTypes: NodeType['type'][] = ['http', 'condition', 'trigger', 'transform']
+const nodeTypes: NodeType['type'][] = ['http', 'condition', 'trigger', 'transform', 'filter']
 
 export const NodeTypeSelector = ({ type, onChange }: NodeTypeSelectorProps) => {
   return (

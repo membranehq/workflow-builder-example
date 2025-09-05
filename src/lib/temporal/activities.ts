@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 
 import { connectToDatabase } from '../mongodb'
-import { HttpNodeData, NativeNodeData } from '@/app/workflows/[id]/components/types/workflow'
+import { HttpNodeData, FilterNodeData, NativeNodeData } from '@/app/workflows/[id]/components/types/workflow'
 
 export async function fetchWorkflow(workflowId: string) {
   const { db } = await connectToDatabase()
@@ -51,6 +51,8 @@ export async function executeNode(node: NativeNodeData) {
       }
     case 'http':
       return await executeHttpNode(node as HttpNodeData)
+    case 'filter':
+      return await executeFilterNode(node as FilterNodeData)
     default:
       return {
         output: baseOutput,
@@ -141,5 +143,113 @@ async function executeHttpNode(node: HttpNodeData) {
         type: 'HTTP_REQUEST_ERROR',
       },
     }
+  }
+}
+
+/**
+ * Executes a Filter node by filtering data based on a condition
+ */
+async function executeFilterNode(node: FilterNodeData) {
+  // Validate required fields
+  if (!node.configuration.condition) {
+    throw new Error('Filter node requires condition in configuration')
+  }
+  if (!node.configuration.dataPath) {
+    throw new Error('Filter node requires dataPath in configuration')
+  }
+
+  try {
+    // TODO: In a real implementation, this would receive data from the previous node
+    // For now, we'll use mock data to demonstrate the filtering logic
+    const mockData = {
+      items: [
+        { id: 1, name: 'John', age: 25, status: 'active' },
+        { id: 2, name: 'Jane', age: 17, status: 'inactive' },
+        { id: 3, name: 'Bob', age: 30, status: 'active' },
+        { id: 4, name: 'Alice', age: 16, status: 'pending' },
+      ],
+    }
+
+    // Extract data using the dataPath (simple implementation for demo)
+    // In a real implementation, you'd use a proper JSONPath library
+    const dataToFilter = getValueByPath(mockData, node.configuration.dataPath)
+
+    if (!Array.isArray(dataToFilter)) {
+      throw new Error(`Data at path "${node.configuration.dataPath}" is not an array`)
+    }
+
+    // Filter the data using the condition
+    const filteredData = dataToFilter.filter((item) => {
+      try {
+        // Create a safe evaluation context
+        const context = { item }
+        // Simple evaluation - in production, use a proper expression evaluator
+        return evaluateCondition(node.configuration.condition, context)
+      } catch (error) {
+        console.warn(`Error evaluating condition for item:`, error)
+        return false
+      }
+    })
+
+    return {
+      message: `Filtered ${dataToFilter.length} items to ${filteredData.length} items`,
+      nodeId: node.id,
+      input: {
+        dataPath: node.configuration.dataPath,
+        condition: node.configuration.condition,
+        originalCount: dataToFilter.length,
+      },
+      output: {
+        filteredData,
+        filteredCount: filteredData.length,
+      },
+    }
+  } catch (error) {
+    return {
+      message: `Filter operation failed`,
+      nodeId: node.id,
+      input: {
+        dataPath: node.configuration.dataPath,
+        condition: node.configuration.condition,
+      },
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        type: 'FILTER_ERROR',
+      },
+    }
+  }
+}
+
+/**
+ * Simple path resolver for nested object properties
+ * In production, use a proper JSONPath library like jsonpath-plus
+ */
+function getValueByPath(obj: unknown, path: string): unknown {
+  return path.split('.').reduce((current: unknown, key: string) => {
+    return current && typeof current === 'object' && current !== null && key in current
+      ? (current as Record<string, unknown>)[key]
+      : undefined
+  }, obj)
+}
+
+/**
+ * Simple condition evaluator
+ * In production, use a proper expression evaluator like expr-eval or vm2
+ */
+function evaluateCondition(condition: string, context: Record<string, unknown>): boolean {
+  // This is a very basic implementation for demo purposes
+  // In production, you should use a proper expression evaluator for security
+
+  // Replace 'item' with the actual item from context
+  const expression = condition.replace(/item\./g, 'context.item.')
+
+  // Create a function that evaluates the condition
+  // WARNING: This uses eval which is dangerous in production
+  // Use a proper expression evaluator instead
+  try {
+    const func = new Function('context', `return ${expression}`)
+    return Boolean(func(context))
+  } catch (error) {
+    throw new Error(`Invalid condition expression: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }

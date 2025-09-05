@@ -95,3 +95,15 @@ export type NewHttpNodeData = NewNativeNodeData & {
 export type HttpNodeData = NewHttpNodeData & {
   id: string
 }
+
+export type NewFilterNodeData = NewNativeNodeData & {
+  type: 'filter'
+  configuration: {
+    condition: string
+    dataPath: string
+  }
+}
+
+export type FilterNodeData = NewFilterNodeData & {
+  id: string
+}

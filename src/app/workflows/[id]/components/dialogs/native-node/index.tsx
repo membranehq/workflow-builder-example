@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react'
 import { Name } from './name'
 import { NodeTypeSelector } from './node-type-selector'
 import { Http } from './http'
-import { NativeNodeData, HttpNodeData, NewNativeNodeData } from '../../types/workflow'
+import { Filter } from './filter'
+import { NativeNodeData, HttpNodeData, FilterNodeData, NewNativeNodeData } from '../../types/workflow'
 
 type NativeNodeDialogProps =
   | {
@@ -69,6 +70,12 @@ export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: Nati
               {formData.type === 'http' && (
                 <Http
                   {...(formData.configuration as HttpNodeData['configuration'])}
+                  onChange={(configuration) => setFormData((prev) => ({ ...prev, configuration }))}
+                />
+              )}
+              {formData.type === 'filter' && (
+                <Filter
+                  {...(formData.configuration as FilterNodeData['configuration'])}
                   onChange={(configuration) => setFormData((prev) => ({ ...prev, configuration }))}
                 />
               )}

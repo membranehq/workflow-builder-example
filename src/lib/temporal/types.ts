@@ -1,4 +1,4 @@
-export type NodeType = 'condition' | 'trigger' | 'transform' | 'http'
+export type NodeType = 'condition' | 'trigger' | 'transform' | 'http' | 'filter'
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
 
 /**
