@@ -1,41 +1,18 @@
 'use client'
 
-import {
-  ReactFlow,
-  Background,
-  BackgroundVariant,
-  Controls,
-  useReactFlow,
-  Node,
-  Edge,
-  ReactFlowProvider,
-  Handle,
-  Position,
-  applyNodeChanges,
-  applyEdgeChanges,
-  getBezierPath,
-  EdgeProps,
-} from '@xyflow/react'
+import { ReactFlow, Background, BackgroundVariant, Node, ReactFlowProvider } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { BlockNode } from './nodes/block-node'
 import { PlusNode } from './nodes/plus-node'
 import { TriggerNode } from './nodes/trigger-node'
 import { ConnectionEdge } from './nodes/connection-edge'
 import { SimpleEdge } from './nodes/simple-edge'
-import { NodeDialog } from './dialogs/node-dialog'
 import { TriggerDialog } from './dialogs/trigger/trigger-dialog'
-import type { WorkflowNode, FlowNode, WorkflowEdge } from './types/workflow'
-import {
-  NODE_WIDTH,
-  NODE_HEIGHT,
-  VERTICAL_SPACING,
-  START_Y,
-  CENTER_X,
-  DEFAULT_ZOOM,
-  FIT_VIEW_PADDING,
-} from './constants'
+import type { WorkflowNode, FlowNode, WorkflowEdge, NewNativeNodeData, NativeNodeData } from './types/workflow'
+import { VERTICAL_SPACING, START_Y, CENTER_X, DEFAULT_ZOOM, FIT_VIEW_PADDING } from './constants'
+import { NativeNodeDialog } from './dialogs/native-node'
 
 // Main Component
 export function WorkflowEditor() {
@@ -50,30 +27,49 @@ export function WorkflowEditor() {
 
 function WorkflowEditorInner() {
   const { id } = useParams()
-  const [nodes, setNodes] = useState<WorkflowNode[]>([])
+  const [nodes, setNodes] = useState<NativeNodeData[]>([])
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null)
   const [selectedTrigger, setSelectedTrigger] = useState<WorkflowNode | null>(null)
   const [createNodeData, setCreateNodeData] = useState<{ afterId: string } | null>(null)
   const [showTriggerDialog, setShowTriggerDialog] = useState(false)
-
-  const handleDeleteNode = async (nodeId: string) => {
-    const updatedNodes = nodes.filter((n) => n.id !== nodeId)
-    try {
-      await saveNodes(updatedNodes)
-      setNodes(updatedNodes)
-    } catch (error) {
-      console.error('Failed to delete node:', error)
-    }
-  }
 
   const getNodePosition = (index: number) => ({
     x: CENTER_X,
     y: START_Y + index * VERTICAL_SPACING,
   })
 
-  const createNewNode = (afterId: string) => {
+  const createNewNode = useCallback((afterId: string) => {
     setCreateNodeData({ afterId })
-  }
+  }, [])
+
+  const saveNodes = useCallback(
+    async (updatedNodes: NativeNodeData[]) => {
+      try {
+        const response = await fetch(`/api/workflows/${id}/nodes`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nodes: updatedNodes }),
+        })
+        if (!response.ok) throw new Error('Failed to save workflow nodes')
+      } catch (error) {
+        console.error('Failed to save workflow:', error)
+      }
+    },
+    [id],
+  )
+
+  const handleDeleteNode = useCallback(
+    async (nodeId: string) => {
+      const updatedNodes = nodes.filter((n) => n.id !== nodeId)
+      try {
+        await saveNodes(updatedNodes)
+        setNodes(updatedNodes)
+      } catch (error) {
+        console.error('Failed to delete node:', error)
+      }
+    },
+    [nodes, saveNodes],
+  )
 
   const flowElements = useMemo(() => {
     const flowNodes: Node[] = []
@@ -170,23 +166,10 @@ function WorkflowEditorInner() {
     }
   }, [nodes, createNewNode, selectedNode, handleDeleteNode])
 
-  const saveNodes = async (updatedNodes: WorkflowNode[]) => {
-    try {
-      const response = await fetch(`/api/workflows/${id}/nodes`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nodes: updatedNodes }),
-      })
-      if (!response.ok) throw new Error('Failed to save workflow nodes')
-    } catch (error) {
-      console.error('Failed to save workflow:', error)
-    }
-  }
-
-  const handleCreateNode = (nodeData: Omit<WorkflowNode, 'id'>) => {
+  const handleCreateNode = (nodeData: Omit<NewNativeNodeData, 'id'>) => {
     if (!createNodeData) return
     const newId = `${nodes.length + 1}`
-    const newNode: WorkflowNode = { id: newId, ...nodeData }
+    const newNode: NativeNodeData = { id: newId, ...nodeData }
 
     setNodes((prevNodes) => {
       const insertIndex = prevNodes.findIndex((n) => n.id === createNodeData.afterId) + 1
@@ -200,7 +183,7 @@ function WorkflowEditorInner() {
     setCreateNodeData(null)
   }
 
-  const handleSaveNode = async (nodeData: Omit<WorkflowNode, 'id'>) => {
+  const handleSaveNode = async (nodeData: Omit<NativeNodeData, 'id'>) => {
     if (!selectedNode) return
     const updatedNode = { ...nodeData, id: selectedNode.id }
 
@@ -222,7 +205,7 @@ function WorkflowEditorInner() {
     }
   }
 
-  const handleSaveTrigger = async (triggerData: Omit<WorkflowNode, 'id'>) => {
+  const handleSaveTrigger = async (triggerData: Omit<NativeNodeData, 'id'>) => {
     if (selectedTrigger) {
       // Editing existing trigger
       const updatedTrigger = { ...triggerData, id: selectedTrigger.id }
@@ -280,16 +263,6 @@ function WorkflowEditorInner() {
       >
         <Background color='#ccc' variant={BackgroundVariant.Dots} />
       </ReactFlow>
-      <NodeDialog
-        mode={selectedNode ? 'configure' : 'create'}
-        node={selectedNode}
-        open={!!selectedNode || !!createNodeData}
-        onClose={() => {
-          setSelectedNode(null)
-          setCreateNodeData(null)
-        }}
-        onSubmit={selectedNode ? handleSaveNode : handleCreateNode}
-      />
       <TriggerDialog
         mode={selectedTrigger ? 'edit' : 'create'}
         node={selectedTrigger || undefined}
@@ -299,6 +272,16 @@ function WorkflowEditorInner() {
           setSelectedTrigger(null)
         }}
         onSubmit={handleSaveTrigger}
+      />
+      <NativeNodeDialog
+        mode='create'
+        isOpen={!!selectedNode || !!createNodeData}
+        onClose={() => {
+          setSelectedNode(null)
+          setCreateNodeData(null)
+        }}
+        onSubmit={handleCreateNode}
+        node={undefined}
       />
     </>
   )

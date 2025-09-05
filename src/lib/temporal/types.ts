@@ -1,3 +1,6 @@
+export type NodeType = 'condition' | 'trigger' | 'transform' | 'http'
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
+
 /**
  * Base node type for workflow execution
  */
@@ -9,7 +12,7 @@ export interface WorkflowNode {
   name: string
 
   /** Type of node (condition, trigger, transform, http) */
-  type: 'condition' | 'trigger' | 'transform' | 'http'
+  type: NodeType
 
   /** Input mapping for the node - defines how data flows into the node */
   inputMapping: Record<string, unknown>
@@ -24,7 +27,7 @@ export type HttpNodeInput =
       uri: string
 
       /** HTTP method that requires payload */
-      method: 'POST' | 'PUT' | 'PATCH'
+      method: Extract<HttpMethod, 'POST' | 'PUT' | 'PATCH'>
 
       /** HTTP headers to include in the request */
       headers?: Record<string, string>
@@ -37,7 +40,7 @@ export type HttpNodeInput =
       uri: string
 
       /** HTTP method that doesn't require payload */
-      method: 'GET' | 'DELETE' | 'HEAD' | 'OPTIONS'
+      method: Extract<HttpMethod, 'GET' | 'DELETE' | 'HEAD' | 'OPTIONS'>
 
       /** HTTP headers to include in the request */
       headers?: Record<string, string>
@@ -162,5 +165,3 @@ export const NodeTypes = {
   /** Transform node - transforms data */
   TRANSFORM: 'transform' as const,
 } as const
-
-export type NodeType = (typeof NodeTypes)[keyof typeof NodeTypes]
