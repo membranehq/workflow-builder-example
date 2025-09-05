@@ -65,6 +65,9 @@ export interface NodeExecutionResult {
   /** Whether the execution was successful */
   success: boolean
 
+  /** Input data that was passed to the node */
+  input?: unknown
+
   /** Output data from the node execution */
   output?: unknown
 
