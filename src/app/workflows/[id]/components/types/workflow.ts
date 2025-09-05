@@ -88,6 +88,7 @@ export type NewHttpNodeData = NewNativeNodeData & {
     uri: string
     method: HttpMethod
     headers: Record<string, string>
+    queryParameters?: Array<{ key: string; value: string }>
   }
 }
 

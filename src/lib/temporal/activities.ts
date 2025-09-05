@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb'
 
 import { connectToDatabase } from '../mongodb'
 import type { WorkflowNode, HttpNodeInput } from './types'
+import { HttpNodeData } from '@/app/workflows/[id]/components/types/workflow'
 
 export async function fetchWorkflow(workflowId: string) {
   const { db } = await connectToDatabase()
@@ -63,22 +64,23 @@ export async function executeNode(node: WorkflowNode) {
 /**
  * Executes an HTTP node by making an HTTP request
  */
-async function executeHttpNode(node: WorkflowNode) {
-  const httpInput = node.inputMapping as unknown as HttpNodeInput
+async function executeHttpNode(node: HttpNodeData) {
+  // TODO: Add zod validation of the node. Same schema should be used on CRUD operations for HttpNode.
 
   // Validate required fields
-  if (!httpInput.uri) {
-    throw new Error('HTTP node requires uri in inputMapping')
+  if (!node.configuration.uri) {
+    throw new Error('HTTP node requires uri in configuration')
   }
-  if (!httpInput.method) {
-    throw new Error('HTTP node requires method in inputMapping')
+  if (!node.configuration.method) {
+    throw new Error('HTTP node requires method in configuration')
   }
 
   // Build URL with query parameters
-  let requestUrl = httpInput.uri
-  if (httpInput.queryParameters && httpInput.queryParameters.length > 0) {
-    const url = new URL(httpInput.uri)
-    httpInput.queryParameters.forEach(({ key, value }) => {
+  let requestUrl = node.configuration.uri
+
+  if (node.configuration.queryParameters && node.configuration.queryParameters.length > 0) {
+    const url = new URL(node.configuration.uri)
+    node.configuration.queryParameters.forEach(({ key, value }) => {
       if (key.trim()) {
         url.searchParams.append(key, value)
       }
@@ -88,17 +90,14 @@ async function executeHttpNode(node: WorkflowNode) {
 
   // Prepare request options
   const requestOptions: RequestInit = {
-    method: httpInput.method,
+    method: node.configuration.method,
     headers: {
       'Content-Type': 'application/json',
-      ...httpInput.headers,
+      ...node.configuration.headers,
     },
   }
 
-  // Add payload for methods that require it
-  if ('payload' in httpInput) {
-    requestOptions.body = JSON.stringify(httpInput.payload)
-  }
+  // TODO: add payload for methods that require it. Payload will come from previous node (result of running it).
 
   try {
     // Make the HTTP request
@@ -116,14 +115,13 @@ async function executeHttpNode(node: WorkflowNode) {
 
     return {
       output: {
-        message: `HTTP ${httpInput.method} request completed`,
+        message: `HTTP ${node.configuration.method} request completed`,
         nodeId: node.id,
         request: {
           uri: requestUrl,
-          method: httpInput.method,
-          headers: httpInput.headers,
-          ...(httpInput.queryParameters ? { queryParameters: httpInput.queryParameters } : {}),
-          ...('payload' in httpInput ? { payload: httpInput.payload } : {}),
+          method: node.configuration.method,
+          headers: node.configuration.headers,
+          ...(node.configuration.queryParameters ? { queryParameters: node.configuration.queryParameters } : {}),
         },
         response: {
           status: response.status,
@@ -136,14 +134,13 @@ async function executeHttpNode(node: WorkflowNode) {
   } catch (error) {
     return {
       output: {
-        message: `HTTP ${httpInput.method} request failed`,
+        message: `HTTP ${node.configuration.method} request failed`,
         nodeId: node.id,
         request: {
           uri: requestUrl,
-          method: httpInput.method,
-          headers: httpInput.headers,
-          ...(httpInput.queryParameters ? { queryParameters: httpInput.queryParameters } : {}),
-          ...('payload' in httpInput ? { payload: httpInput.payload } : {}),
+          method: node.configuration.method,
+          headers: node.configuration.headers,
+          ...(node.configuration.queryParameters ? { queryParameters: node.configuration.queryParameters } : {}),
         },
         error: {
           message: error instanceof Error ? error.message : 'Unknown error',
