@@ -37,18 +37,12 @@ export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: Nati
     if (mode === 'configure' && node) {
       setFormData(node)
     }
-  }, [mode, node])
+  }, [mode, node?.id])
 
   console.log(formData)
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={() => {
-        setFormData(initialFormData)
-        onClose()
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className='max-w-[800px] w-[800px] max-h-[90vh] flex flex-col p-0 overflow-auto'>
         <DialogHeader className='p-6 pb-0'>
           <DialogTitle>{mode === 'configure' ? 'Edit Node' : 'Add Node'}</DialogTitle>
@@ -89,7 +83,9 @@ export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: Nati
               <Button
                 onClick={() => {
                   if (formData.type) {
-                    return onSubmit(formData as NativeNodeData)
+                    onSubmit(formData as NativeNodeData)
+                    // Reset form data after successful submission
+                    setFormData(initialFormData)
                   }
                 }}
                 disabled={!formData.name || !formData.type}
