@@ -1,5 +1,6 @@
 import { Node, Edge } from '@xyflow/react'
 import { DataSchema } from '@membranehq/sdk'
+import { HttpMethod, NodeType } from '@/lib/temporal/types'
 
 export interface WorkflowNode {
   id: string
@@ -67,4 +68,42 @@ export interface Action {
   key: string
   name: string
   inputSchema?: DataSchema
+}
+
+////////////////////////
+
+export type NewNativeNodeData = {
+  name: string
+  type: NodeType
+  configuration: Record<string, unknown>
+}
+
+export type NativeNodeData = NewNativeNodeData & {
+  id: string
+}
+
+export type NewHttpNodeData = NewNativeNodeData & {
+  type: 'http'
+  configuration: {
+    uri: string
+    method: HttpMethod
+    headers: Record<string, string>
+    queryParameters?: Array<{ key: string; value: string }>
+  }
+}
+
+export type HttpNodeData = NewHttpNodeData & {
+  id: string
+}
+
+export type NewFilterNodeData = NewNativeNodeData & {
+  type: 'filter'
+  configuration: {
+    condition: string
+    dataPath: string
+  }
+}
+
+export type FilterNodeData = NewFilterNodeData & {
+  id: string
 }
