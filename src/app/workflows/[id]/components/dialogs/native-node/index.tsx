@@ -13,7 +13,7 @@ type NativeNodeDialogProps =
       mode: 'create'
       onClose: () => void
       onSubmit: (nodeData: NewNativeNodeData) => void
-      node: undefined
+      node?: undefined
     }
   | {
       isOpen: boolean

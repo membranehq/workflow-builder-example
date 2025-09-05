@@ -19,6 +19,14 @@ export interface WorkflowNode {
 }
 
 /**
+ * Query parameter type for HTTP requests
+ */
+export type QueryParameter = {
+  key: string
+  value: string
+}
+
+/**
  * Input data for HTTP nodes
  */
 export type HttpNodeInput =
@@ -32,6 +40,9 @@ export type HttpNodeInput =
       /** HTTP headers to include in the request */
       headers?: Record<string, string>
 
+      /** Query parameters for the request */
+      queryParameters?: QueryParameter[]
+
       /** Request payload/body (required for POST, PUT, PATCH) */
       payload: unknown
     }
@@ -44,6 +55,9 @@ export type HttpNodeInput =
 
       /** HTTP headers to include in the request */
       headers?: Record<string, string>
+
+      /** Query parameters for the request */
+      queryParameters?: QueryParameter[]
     }
 
 /**

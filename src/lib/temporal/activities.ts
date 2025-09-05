@@ -74,6 +74,18 @@ async function executeHttpNode(node: WorkflowNode) {
     throw new Error('HTTP node requires method in inputMapping')
   }
 
+  // Build URL with query parameters
+  let requestUrl = httpInput.uri
+  if (httpInput.queryParameters && httpInput.queryParameters.length > 0) {
+    const url = new URL(httpInput.uri)
+    httpInput.queryParameters.forEach(({ key, value }) => {
+      if (key.trim()) {
+        url.searchParams.append(key, value)
+      }
+    })
+    requestUrl = url.toString()
+  }
+
   // Prepare request options
   const requestOptions: RequestInit = {
     method: httpInput.method,
@@ -90,7 +102,7 @@ async function executeHttpNode(node: WorkflowNode) {
 
   try {
     // Make the HTTP request
-    const response = await fetch(httpInput.uri, requestOptions)
+    const response = await fetch(requestUrl, requestOptions)
 
     // Parse response
     const responseText = await response.text()
@@ -107,9 +119,10 @@ async function executeHttpNode(node: WorkflowNode) {
         message: `HTTP ${httpInput.method} request completed`,
         nodeId: node.id,
         request: {
-          uri: httpInput.uri,
+          uri: requestUrl,
           method: httpInput.method,
           headers: httpInput.headers,
+          ...(httpInput.queryParameters ? { queryParameters: httpInput.queryParameters } : {}),
           ...('payload' in httpInput ? { payload: httpInput.payload } : {}),
         },
         response: {
@@ -126,9 +139,10 @@ async function executeHttpNode(node: WorkflowNode) {
         message: `HTTP ${httpInput.method} request failed`,
         nodeId: node.id,
         request: {
-          uri: httpInput.uri,
+          uri: requestUrl,
           method: httpInput.method,
           headers: httpInput.headers,
+          ...(httpInput.queryParameters ? { queryParameters: httpInput.queryParameters } : {}),
           ...('payload' in httpInput ? { payload: httpInput.payload } : {}),
         },
         error: {

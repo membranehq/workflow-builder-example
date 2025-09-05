@@ -28,7 +28,7 @@ export function WorkflowEditor() {
 function WorkflowEditorInner() {
   const { id } = useParams()
   const [nodes, setNodes] = useState<NativeNodeData[]>([])
-  const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null)
+  const [selectedNode, setSelectedNode] = useState<NativeNodeData | null>(null)
   const [selectedTrigger, setSelectedTrigger] = useState<WorkflowNode | null>(null)
   const [createNodeData, setCreateNodeData] = useState<{ afterId: string } | null>(null)
   const [showTriggerDialog, setShowTriggerDialog] = useState(false)
@@ -166,7 +166,7 @@ function WorkflowEditorInner() {
     }
   }, [nodes, createNewNode, selectedNode, handleDeleteNode])
 
-  const handleCreateNode = (nodeData: Omit<NewNativeNodeData, 'id'>) => {
+  const handleCreateNode = (nodeData: NewNativeNodeData) => {
     if (!createNodeData) return
     const newId = `${nodes.length + 1}`
     const newNode: NativeNodeData = { id: newId, ...nodeData }
@@ -273,16 +273,22 @@ function WorkflowEditorInner() {
         }}
         onSubmit={handleSaveTrigger}
       />
-      <NativeNodeDialog
-        mode='create'
-        isOpen={!!selectedNode || !!createNodeData}
-        onClose={() => {
-          setSelectedNode(null)
-          setCreateNodeData(null)
-        }}
-        onSubmit={handleCreateNode}
-        node={undefined}
-      />
+      {selectedNode ? (
+        <NativeNodeDialog
+          mode='configure'
+          isOpen={Boolean(selectedNode)}
+          onClose={() => setSelectedNode(null)}
+          onSubmit={handleSaveNode}
+          node={selectedNode}
+        />
+      ) : (
+        <NativeNodeDialog
+          mode='create'
+          isOpen={Boolean(createNodeData)}
+          onClose={() => setCreateNodeData(null)}
+          onSubmit={handleCreateNode}
+        />
+      )}
     </>
   )
 }
