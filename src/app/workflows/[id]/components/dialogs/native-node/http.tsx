@@ -1,12 +1,70 @@
 import { Button } from '@/components/ui/button'
 import { HttpNodeInput } from '@/lib/temporal/types'
 import { HttpNodeData } from '../../types/workflow'
+import { cn } from '@/lib/utils'
 
 type HttpProps = HttpNodeData['configuration'] & {
   onChange: (data: HttpNodeData['configuration']) => void
 }
 
 const methods: HttpNodeInput['method'][] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']
+
+// Reusable input components
+const TextInput = ({
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  placeholder?: string
+  className?: string
+}) => (
+  <input
+    type='text'
+    placeholder={placeholder}
+    value={value}
+    onChange={onChange}
+    className={cn(
+      'rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2',
+      className,
+    )}
+  />
+)
+
+const SelectInput = ({
+  value,
+  onChange,
+  children,
+  className,
+}: {
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
+  children: React.ReactNode
+  className?: string
+}) => (
+  <select
+    value={value}
+    onChange={onChange}
+    className={cn(
+      'w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2',
+      className,
+    )}
+  >
+    {children}
+  </select>
+)
+
+const DeleteButton = ({ onClick, className }: { onClick: () => void; className?: string }) => (
+  <Button variant='outline' onClick={onClick} className={cn('px-2 py-1 text-xs', className)}>
+    Delete
+  </Button>
+)
+
+const SpacerDiv = ({ className }: { className?: string }) => (
+  <div className={cn('px-2 py-1 text-xs h-8 w-16 flex items-center justify-center', className)} />
+)
 
 export const Http = ({ uri, method, headers, queryParameters, onChange }: HttpProps) => {
   // Ensure all values have defaults to prevent controlled/uncontrolled input warnings
@@ -120,7 +178,7 @@ export const Http = ({ uri, method, headers, queryParameters, onChange }: HttpPr
     <>
       <div className='space-y-2'>
         <label className='text-sm font-medium'>Method</label>
-        <select
+        <SelectInput
           value={safeMethod}
           onChange={(e) => {
             const method = e.target.value as HttpNodeInput['method']
@@ -129,7 +187,6 @@ export const Http = ({ uri, method, headers, queryParameters, onChange }: HttpPr
               onChange({ uri: safeUri, headers: safeHeaders, method, queryParameters: safeQueryParameters })
             }
           }}
-          className='w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2'
         >
           <option key='no-method-selected' value=''>
             ---
@@ -139,11 +196,11 @@ export const Http = ({ uri, method, headers, queryParameters, onChange }: HttpPr
               {method}
             </option>
           ))}
-        </select>
+        </SelectInput>
       </div>
       <div className='space-y-2'>
         <label className='text-sm font-medium'>URI</label>
-        <input
+        <TextInput
           value={safeUri}
           onChange={(e) =>
             onChange({
@@ -153,7 +210,7 @@ export const Http = ({ uri, method, headers, queryParameters, onChange }: HttpPr
               queryParameters: safeQueryParameters,
             })
           }
-          className='w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2'
+          className='w-full'
         />
       </div>
       <div className='space-y-2'>
@@ -162,28 +219,18 @@ export const Http = ({ uri, method, headers, queryParameters, onChange }: HttpPr
           {displayHeaders.map(([key, value], index) => (
             <div key={index} className='flex items-center gap-2'>
               <div className='w-[80%] grid grid-cols-2 gap-2'>
-                <input
-                  type='text'
-                  placeholder='key'
-                  value={key}
-                  onChange={(e) => updateHeader(index, e.target.value, value)}
-                  className='rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2'
-                />
-                <input
-                  type='text'
+                <TextInput placeholder='key' value={key} onChange={(e) => updateHeader(index, e.target.value, value)} />
+                <TextInput
                   placeholder='value'
                   value={value}
                   onChange={(e) => updateHeader(index, key, e.target.value)}
-                  className='rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2'
                 />
               </div>
               <div className='flex items-center'>
                 {key.trim() !== '' || value.trim() !== '' ? (
-                  <Button variant='outline' onClick={() => removeHeader(index)} className='px-2 py-1 text-xs'>
-                    Delete
-                  </Button>
+                  <DeleteButton onClick={() => removeHeader(index)} />
                 ) : (
-                  <div className='px-2 py-1 text-xs h-8 w-16 flex items-center justify-center' /> // Invisible spacer matching button dimensions
+                  <SpacerDiv />
                 )}
               </div>
             </div>
@@ -196,28 +243,22 @@ export const Http = ({ uri, method, headers, queryParameters, onChange }: HttpPr
           {displayQueryParams.map(({ key, value }, index) => (
             <div key={index} className='flex items-center gap-2'>
               <div className='w-[80%] grid grid-cols-2 gap-2'>
-                <input
-                  type='text'
+                <TextInput
                   placeholder='key'
                   value={key}
                   onChange={(e) => updateQueryParam(index, e.target.value, value)}
-                  className='rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2'
                 />
-                <input
-                  type='text'
+                <TextInput
                   placeholder='value'
                   value={value}
                   onChange={(e) => updateQueryParam(index, key, e.target.value)}
-                  className='rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2'
                 />
               </div>
               <div className='flex items-center'>
                 {key.trim() !== '' || value.trim() !== '' ? (
-                  <Button variant='outline' onClick={() => removeQueryParam(index)} className='px-2 py-1 text-xs'>
-                    Delete
-                  </Button>
+                  <DeleteButton onClick={() => removeQueryParam(index)} />
                 ) : (
-                  <div className='px-2 py-1 text-xs h-8 w-16 flex items-center justify-center' /> // Invisible spacer matching button dimensions
+                  <SpacerDiv />
                 )}
               </div>
             </div>
