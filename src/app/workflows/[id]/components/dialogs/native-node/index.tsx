@@ -34,6 +34,7 @@ const initialFormData: NewNativeNodeData = {
 
 export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: NativeNodeDialogProps) => {
   const [formData, setFormData] = useState<NewNativeNodeData | NativeNodeData>(initialFormData)
+  const [isDialogReady, setIsDialogReady] = useState(false)
 
   // Get node type configuration from API
   const { nodeType: nodeTypeConfig, isLoading: isLoadingNodeType } = useNodeType(formData.type as WorkflowNode['type'])
@@ -53,6 +54,16 @@ export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: Nati
     }
   }, [isOpen, mode])
 
+  // Set dialog ready state after a short delay to avoid focus conflicts
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => setIsDialogReady(true), 100)
+      return () => clearTimeout(timer)
+    } else {
+      setIsDialogReady(false)
+    }
+  }, [isOpen])
+
   // Clear configuration when node type changes (but not on initial load)
   const [previousType, setPreviousType] = useState<string | null>(null)
   useEffect(() => {
@@ -64,11 +75,7 @@ export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: Nati
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        className='max-w-[800px] w-[800px] max-h-[90vh] flex flex-col p-0 overflow-auto'
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        onCloseAutoFocus={(e) => e.preventDefault()}
-      >
+      <DialogContent className='max-w-[800px] w-[800px] max-h-[90vh] flex flex-col p-0 overflow-auto'>
         <DialogHeader className='p-6 pb-0'>
           <DialogTitle>{mode === 'configure' ? 'Edit Node' : 'Add Node'}</DialogTitle>
           <DialogDescription>
@@ -97,8 +104,16 @@ export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: Nati
                     <p className='text-sm text-gray-600 dark:text-gray-400 mb-4'>{nodeTypeConfig.description}</p>
                     {isLoadingNodeType ? (
                       <div className='h-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse' />
-                    ) : (
-                      <div className='relative' style={{ isolation: 'isolate' }}>
+                    ) : isDialogReady ? (
+                      <div
+                        style={{
+                          position: 'relative',
+                          zIndex: 1,
+                          isolation: 'isolate',
+                        }}
+                        onFocus={(e) => e.stopPropagation()}
+                        onBlur={(e) => e.stopPropagation()}
+                      >
                         <DataInput
                           schema={nodeTypeConfig.configurationSchema}
                           value={formData.configuration}
@@ -106,6 +121,8 @@ export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: Nati
                           onChange={(configuration) => setFormData((prev) => ({ ...prev, configuration }))}
                         />
                       </div>
+                    ) : (
+                      <div className='h-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse' />
                     )}
                   </div>
                 </div>

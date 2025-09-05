@@ -50,6 +50,7 @@ async function executeWorkflowNode(node: NativeNodeData, previousData: unknown):
       id: `${node.id}-${Date.now()}`,
       nodeId: node.id,
       success: !activityResult.error,
+      input: previousData,
       output: activityResult.output,
       error: activityResult.error
         ? {
@@ -64,6 +65,7 @@ async function executeWorkflowNode(node: NativeNodeData, previousData: unknown):
       id: `${node.id}-${Date.now()}`,
       nodeId: node.id,
       success: false,
+      input: previousData,
       error: {
         message: error instanceof Error ? error.message : 'Unknown error',
         code: 'EXECUTION_ERROR',
