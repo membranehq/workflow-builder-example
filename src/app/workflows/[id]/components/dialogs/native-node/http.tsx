@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button'
 import { HttpNodeInput } from '@/lib/temporal/types'
+import { HttpNodeData } from '../../types/workflow'
 
-type HttpNodeData = Omit<HttpNodeInput, 'payload'>
-type HttpProps = HttpNodeData & {
-  onChange: (data: HttpNodeData) => void
+type HttpProps = HttpNodeData['configuration'] & {
+  onChange: (data: HttpNodeData['configuration']) => void
 }
 
 const methods: HttpNodeInput['method'][] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']

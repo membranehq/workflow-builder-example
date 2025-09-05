@@ -1,8 +1,7 @@
 import { ObjectId } from 'mongodb'
 
 import { connectToDatabase } from '../mongodb'
-import type { WorkflowNode, HttpNodeInput } from './types'
-import { HttpNodeData } from '@/app/workflows/[id]/components/types/workflow'
+import { HttpNodeData, NativeNodeData } from '@/app/workflows/[id]/components/types/workflow'
 
 export async function fetchWorkflow(workflowId: string) {
   const { db } = await connectToDatabase()
@@ -16,7 +15,7 @@ export async function fetchWorkflow(workflowId: string) {
   return workflow
 }
 
-export async function executeNode(node: WorkflowNode) {
+export async function executeNode(node: NativeNodeData) {
   // Simple node execution - this is where you would integrate with your specific workflow system
   // For Temporal, this might call other activities
   // For AWS Step Functions, this might invoke a Lambda
@@ -26,7 +25,6 @@ export async function executeNode(node: WorkflowNode) {
   const baseOutput = {
     message: `Executed ${node.type} node: ${node.name}`,
     nodeId: node.id,
-    inputData: node.inputMapping,
   }
 
   // Add type-specific output
@@ -49,11 +47,10 @@ export async function executeNode(node: WorkflowNode) {
       return {
         output: {
           ...baseOutput,
-          transformedData: node.inputMapping,
         },
       }
     case 'http':
-      return await executeHttpNode(node)
+      return await executeHttpNode(node as HttpNodeData)
     default:
       return {
         output: baseOutput,
@@ -114,38 +111,34 @@ async function executeHttpNode(node: HttpNodeData) {
     }
 
     return {
-      output: {
-        message: `HTTP ${node.configuration.method} request completed`,
-        nodeId: node.id,
-        request: {
-          uri: requestUrl,
-          method: node.configuration.method,
-          headers: node.configuration.headers,
-          ...(node.configuration.queryParameters ? { queryParameters: node.configuration.queryParameters } : {}),
-        },
-        response: {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries()),
-          data: responseData,
-        },
+      message: `HTTP ${node.configuration.method} request completed`,
+      nodeId: node.id,
+      request: {
+        uri: requestUrl,
+        method: node.configuration.method,
+        headers: node.configuration.headers,
+        ...(node.configuration.queryParameters ? { queryParameters: node.configuration.queryParameters } : {}),
+      },
+      response: {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        data: responseData,
       },
     }
   } catch (error) {
     return {
-      output: {
-        message: `HTTP ${node.configuration.method} request failed`,
-        nodeId: node.id,
-        request: {
-          uri: requestUrl,
-          method: node.configuration.method,
-          headers: node.configuration.headers,
-          ...(node.configuration.queryParameters ? { queryParameters: node.configuration.queryParameters } : {}),
-        },
-        error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          type: 'HTTP_REQUEST_ERROR',
-        },
+      message: `HTTP ${node.configuration.method} request failed`,
+      nodeId: node.id,
+      request: {
+        uri: requestUrl,
+        method: node.configuration.method,
+        headers: node.configuration.headers,
+        ...(node.configuration.queryParameters ? { queryParameters: node.configuration.queryParameters } : {}),
+      },
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        type: 'HTTP_REQUEST_ERROR',
       },
     }
   }
