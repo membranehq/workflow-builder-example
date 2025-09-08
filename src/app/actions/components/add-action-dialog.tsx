@@ -4,6 +4,26 @@ import { useConnections, useIntegrationApp, DataInput } from '@membranehq/react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
+
+interface Connection {
+  id: string
+  name: string
+  integration?: {
+    key?: string
+    logoUri?: string
+  }
+}
+
+interface DataCollection {
+  key: string
+  name: string
+}
+
+interface CollectionSpec {
+  fieldsSchema?: Record<string, unknown>
+  parametersSchema?: Record<string, unknown>
+}
+
 interface AddActionDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -12,10 +32,10 @@ interface AddActionDialogProps {
 export function AddActionDialog({ open, onOpenChange }: AddActionDialogProps) {
   const { items: connections } = useConnections()
   const integrationApp = useIntegrationApp()
-  const [selectedConnection, setSelectedConnection] = useState<any>(null)
-  const [dataCollections, setDataCollections] = useState<any[]>([])
-  const [selectedCollection, setSelectedCollection] = useState<any>(null)
-  const [collectionSpec, setCollectionSpec] = useState<any>(null)
+  const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null)
+  const [dataCollections, setDataCollections] = useState<DataCollection[]>([])
+  const [selectedCollection, setSelectedCollection] = useState<DataCollection | null>(null)
+  const [collectionSpec, setCollectionSpec] = useState<CollectionSpec | null>(null)
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
   const [isLoadingCollections, setIsLoadingCollections] = useState(false)
   const [isLoadingSpec, setIsLoadingSpec] = useState(false)
@@ -23,58 +43,60 @@ export function AddActionDialog({ open, onOpenChange }: AddActionDialogProps) {
   const METHODS = {
     list: {
       inputSchema: {
-        type: 'object',
+        type: 'object' as const,
         properties: {
           cursor: {
-            type: 'string',
+            type: 'string' as const,
           },
         },
       },
     },
     create: {
       inputSchema: {
-        type: 'object',
+        type: 'object' as const,
         properties: {
-          fields: collectionSpec?.fieldsSchema,
+          fields: collectionSpec?.fieldsSchema || {},
         },
       },
     },
     update: {
       inputSchema: {
-        type: 'object',
+        type: 'object' as const,
         properties: {
-          fields: collectionSpec?.fieldsSchema,
+          fields: collectionSpec?.fieldsSchema || {},
         },
       },
     },
     delete: {
       inputSchema: {
-        type: 'object',
+        type: 'object' as const,
         properties: {
-          id: { type: 'string' },
+          id: { type: 'string' as const },
         },
       },
     },
     search: {
       inputSchema: {
-        type: 'object',
+        type: 'object' as const,
         properties: {
-          query: { type: 'string' },
-          cursor: { type: 'string' },
+          query: { type: 'string' as const },
+          cursor: { type: 'string' as const },
         },
       },
     },
     'find-by-id': {
       inputSchema: {
-        type: 'object',
+        type: 'object' as const,
         properties: {
-          id: { type: 'string' },
+          id: { type: 'string' as const },
         },
       },
     },
   }
 
-  const handleSelectConnection = async (connection: any) => {
+  const handleSelectConnection = async (connection: Connection) => {
+    if (!connection.integration?.key) return
+
     try {
       setSelectedConnection(connection)
       setIsLoadingCollections(true)
@@ -87,7 +109,9 @@ export function AddActionDialog({ open, onOpenChange }: AddActionDialogProps) {
     }
   }
 
-  const handleSelectCollection = async (collection: any) => {
+  const handleSelectCollection = async (collection: DataCollection) => {
+    if (!selectedConnection?.integration?.key) return
+
     try {
       setSelectedCollection(collection)
       setIsLoadingSpec(true)
@@ -119,10 +143,10 @@ export function AddActionDialog({ open, onOpenChange }: AddActionDialogProps) {
   }
 
   const getDialogTitle = () => {
-    if (selectedMethod) {
+    if (selectedMethod && selectedConnection && selectedCollection) {
       return `${selectedConnection.name} ${selectedCollection.name} | ${selectedMethod} Configuration`
     }
-    if (selectedCollection) {
+    if (selectedCollection && selectedConnection) {
       return `${selectedConnection.name} ${selectedCollection.name}`
     }
     if (selectedConnection) {
@@ -190,22 +214,23 @@ export function AddActionDialog({ open, onOpenChange }: AddActionDialogProps) {
               </div>
             ) : (
               <div className='space-y-4'>
-                {Object.keys(collectionSpec)
-                  .filter((key) => Object.keys(METHODS).includes(key))
-                  .map((method) => (
-                    <div
-                      key={method}
-                      className='flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer'
-                      onClick={() => handleSelectMethod(method)}
-                    >
-                      <div>
-                        <h3 className='text-lg font-medium text-gray-900 dark:text-white'>{method}</h3>
+                {collectionSpec &&
+                  Object.keys(collectionSpec)
+                    .filter((key) => Object.keys(METHODS).includes(key))
+                    .map((method) => (
+                      <div
+                        key={method}
+                        className='flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer'
+                        onClick={() => handleSelectMethod(method)}
+                      >
+                        <div>
+                          <h3 className='text-lg font-medium text-gray-900 dark:text-white'>{method}</h3>
+                        </div>
+                        <Button variant='ghost' size='sm'>
+                          Select →
+                        </Button>
                       </div>
-                      <Button variant='ghost' size='sm'>
-                        Select →
-                      </Button>
-                    </div>
-                  ))}
+                    ))}
               </div>
             )
           ) : selectedConnection ? (

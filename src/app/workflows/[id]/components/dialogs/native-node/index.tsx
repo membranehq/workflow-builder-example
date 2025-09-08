@@ -99,9 +99,11 @@ export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: Nati
                 <div className='space-y-4'>
                   <div className='border-t pt-4'>
                     <h3 className='text-sm font-medium text-gray-900 dark:text-white mb-2'>
-                      {nodeTypeConfig.name} Configuration
+                      {(nodeTypeConfig as { name?: string })?.name || 'Node'} Configuration
                     </h3>
-                    <p className='text-sm text-gray-600 dark:text-gray-400 mb-4'>{nodeTypeConfig.description}</p>
+                    <p className='text-sm text-gray-600 dark:text-gray-400 mb-4'>
+                      {(nodeTypeConfig as { description?: string })?.description || ''}
+                    </p>
                     {isLoadingNodeType ? (
                       <div className='h-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse' />
                     ) : isDialogReady ? (
@@ -115,7 +117,7 @@ export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: Nati
                         onBlur={(e) => e.stopPropagation()}
                       >
                         <DataInput
-                          schema={nodeTypeConfig.configurationSchema}
+                          schema={(nodeTypeConfig as { configurationSchema?: unknown })?.configurationSchema || {}}
                           value={formData.configuration}
                           variablesSchema={{}}
                           onChange={(configuration) => setFormData((prev) => ({ ...prev, configuration }))}

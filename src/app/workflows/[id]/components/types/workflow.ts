@@ -64,7 +64,7 @@ export type FlowNode = Node<{
 }>
 
 export interface Action {
-  key: string
+  key?: string
   name: string
   inputSchema?: DataSchema
 }

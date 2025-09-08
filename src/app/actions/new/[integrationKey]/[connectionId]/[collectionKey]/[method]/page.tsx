@@ -3,11 +3,25 @@
 import { useIntegrationApp, DataInput } from '@membranehq/react'
 import { Button } from '@/components/ui/button'
 import { useRouter, useParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import '@membranehq/react/styles.css'
-import { JsonViewer } from '@/components/ui/json-viewer'
-import ReactDOM from 'react-dom/client'
 import { TestResultDialog } from '@/app/actions/components/test-result-dialog'
+
+interface Connection {
+  id: string
+  name: string
+  integration?: {
+    key?: string
+    name?: string
+    logoUri?: string
+  }
+}
+
+interface CollectionSpec {
+  name: string
+  fieldsSchema?: Record<string, unknown>
+  parametersSchema?: Record<string, unknown>
+}
 
 const METHODS = {
   list: {
@@ -67,17 +81,16 @@ export default function ConfigureMethodPage() {
   const router = useRouter()
   const { integrationKey, connectionId, collectionKey, method } = useParams()
   const integrationApp = useIntegrationApp()
-  const [collectionSpec, setCollectionSpec] = useState<any>(null)
-  const [connection, setConnection] = useState<any>(null)
+  const [collectionSpec, setCollectionSpec] = useState<CollectionSpec | null>(null)
+  const [connection, setConnection] = useState<Connection | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isTestRunning, setIsTestRunning] = useState(false)
-  const [inputValue, setInputValue] = useState<any>({})
-  const [parameters, setParameters] = useState<Record<string, any>>({})
-  const [testResult, setTestResult] = useState<any>(null)
-  const [testError, setTestError] = useState<any>(null)
+  const [inputValue, setInputValue] = useState<Record<string, unknown>>({})
+  const [parameters, setParameters] = useState<Record<string, unknown>>({})
+  const [testResult, setTestResult] = useState<unknown>(null)
+  const [testError, setTestError] = useState<Error | unknown>(null)
   const [isTestDialogOpen, setIsTestDialogOpen] = useState(false)
 
-  const fetchCollectionSpec = async (params = parameters) => {
+  const fetchCollectionSpec = useCallback(async () => {
     try {
       setIsLoading(true)
       const [spec, conn] = await Promise.all([
@@ -91,13 +104,13 @@ export default function ConfigureMethodPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [integrationApp, integrationKey, collectionKey, connectionId])
 
   useEffect(() => {
     fetchCollectionSpec()
-  }, [integrationKey, collectionKey, connectionId])
+  }, [fetchCollectionSpec])
 
-  const handleParametersChange = (newParameters: Record<string, any>) => {
+  const handleParametersChange = (newParameters: Record<string, unknown>) => {
     setParameters(newParameters)
   }
 
@@ -108,7 +121,7 @@ export default function ConfigureMethodPage() {
         ...methodSpec.inputSchema,
         properties: {
           ...methodSpec.inputSchema.properties,
-          fields: collectionSpec?.fieldsSchema,
+          fields: collectionSpec?.fieldsSchema || {},
         },
       }
     }
@@ -148,7 +161,7 @@ export default function ConfigureMethodPage() {
       const dataCollection = connection.dataCollection(collectionKey as string)
 
       // Type assertion to handle method as a key
-      const methodFn = dataCollection[method as keyof typeof dataCollection] as Function
+      const methodFn = dataCollection[method as keyof typeof dataCollection] as (...args: unknown[]) => Promise<unknown>
       if (typeof methodFn !== 'function') {
         throw new Error(`Method ${method} not found`)
       }
@@ -188,12 +201,12 @@ export default function ConfigureMethodPage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={connection.integration.logoUri}
-                  alt={`${connection.integration.name} logo`}
+                  alt={`${connection.integration.name || 'Integration'} logo`}
                   className='w-10 h-10 rounded-lg'
                 />
               ) : (
                 <div className='w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-lg font-medium text-gray-600 dark:text-gray-300'>
-                  {connection?.integration?.name?.[0]}
+                  {connection?.integration?.name?.[0] || connection?.name?.[0] || '?'}
                 </div>
               )}
               <div>
@@ -211,34 +224,8 @@ export default function ConfigureMethodPage() {
               Back
             </Button>
             <Button onClick={handleSave}>Save Action</Button>
-            <Button variant='outline' onClick={handleTest} disabled={isTestRunning}>
-              {isTestRunning ? (
-                <>
-                  <svg
-                    className='animate-spin -ml-1 mr-2 h-4 w-4 text-current'
-                    xmlns='http://www.w3.org/2000/svg'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                  >
-                    <circle
-                      className='opacity-25'
-                      cx='12'
-                      cy='12'
-                      r='10'
-                      stroke='currentColor'
-                      strokeWidth='4'
-                    ></circle>
-                    <path
-                      className='opacity-75'
-                      fill='currentColor'
-                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                    ></path>
-                  </svg>
-                  Running...
-                </>
-              ) : (
-                'Test Run'
-              )}
+            <Button variant='outline' onClick={handleTest}>
+              Test Run
             </Button>
           </div>
         </div>

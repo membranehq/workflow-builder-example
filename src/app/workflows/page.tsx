@@ -5,9 +5,15 @@ import { useState, useEffect } from 'react'
 import { CreateWorkflowDialog } from './components/create-workflow-dialog'
 import { useRouter } from 'next/navigation'
 
+interface Workflow {
+  _id: string
+  name: string
+  createdAt: string
+}
+
 export default function WorkflowsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [workflows, setWorkflows] = useState<any[]>([])
+  const [workflows, setWorkflows] = useState<Workflow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
@@ -44,7 +50,7 @@ export default function WorkflowsPage() {
         ) : workflows.length === 0 ? (
           <div className='p-6'>
             <div className='text-center text-gray-500 dark:text-gray-400'>
-              No workflows yet. Click "Create Workflow" to create one.
+              No workflows yet. Click &quot;Create Workflow&quot; to create one.
             </div>
           </div>
         ) : (

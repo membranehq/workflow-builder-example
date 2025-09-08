@@ -8,8 +8,8 @@ import { XCircle } from 'lucide-react'
 interface TestResultDialogProps {
   isOpen: boolean
   onClose: () => void
-  result?: any
-  error?: any
+  result?: unknown
+  error?: Error | unknown
 }
 
 export function TestResultDialog({ isOpen, onClose, result, error }: TestResultDialogProps) {

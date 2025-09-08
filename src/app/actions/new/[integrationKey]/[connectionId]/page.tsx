@@ -5,12 +5,27 @@ import { Button } from '@/components/ui/button'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+interface Connection {
+  id: string
+  name: string
+  integration?: {
+    key?: string
+    name?: string
+    logoUri?: string
+  }
+}
+
+interface DataCollection {
+  key: string
+  name: string
+}
+
 export default function SelectCollectionPage() {
   const router = useRouter()
   const { integrationKey, connectionId } = useParams()
   const integrationApp = useIntegrationApp()
-  const [dataCollections, setDataCollections] = useState<any[]>([])
-  const [connection, setConnection] = useState<any>(null)
+  const [dataCollections, setDataCollections] = useState<DataCollection[]>([])
+  const [connection, setConnection] = useState<Connection | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -55,12 +70,12 @@ export default function SelectCollectionPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={connection.integration.logoUri}
-                alt={`${connection.integration.name} logo`}
+                alt={`${connection.integration.name || 'Integration'} logo`}
                 className='w-10 h-10 rounded-lg'
               />
             ) : (
               <div className='w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-lg font-medium text-gray-600 dark:text-gray-300'>
-                {connection?.integration?.name?.[0]}
+                {connection?.integration?.name?.[0] || connection?.name?.[0] || '?'}
               </div>
             )}
             <div>

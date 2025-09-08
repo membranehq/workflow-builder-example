@@ -5,12 +5,18 @@ import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
 
+interface CollectionSpec {
+  name: string
+  fieldsSchema?: Record<string, unknown>
+  parametersSchema?: Record<string, unknown>
+}
+
 export default function CollectionDetailPage() {
   const router = useRouter()
   const { key, collectionKey } = useParams()
   const integrationApp = useIntegrationApp()
-  const { integration } = useIntegration(key as string)
-  const [collectionSpec, setCollectionSpec] = useState<any>(null)
+  useIntegration(key as string)
+  const [collectionSpec, setCollectionSpec] = useState<CollectionSpec | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {

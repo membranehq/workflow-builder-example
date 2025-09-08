@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
+import { connectToDatabase } from '@/lib/mongodb'
 import { User } from '@/models/user'
 import { getAuthFromRequest } from '@/lib/server-auth'
 import { getIntegrationClient } from '@/lib/integration-app-client'
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await connectDB()
+    await connectToDatabase()
 
     // 1. Get Integration.app client
     const client = await getIntegrationClient(auth)

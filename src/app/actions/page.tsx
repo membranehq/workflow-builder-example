@@ -6,14 +6,24 @@ import { useEffect, useState } from 'react'
 import { useIntegrationApp } from '@membranehq/react'
 import { TestResultDialog } from './components/test-result-dialog'
 
+interface Action {
+  _id: string
+  connectionId: string
+  collectionKey: string
+  method: string
+  input: Record<string, unknown>
+  parameters: Record<string, unknown>
+  createdAt: string
+}
+
 export default function ActionsPage() {
   const router = useRouter()
   const integrationApp = useIntegrationApp()
-  const [actions, setActions] = useState<any[]>([])
+  const [actions, setActions] = useState<Action[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [runningActionId, setRunningActionId] = useState<string | null>(null)
-  const [testResult, setTestResult] = useState<any>(null)
-  const [testError, setTestError] = useState<any>(null)
+  const [testResult, setTestResult] = useState<unknown>(null)
+  const [testError, setTestError] = useState<Error | unknown>(null)
   const [isTestDialogOpen, setIsTestDialogOpen] = useState(false)
 
   useEffect(() => {
@@ -33,7 +43,7 @@ export default function ActionsPage() {
     fetchActions()
   }, [])
 
-  const handleRunAction = async (action: any) => {
+  const handleRunAction = async (action: Action) => {
     try {
       setRunningActionId(action._id)
       setTestError(null)
@@ -50,10 +60,18 @@ export default function ActionsPage() {
 }
        */
 
-      const response = await integrationApp
+      const dataCollection = integrationApp
         .connection(action.connectionId)
         .dataCollection(action.collectionKey, action.parameters || {})
-        [action.method](action.input)
+
+      const methodFn = dataCollection[action.method as keyof typeof dataCollection] as (
+        ...args: unknown[]
+      ) => Promise<unknown>
+      if (typeof methodFn !== 'function') {
+        throw new Error(`Method ${action.method} not found`)
+      }
+
+      const response = await methodFn(action.input)
 
       setTestResult(response)
       setIsTestDialogOpen(true)
@@ -81,7 +99,7 @@ export default function ActionsPage() {
         ) : actions.length === 0 ? (
           <div className='p-6'>
             <div className='text-center text-gray-500 dark:text-gray-400'>
-              No actions yet. Click "Add Action" to create one.
+              No actions yet. Click &quot;Add Action&quot; to create one.
             </div>
           </div>
         ) : (

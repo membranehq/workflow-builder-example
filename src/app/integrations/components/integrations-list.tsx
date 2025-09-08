@@ -10,6 +10,8 @@ export function IntegrationList() {
   const { integrations, refresh } = useIntegrations()
 
   const handleConnect = async (integration: IntegrationAppIntegration) => {
+    if (!integration.key) return
+
     try {
       await integrationApp.integration(integration.key).openNewConnection()
       refresh()
@@ -29,7 +31,9 @@ export function IntegrationList() {
   }
 
   const handleConfigure = (integration: IntegrationAppIntegration) => {
-    router.push(`/integrations/${integration.key}`)
+    if (integration.key) {
+      router.push(`/integrations/${integration.key}`)
+    }
   }
 
   return (

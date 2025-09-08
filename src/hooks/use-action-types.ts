@@ -1,5 +1,5 @@
 import useSWR from 'swr'
-import type { NodeTypesResponse, NodeTypeConfigUnion } from '@/types/action-types'
+import type { NodeTypesResponse } from '@/types/action-types'
 import { NodeType } from '@/lib/temporal/types'
 
 const fetcher = async (url: string): Promise<NodeTypesResponse> => {
@@ -36,7 +36,7 @@ export function useNodeType(nodeType: NodeType) {
   const { nodeTypesByType, isLoading, error } = useNodeTypes()
 
   return {
-    nodeType: nodeTypesByType[nodeType],
+    nodeType: (nodeTypesByType as Record<string, unknown>)[nodeType] || undefined,
     isLoading,
     error,
   }

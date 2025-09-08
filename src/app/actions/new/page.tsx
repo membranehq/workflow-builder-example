@@ -22,7 +22,9 @@ export default function NewActionPage() {
           <div
             key={connection.id}
             className='flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer'
-            onClick={() => router.push(`/actions/new/${connection.integration.key}/${connection.id}`)}
+            onClick={() =>
+              connection.integration?.key && router.push(`/actions/new/${connection.integration.key}/${connection.id}`)
+            }
           >
             <div className='flex items-center space-x-4'>
               {connection?.integration?.logoUri ? (

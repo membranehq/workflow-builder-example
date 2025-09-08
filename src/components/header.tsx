@@ -2,19 +2,8 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
-import { useTheme } from 'next-themes'
-import { Sun, Moon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 export function Header() {
-  const [mounted, setMounted] = useState(false)
-  const { theme, setTheme } = useTheme()
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
   return (
     <header className='bg-white dark:bg-gray-800 shadow-xs'>
       <nav className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>

@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactFlow, Background, BackgroundVariant, Node, ReactFlowProvider } from '@xyflow/react'
+import { ReactFlow, Background, BackgroundVariant, ReactFlowProvider } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
@@ -28,7 +28,7 @@ export function WorkflowEditor() {
 
 function WorkflowEditorInner() {
   const { id } = useParams()
-  const [nodes, setNodes] = useState<NativeNodeData[]>([])
+  const [nodes, setNodes] = useState<WorkflowNode[]>([])
   const [selectedNode, setSelectedNode] = useState<NativeNodeData | null>(null)
   const [selectedTrigger, setSelectedTrigger] = useState<WorkflowNode | null>(null)
   const [createNodeData, setCreateNodeData] = useState<{ afterId: string } | null>(null)
@@ -44,7 +44,7 @@ function WorkflowEditorInner() {
   }, [])
 
   const saveNodes = useCallback(
-    async (updatedNodes: NativeNodeData[]) => {
+    async (updatedNodes: WorkflowNode[]) => {
       try {
         const response = await fetch(`/api/workflows/${id}/nodes`, {
           method: 'PUT',
@@ -73,7 +73,7 @@ function WorkflowEditorInner() {
   )
 
   const flowElements = useMemo(() => {
-    const flowNodes: Node[] = []
+    const flowNodes: FlowNode[] = []
     const flowEdges: WorkflowEdge[] = []
 
     // Always add trigger node or empty trigger placeholder first
@@ -98,8 +98,18 @@ function WorkflowEditorInner() {
         type: 'trigger',
         position: getNodePosition(0),
         data: {
-          isEmpty: true,
-          onClick: () => setShowTriggerDialog(true),
+          label: 'Add Trigger',
+          node: {
+            id: 'empty-trigger',
+            name: 'Add Trigger',
+            type: 'trigger',
+            integrationKey: '',
+            connectionId: '',
+            flowKey: '',
+            actionKey: '',
+            inputMapping: {},
+          },
+          onDelete: () => {},
         },
         draggable: false,
       })
@@ -135,7 +145,7 @@ function WorkflowEditorInner() {
     }
 
     // Add plus node at the end with half spacing
-    const plusNode = {
+    const plusNode: FlowNode = {
       id: 'plus',
       type: 'plus',
       position: {
@@ -143,8 +153,18 @@ function WorkflowEditorInner() {
         y: START_Y + flowNodes.length * VERTICAL_SPACING - VERTICAL_SPACING / 4, // Add full node spacing plus half spacing
       },
       data: {
-        parentId: flowNodes.length > 0 ? flowNodes[flowNodes.length - 1].id : 'root',
-        createNewNode,
+        label: 'Add Node',
+        node: {
+          id: 'plus',
+          name: 'Add Node',
+          type: 'action',
+          integrationKey: '',
+          connectionId: '',
+          flowKey: '',
+          actionKey: '',
+          inputMapping: {},
+        },
+        onDelete: () => {},
       },
       draggable: false,
     }
@@ -170,7 +190,16 @@ function WorkflowEditorInner() {
   const handleCreateNode = (nodeData: NewNativeNodeData) => {
     if (!createNodeData) return
     const newId = `${nodes.length + 1}`
-    const newNode: NativeNodeData = { id: newId, ...nodeData }
+    const newNode: WorkflowNode = {
+      id: newId,
+      name: nodeData.name,
+      type: 'action',
+      integrationKey: '',
+      connectionId: '',
+      flowKey: '',
+      actionKey: '',
+      inputMapping: {},
+    }
 
     setNodes((prevNodes) => {
       const insertIndex = prevNodes.findIndex((n) => n.id === createNodeData.afterId) + 1
@@ -186,7 +215,16 @@ function WorkflowEditorInner() {
 
   const handleSaveNode = async (nodeData: Omit<NativeNodeData, 'id'>) => {
     if (!selectedNode) return
-    const updatedNode = { ...nodeData, id: selectedNode.id }
+    const updatedNode: WorkflowNode = {
+      id: selectedNode.id,
+      name: nodeData.name,
+      type: 'action',
+      integrationKey: '',
+      connectionId: '',
+      flowKey: '',
+      actionKey: '',
+      inputMapping: {},
+    }
 
     setNodes((prevNodes) => {
       const newNodes = prevNodes.map((n) => (n.id === selectedNode.id ? updatedNode : n))
@@ -199,23 +237,42 @@ function WorkflowEditorInner() {
 
   const handleNodeClick = (event: React.MouseEvent, node: FlowNode) => {
     if (node.type === 'block') {
-      setSelectedNode(node.data.node)
-    } else if (node.type === 'trigger' && !node.data.isEmpty) {
+      // Convert WorkflowNode to NativeNodeData by adding configuration
+      const nativeNodeData: NativeNodeData = {
+        id: node.data.node.id,
+        name: node.data.node.name,
+        type: 'http', // Default type, could be made configurable
+        configuration: {
+          integrationKey: node.data.node.integrationKey,
+          connectionId: node.data.node.connectionId,
+          flowKey: node.data.node.flowKey,
+          actionKey: node.data.node.actionKey,
+          inputMapping: node.data.node.inputMapping,
+        },
+      }
+      setSelectedNode(nativeNodeData)
+    } else if (node.type === 'trigger') {
       setSelectedTrigger(node.data.node)
       setShowTriggerDialog(true)
     }
   }
 
-  const handleSaveTrigger = async (triggerData: Omit<NativeNodeData, 'id'>) => {
+  const handleSaveTrigger = async (triggerData: Omit<WorkflowNode, 'id'>) => {
     if (selectedTrigger) {
       // Editing existing trigger
-      const updatedTrigger = { ...triggerData, id: selectedTrigger.id }
+      const updatedTrigger: WorkflowNode = {
+        id: selectedTrigger.id,
+        ...triggerData,
+      }
       const updatedNodes = nodes.map((node) => (node.id === selectedTrigger.id ? updatedTrigger : node))
       await saveNodes(updatedNodes)
       setNodes(updatedNodes)
     } else {
       // Creating new trigger
-      const newTrigger = { ...triggerData, id: 'trigger-1' }
+      const newTrigger: WorkflowNode = {
+        id: 'trigger-1',
+        ...triggerData,
+      }
       const updatedNodes = [newTrigger, ...nodes.filter((n) => n.type !== 'trigger')]
       await saveNodes(updatedNodes)
       setNodes(updatedNodes)

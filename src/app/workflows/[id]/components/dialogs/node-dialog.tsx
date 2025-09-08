@@ -70,7 +70,7 @@ export function NodeDialog({ mode, node, open, onClose, onSubmit }: NodeDialogPr
         actionKey,
         name: `${getIntegrationName(
           connections?.find((c) => c.id === prev.connectionId),
-        )} ${action.name || action.key}`,
+        )} ${action.name || action.key || 'Unknown Action'}`,
       }))
     }
   }
@@ -159,8 +159,8 @@ export function NodeDialog({ mode, node, open, onClose, onSubmit }: NodeDialogPr
                         Select Action
                       </option>
                       {actions.map((action) => (
-                        <option key={`action-${action.key}`} value={action.key}>
-                          {action.name || action.key}
+                        <option key={`action-${action.key || 'unknown'}`} value={action.key || ''}>
+                          {action.name || action.key || 'Unknown Action'}
                         </option>
                       ))}
                     </select>

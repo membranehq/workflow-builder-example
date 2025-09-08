@@ -27,7 +27,7 @@ export default function WorkflowDetailPage() {
   const [editedName, setEditedName] = useState('')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [workflowResult, setWorkflowResult] = useState<any>(null)
+  const [workflowResult, setWorkflowResult] = useState<unknown>(null)
   const [isRunning, setIsRunning] = useState(false)
 
   useEffect(() => {
@@ -193,7 +193,7 @@ export default function WorkflowDetailPage() {
         </div>
       </div>
 
-      {workflowResult && (
+      {!!workflowResult && (
         <div className='border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 py-3'>
           <div className='max-w-7xl mx-auto'>
             <h3 className='text-sm font-medium text-gray-900 dark:text-white mb-2'>Workflow Result:</h3>

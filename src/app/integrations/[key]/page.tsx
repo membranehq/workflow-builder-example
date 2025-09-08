@@ -4,22 +4,29 @@ import { useIntegrationApp, useIntegration } from '@membranehq/react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
-// Helper function to add delay between requests
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+interface DataCollection {
+  key: string
+  name: string
+}
+
+interface CollectionSpec {
+  name: string
+  fieldsSchema?: Record<string, unknown>
+  parametersSchema?: Record<string, unknown>
+}
 
 export default function IntegrationConfigPage() {
   const router = useRouter()
   const { key } = useParams()
   const integrationApp = useIntegrationApp()
   const { integration, loading: isLoading } = useIntegration(key as string)
-  const [dataCollections, setDataCollections] = useState<any[]>([])
+  const [dataCollections, setDataCollections] = useState<DataCollection[]>([])
   const [isLoadingCollections, setIsLoadingCollections] = useState(true)
-  const [selectedCollection, setSelectedCollection] = useState<any>(null)
+  const [selectedCollection, setSelectedCollection] = useState<DataCollection | null>(null)
   const [isLoadingSpec, setIsLoadingSpec] = useState(false)
-  const [collectionSpec, setCollectionSpec] = useState<any>(null)
+  const [collectionSpec, setCollectionSpec] = useState<CollectionSpec | null>(null)
 
   useEffect(() => {
     const fetchDataCollections = async () => {
@@ -43,7 +50,7 @@ export default function IntegrationConfigPage() {
     }
   }, [integration, isLoading, router])
 
-  const handleViewCollection = async (collection: any) => {
+  const handleViewCollection = async (collection: DataCollection) => {
     try {
       setSelectedCollection(collection)
       setIsLoadingSpec(true)

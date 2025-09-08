@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { DataSchema, resolveFormulas } from '@membranehq/sdk'
 
 import { useIntegrationApp } from '@membranehq/react'
@@ -19,23 +19,29 @@ export function useDynamicDataSchema(schema: DataSchema | undefined, connectionI
   // This is the error that may occur when resolving the schema
   const [error, setError] = useState<Error | undefined>(undefined)
 
-  async function resolveSchema(schema: DataSchema, value: unknown) {
-    try {
-      const resolvedSchema = await resolveFormulas<DataSchema>(schema, {
-        variables: await resolveFormulas(value, {}),
-        getDataCollection: connectionId
-          ? async (key, parameters) => {
-              const dataCollection = await integrationApp.connection(connectionId).dataCollection(key, parameters).get()
-              return dataCollection
-            }
-          : undefined,
-      })
-      setResolvedSchema(resolvedSchema)
-      setError(undefined)
-    } catch (err) {
-      setError(err as Error)
-    }
-  }
+  const resolveSchema = useCallback(
+    async (schema: DataSchema, value: unknown) => {
+      try {
+        const resolvedSchema = await resolveFormulas<DataSchema>(schema, {
+          variables: await resolveFormulas(value, {}),
+          getDataCollection: connectionId
+            ? async (key, parameters) => {
+                const dataCollection = await integrationApp
+                  .connection(connectionId)
+                  .dataCollection(key, parameters)
+                  .get()
+                return dataCollection
+              }
+            : undefined,
+        })
+        setResolvedSchema(resolvedSchema)
+        setError(undefined)
+      } catch (err) {
+        setError(err as Error)
+      }
+    },
+    [integrationApp, connectionId],
+  )
 
   useEffect(() => {
     if (schema !== previousSourceSchema) {
@@ -46,7 +52,7 @@ export function useDynamicDataSchema(schema: DataSchema | undefined, connectionI
     if (schema) {
       void resolveSchema(schema, value)
     }
-  }, [schema ? JSON.stringify(schema) : undefined, value ? JSON.stringify(value) : undefined, connectionId])
+  }, [schema, previousSourceSchema, resolveSchema, value, connectionId])
 
   return { schema: resolvedSchema, error }
 }
