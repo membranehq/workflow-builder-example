@@ -3,7 +3,7 @@ import { proxyActivities } from '@temporalio/workflow'
 import type { NodeExecutionResult, ActivityResult } from './types'
 
 import type * as activities from './activities'
-import { NativeNodeData } from '@/app/workflows/[id]/components/types/workflow'
+import { NativeNodeData } from './types'
 
 const { fetchWorkflow, executeNode } = proxyActivities<typeof activities>({
   startToCloseTimeout: '1 minute',

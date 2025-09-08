@@ -1,8 +1,9 @@
-import { WorkflowNode } from '@/lib/temporal/types'
 import { useNodeTypes } from '@/hooks/use-action-types'
+import { NativeNodeData } from '@/lib/temporal/types'
 
-type NodeType = Pick<WorkflowNode, 'type'>
-type NodeTypeSelectorProps = NodeType & { onChange: ({ type }: NodeType) => void }
+type TypeData = Pick<NativeNodeData, 'type'>
+
+type NodeTypeSelectorProps = TypeData & { onChange: ({ type }: TypeData) => void }
 
 export const NodeTypeSelector = ({ type, onChange }: NodeTypeSelectorProps) => {
   const { nodeTypes, isLoading } = useNodeTypes()
@@ -22,7 +23,7 @@ export const NodeTypeSelector = ({ type, onChange }: NodeTypeSelectorProps) => {
       <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Node Type</label>
       <select
         value={type || ''}
-        onChange={(e) => onChange({ type: e.target.value as NodeType['type'] })}
+        onChange={(e) => onChange({ type: e.target.value as NativeNodeData['type'] })}
         className='w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
       >
         <option value=''>Select a node type...</option>

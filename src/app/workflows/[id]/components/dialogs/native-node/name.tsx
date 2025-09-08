@@ -1,6 +1,6 @@
-import { WorkflowNode } from '@/lib/temporal/types'
+import { NativeNodeData } from '@/lib/temporal/types'
 
-type NameData = Pick<WorkflowNode, 'name'>
+type NameData = Pick<NativeNodeData, 'name'>
 
 type NameProps = NameData & {
   onChange: ({ name }: NameData) => void

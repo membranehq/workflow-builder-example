@@ -1,4 +1,4 @@
-import { FilterNodeData } from '../../types/workflow'
+import { FilterNodeData } from '@/lib/temporal/types'
 import { cn } from '@/lib/utils'
 import { DataInput } from '@membranehq/react'
 

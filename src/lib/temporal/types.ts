@@ -2,57 +2,6 @@ export type NodeType = 'condition' | 'trigger' | 'transform' | 'http' | 'filter'
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
 
 /**
- * Base node type for workflow execution
- */
-export interface WorkflowNode {
-  /** Unique identifier for the node */
-  id: string
-
-  /** Human-readable name for the node */
-  name: string
-
-  /** Type of node (condition, trigger, transform, http) */
-  type: NodeType
-
-  /** Input mapping for the node - defines how data flows into the node */
-  inputMapping: Record<string, unknown>
-}
-
-export type HttpMethodWithPayload = Extract<HttpMethod, 'POST' | 'PUT' | 'PATCH'>
-
-export type HttpMethodWithoutPayload = Extract<HttpMethod, 'GET' | 'DELETE' | 'HEAD' | 'OPTIONS'>
-
-export type HttpNodeInputBase = {
-  uri: string
-  headers?: Record<string, string>
-}
-
-export type HttpNodeInputWithPayload = HttpNodeInputBase & {
-  method: HttpMethodWithPayload
-  payload: unknown
-}
-
-export type HttpNodeInputWithoutPayload = HttpNodeInputBase & {
-  method: HttpMethodWithoutPayload
-}
-
-export type HttpNodeInput = HttpNodeInputWithPayload | HttpNodeInputWithoutPayload
-
-/**
- * Workflow definition containing nodes
- */
-export interface WorkflowDefinition {
-  /** Unique identifier for the workflow */
-  id: string
-
-  /** Human-readable name for the workflow */
-  name: string
-
-  /** Array of nodes in the workflow */
-  nodes: WorkflowNode[]
-}
-
-/**
  * Result of executing a workflow node
  */
 export interface NodeExecutionResult {
@@ -77,71 +26,6 @@ export interface NodeExecutionResult {
     code?: string
     details?: unknown
   }
-}
-
-/**
- * Context for workflow execution
- */
-export interface WorkflowExecutionContext {
-  /** Results from previously executed nodes */
-  nodeResults: Map<string, NodeExecutionResult>
-
-  /** Workflow-level state and variables */
-  workflowState: Map<string, unknown>
-
-  /** Execution identifier */
-  executionId: string
-
-  /** Execution start time */
-  startTime: Date
-}
-
-/**
- * Configuration for workflow execution
- */
-export interface WorkflowExecutionConfig {
-  /** Maximum execution time for the workflow */
-  timeout?: number
-
-  /** Retry configuration for failed nodes */
-  retry?: {
-    maxAttempts: number
-    backoffMs: number
-  }
-
-  /** Parallel execution configuration */
-  parallel?: {
-    maxConcurrency: number
-  }
-
-  /** Error handling strategy */
-  errorHandling?: 'stop' | 'continue' | 'retry'
-}
-
-/**
- * Node execution function type
- */
-export type NodeExecutor = (node: WorkflowNode, context: WorkflowExecutionContext) => Promise<NodeExecutionResult>
-
-/**
- * Workflow execution function type
- */
-export type WorkflowExecutor = (
-  definition: WorkflowDefinition,
-  config?: WorkflowExecutionConfig,
-) => Promise<NodeExecutionResult[]>
-
-/**
- * Node validation function type
- */
-export type NodeValidator = (node: WorkflowNode) => boolean
-
-/**
- * Workflow validation function type
- */
-export type WorkflowValidator = (definition: WorkflowDefinition) => {
-  valid: boolean
-  errors: string[]
 }
 
 /**
@@ -205,19 +89,38 @@ export interface FilterActivityResult extends ActivityResult {
   }
 }
 
-/**
- * Common node types
- */
-export const NodeTypes = {
-  /** Trigger node - starts a workflow */
-  TRIGGER: 'trigger' as const,
+export type NewNativeNodeData = {
+  name: string
+  type: NodeType
+  configuration: Record<string, unknown>
+}
 
-  /** Action node - performs an operation */
-  ACTION: 'action' as const,
+export type NativeNodeData = NewNativeNodeData & {
+  id: string
+}
 
-  /** Condition node - makes decisions */
-  CONDITION: 'condition' as const,
+export type NewHttpNodeData = NewNativeNodeData & {
+  type: 'http'
+  configuration: {
+    uri: string
+    method: HttpMethod
+    headers: Record<string, string>
+    queryParameters?: Array<{ key: string; value: string }>
+  }
+}
 
-  /** Transform node - transforms data */
-  TRANSFORM: 'transform' as const,
-} as const
+export type HttpNodeData = NewHttpNodeData & {
+  id: string
+}
+
+export type NewFilterNodeData = NewNativeNodeData & {
+  type: 'filter'
+  configuration: {
+    condition: string
+    dataPath: string
+  }
+}
+
+export type FilterNodeData = NewFilterNodeData & {
+  id: string
+}

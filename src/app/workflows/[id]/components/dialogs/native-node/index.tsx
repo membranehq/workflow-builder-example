@@ -1,12 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import type { WorkflowNode } from '@/lib/temporal/types'
+import type { NodeType } from '@/lib/temporal/types'
 import { useEffect, useState } from 'react'
 import { Name } from './name'
 import { NodeTypeSelector } from './node-type-selector'
 import { Http } from './http'
 import { Filter } from './filter'
-import { NativeNodeData, HttpNodeData, FilterNodeData, NewNativeNodeData } from '../../types/workflow'
+import { NativeNodeData, HttpNodeData, FilterNodeData, NewNativeNodeData } from '@/lib/temporal/types'
 import { useNodeType } from '@/hooks/use-action-types'
 import { DataInput } from '@membranehq/react'
 
@@ -28,7 +28,7 @@ type NativeNodeDialogProps =
 
 const initialFormData: NewNativeNodeData = {
   name: '',
-  type: '' as WorkflowNode['type'], // Need to hack for not selected option,
+  type: '' as NodeType, // Need to hack for not selected option,
   configuration: {},
 }
 
@@ -37,7 +37,7 @@ export const NativeNodeDialog = ({ isOpen, mode, node, onClose, onSubmit }: Nati
   const [isDialogReady, setIsDialogReady] = useState(false)
 
   // Get node type configuration from API
-  const { nodeType: nodeTypeConfig, isLoading: isLoadingNodeType } = useNodeType(formData.type as WorkflowNode['type'])
+  const { nodeType: nodeTypeConfig, isLoading: isLoadingNodeType } = useNodeType(formData.type as NodeType)
 
   useEffect(() => {
     if (mode === 'configure' && node) {

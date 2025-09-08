@@ -1,5 +1,5 @@
-import { HttpNodeInput } from '@/lib/temporal/types'
-import { HttpNodeData } from '../../types/workflow'
+import { HttpMethod } from '@/lib/temporal/types'
+import { HttpNodeData } from '@/lib/temporal/types'
 import { DataInput } from '@membranehq/react'
 
 type HttpProps = HttpNodeData['configuration'] & {
@@ -58,7 +58,7 @@ export const Http = ({ uri, method, headers, queryParameters, onChange }: HttpPr
           onChange={(newConfig) => {
             onChange({
               uri: newConfig.uri || '',
-              method: newConfig.method as HttpNodeInput['method'],
+              method: newConfig.method as HttpMethod,
               headers: newConfig.headers || {},
               queryParameters: newConfig.queryParameters || [],
             })

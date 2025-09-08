@@ -1,8 +1,10 @@
 import { ObjectId } from 'mongodb'
 
 import { connectToDatabase } from '../mongodb'
-import { HttpNodeData, FilterNodeData, NativeNodeData } from '@/app/workflows/[id]/components/types/workflow'
-import { HttpMethodWithPayload, ActivityResult, HttpActivityResult, FilterActivityResult } from './types'
+import { HttpNodeData, FilterNodeData, NativeNodeData } from './types'
+import { ActivityResult, HttpActivityResult, FilterActivityResult, HttpMethod } from './types'
+
+type HttpMethodWithPayload = Extract<HttpMethod, 'POST' | 'PUT' | 'PATCH'>
 
 export async function fetchWorkflow(workflowId: string) {
   const { db } = await connectToDatabase()
