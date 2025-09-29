@@ -1,352 +1,442 @@
 'use client'
 
-import { ReactFlow, Background, BackgroundVariant, ReactFlowProvider } from '@xyflow/react'
+import React, { useCallback, useState, useMemo } from 'react'
+import {
+  ReactFlow,
+  Node,
+  Edge,
+  addEdge,
+  Connection,
+  useNodesState,
+  useEdgesState,
+  Background,
+  Controls,
+  MiniMap,
+  NodeTypes,
+  ReactFlowProvider,
+  NodeChange,
+  EdgeChange,
+} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { useParams } from 'next/navigation'
-import { BlockNode } from './nodes/block-node'
-import { PlusNode } from './nodes/plus-node'
-import { TriggerNode } from './nodes/trigger-node'
-import { ConnectionEdge } from './nodes/connection-edge'
-import { SimpleEdge } from './nodes/simple-edge'
-import { TriggerDialog } from './dialogs/trigger/trigger-dialog'
-import type { WorkflowNode, FlowNode, WorkflowEdge } from './types/workflow'
-import type { NewNativeNodeData, NativeNodeData } from '@/lib/temporal/types'
-import { VERTICAL_SPACING, START_Y, CENTER_X, DEFAULT_ZOOM, FIT_VIEW_PADDING } from './constants'
-import { NativeNodeDialog } from './dialogs/native-node'
 
-// Main Component
-export function WorkflowEditor() {
-  return (
-    <div className='w-full h-[calc(100vh-8rem)]'>
-      <ReactFlowProvider>
-        <WorkflowEditorInner />
-      </ReactFlowProvider>
-    </div>
-  )
+import { WorkflowNode, NodeData } from './types/workflow'
+import { useWorkflow } from './workflow-context'
+import { TriggerNode } from './nodes/trigger-node'
+import { ActionNode } from './nodes/action-node'
+import { PlusNode } from './nodes/plus-node'
+import { EditNodeDialog } from './dialogs/edit-action-dialog'
+import { NodeCreateDialog } from './dialogs/node-create-dialog'
+import { TriggerCreateDialog } from './dialogs/trigger/trigger-create-dialog'
+import { v4 as uuidv4 } from 'uuid'
+import { EditTriggerDialog } from './dialogs/trigger/edit-trigger-dialog'
+
+type WorkflowEditorProps = Record<string, never>
+
+const nodeTypes: NodeTypes = {
+  trigger: TriggerNode,
+  action: ActionNode,
+  plus: PlusNode,
 }
 
-function WorkflowEditorInner() {
-  const { id } = useParams()
-  const [nodes, setNodes] = useState<WorkflowNode[]>([])
-  const [selectedNode, setSelectedNode] = useState<NativeNodeData | null>(null)
-  const [selectedTrigger, setSelectedTrigger] = useState<WorkflowNode | null>(null)
-  const [createNodeData, setCreateNodeData] = useState<{ afterId: string } | null>(null)
-  const [showTriggerDialog, setShowTriggerDialog] = useState(false)
+export function WorkflowEditor() {
+  const { workflow, setWorkflow, saveNodes, nodeTypes: nodeTypeDefinitions, triggerTypes, deleteNode } = useWorkflow()
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
-  const getNodePosition = (index: number) => ({
-    x: CENTER_X,
-    y: START_Y + index * VERTICAL_SPACING,
+  const [triggerDialog, setTriggerDialog] = useState<{
+    isOpen: boolean
+    node?: WorkflowNode
+  }>({
+    isOpen: false,
   })
 
-  const createNewNode = useCallback((afterId: string) => {
-    setCreateNodeData({ afterId })
-  }, [])
+  const [actionDialog, setActionDialog] = useState<{
+    isOpen: boolean
+    node?: WorkflowNode
+    afterNodeId?: string
+  }>({
+    isOpen: false,
+  })
 
-  const saveNodes = useCallback(
-    async (updatedNodes: WorkflowNode[]) => {
-      try {
-        const response = await fetch(`/api/workflows/${id}/nodes`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nodes: updatedNodes }),
-        })
-        if (!response.ok) throw new Error('Failed to save workflow nodes')
-      } catch (error) {
-        console.error('Failed to save workflow:', error)
-      }
-    },
-    [id],
-  )
+  const [nodeCreateDialogOpen, setNodeCreateDialogOpen] = useState(false)
+  const [triggerCreateDialogOpen, setTriggerCreateDialogOpen] = useState(false)
+  const [pendingAfterId, setPendingAfterId] = useState<string | undefined>(undefined)
 
   const handleDeleteNode = useCallback(
-    async (nodeId: string) => {
-      const updatedNodes = nodes.filter((n) => n.id !== nodeId)
-      try {
-        await saveNodes(updatedNodes)
-        setNodes(updatedNodes)
-      } catch (error) {
-        console.error('Failed to delete node:', error)
-      }
+    (nodeId: string) => {
+      deleteNode(nodeId)
     },
-    [nodes, saveNodes],
+    [deleteNode],
   )
 
-  const flowElements = useMemo(() => {
-    const flowNodes: FlowNode[] = []
-    const flowEdges: WorkflowEdge[] = []
+  const reactFlowNodes = useMemo(() => {
+    const flowNodes: Node[] = []
 
-    // Always add trigger node or empty trigger placeholder first
-    const triggerNode = nodes.find((n) => n.type === 'trigger')
+    const safeNodes = workflow?.nodes ?? []
+
+    // Add trigger node (first node, if exists)
+    const triggerNode = safeNodes.find((node) => node.type === 'trigger')
     if (triggerNode) {
+      const triggerTypeMetadata = triggerNode.triggerType ? triggerTypes[triggerNode.triggerType] : undefined
       flowNodes.push({
-        id: `block-${triggerNode.id}`,
+        id: triggerNode.id,
         type: 'trigger',
-        position: getNodePosition(0),
+        position: { x: 100, y: 100 },
         data: {
           label: triggerNode.name,
           node: triggerNode,
           onDelete: handleDeleteNode,
-        },
-        selected: selectedNode?.id === triggerNode.id,
-        draggable: false,
+          triggerTypeMetadata,
+        } as NodeData,
       })
     } else {
-      // Show empty trigger placeholder even if there are other nodes
+      // Add empty trigger node
       flowNodes.push({
-        id: 'empty-trigger',
+        id: 'trigger-placeholder',
         type: 'trigger',
-        position: getNodePosition(0),
+        position: { x: 100, y: 100 },
         data: {
-          label: 'Add Trigger',
-          node: {
-            id: 'empty-trigger',
-            name: 'Add Trigger',
-            type: 'trigger',
-            integrationKey: '',
-            connectionId: '',
-            flowKey: '',
-            actionKey: '',
-            inputMapping: {},
-          },
-          onDelete: () => {},
+          isEmpty: true,
+          onClick: () => setTriggerCreateDialogOpen(true),
         },
-        draggable: false,
       })
     }
 
-    // Add remaining workflow nodes
-    const workflowNodes = nodes.filter((n) => n.type !== 'trigger')
-    workflowNodes.forEach((node, index) => {
-      const position = getNodePosition(index + 1) // Start after trigger
+    // Add action nodes
+    const actionNodes = safeNodes.filter((node) => node.type === 'action')
+    const nodeHeight = 80 // Height of each node
+    actionNodes.forEach((node, index) => {
+      const nodeTypeMetadata = node.nodeType ? nodeTypeDefinitions[node.nodeType] : undefined
+      const actionY = 250 + index * 150
       flowNodes.push({
-        id: `block-${node.id}`,
-        type: 'block',
-        position,
+        id: node.id,
+        type: 'action',
+        position: { x: 100, y: actionY },
         data: {
           label: node.name,
-          node,
+          node: node,
           onDelete: handleDeleteNode,
+          nodeTypeMetadata,
+        } as NodeData,
+      })
+
+      // Add plus node between current action and next action (or at end)
+      const currentActionBottom = actionY + nodeHeight
+      const nextActionTop = index < actionNodes.length - 1 ? 250 + (index + 1) * 150 : actionY + 150
+      const plusY = (currentActionBottom + nextActionTop) / 2
+
+      flowNodes.push({
+        id: `plus-${node.id}`,
+        type: 'plus',
+        position: { x: 100, y: plusY },
+        data: {
+          parentId: node.id,
+          createNewNode: (afterId: string) => {
+            setPendingAfterId(afterId)
+            setNodeCreateDialogOpen(true)
+          },
         },
-        selected: selectedNode?.id === node.id,
-        draggable: false,
       })
     })
 
-    // Create edges between all nodes (including from empty trigger to first node)
-    for (let i = 0; i < flowNodes.length - 1; i++) {
-      flowEdges.push({
-        id: `e-${flowNodes[i].id}-${flowNodes[i + 1].id}`,
-        source: flowNodes[i].id,
-        target: flowNodes[i + 1].id,
-        type: 'connection',
-        data: { createNewNode },
-      })
-    }
+    // Add plus node between trigger and first action, or after trigger if no actions
+    if (triggerNode) {
+      if (actionNodes.length === 0) {
+        // No action nodes - place plus node below trigger
+        const triggerBottom = 100 + nodeHeight // 100 (trigger top) + 80 (height)
+        flowNodes.push({
+          id: 'plus-trigger',
+          type: 'plus',
+          position: { x: 100, y: triggerBottom + 35 }, // 35px spacing below trigger
+          data: {
+            parentId: triggerNode.id,
+            createNewNode: (afterId: string) => {
+              setPendingAfterId(afterId)
+              setNodeCreateDialogOpen(true)
+            },
+          },
+        })
+      } else {
+        // Has action nodes - place plus node between trigger and first action
+        const triggerBottom = 100 + nodeHeight // 100 + 80 = 180
+        const firstActionTop = 250
+        const plusY = (triggerBottom + firstActionTop) / 2 // (180 + 250) / 2 = 215
 
-    // Add plus node at the end with half spacing
-    const plusNode: FlowNode = {
-      id: 'plus',
-      type: 'plus',
-      position: {
-        x: CENTER_X,
-        y: START_Y + flowNodes.length * VERTICAL_SPACING - VERTICAL_SPACING / 4, // Add full node spacing plus half spacing
-      },
-      data: {
-        label: 'Add Node',
-        node: {
-          id: 'plus',
-          name: 'Add Node',
-          type: 'action',
-          integrationKey: '',
-          connectionId: '',
-          flowKey: '',
-          actionKey: '',
-          inputMapping: {},
-        },
-        onDelete: () => {},
-      },
-      draggable: false,
-    }
-
-    // Add edge to plus node if there are any nodes
-    if (flowNodes.length > 0) {
-      const lastNode = flowNodes[flowNodes.length - 1]
-      flowEdges.push({
-        id: `e-${lastNode.id}-plus`,
-        source: lastNode.id,
-        type: 'simple',
-        target: 'plus',
-        data: { createNewNode },
-      })
-    }
-
-    return {
-      nodes: [...flowNodes, plusNode],
-      edges: flowEdges,
-    }
-  }, [nodes, createNewNode, selectedNode, handleDeleteNode])
-
-  const handleCreateNode = (nodeData: NewNativeNodeData) => {
-    if (!createNodeData) return
-    const newId = `${nodes.length + 1}`
-    const newNode: WorkflowNode = {
-      id: newId,
-      name: nodeData.name,
-      type: 'action',
-      integrationKey: '',
-      connectionId: '',
-      flowKey: '',
-      actionKey: '',
-      inputMapping: {},
-    }
-
-    setNodes((prevNodes) => {
-      const insertIndex = prevNodes.findIndex((n) => n.id === createNodeData.afterId) + 1
-      const newNodes = [...prevNodes]
-      newNodes.splice(insertIndex, 0, newNode)
-      saveNodes(newNodes)
-      return newNodes
-    })
-
-    // Reset createNodeData to close the dialog
-    setCreateNodeData(null)
-  }
-
-  const handleSaveNode = async (nodeData: Omit<NativeNodeData, 'id'>) => {
-    if (!selectedNode) return
-    const updatedNode: WorkflowNode = {
-      id: selectedNode.id,
-      name: nodeData.name,
-      type: 'action',
-      integrationKey: '',
-      connectionId: '',
-      flowKey: '',
-      actionKey: '',
-      inputMapping: {},
-    }
-
-    setNodes((prevNodes) => {
-      const newNodes = prevNodes.map((n) => (n.id === selectedNode.id ? updatedNode : n))
-      saveNodes(newNodes)
-      return newNodes
-    })
-
-    setSelectedNode(null)
-  }
-
-  const handleNodeClick = (event: React.MouseEvent, node: FlowNode) => {
-    if (node.type === 'block') {
-      // Convert WorkflowNode to NativeNodeData by adding configuration
-      const nativeNodeData: NativeNodeData = {
-        id: node.data.node.id,
-        name: node.data.node.name,
-        type: 'http', // Default type, could be made configurable
-        configuration: {
-          integrationKey: node.data.node.integrationKey,
-          connectionId: node.data.node.connectionId,
-          flowKey: node.data.node.flowKey,
-          actionKey: node.data.node.actionKey,
-          inputMapping: node.data.node.inputMapping,
-        },
+        flowNodes.push({
+          id: 'plus-trigger',
+          type: 'plus',
+          position: { x: 100, y: plusY },
+          data: {
+            parentId: triggerNode.id,
+            createNewNode: (afterId: string) => {
+              setPendingAfterId(afterId)
+              setNodeCreateDialogOpen(true)
+            },
+          },
+        })
       }
-      setSelectedNode(nativeNodeData)
-    } else if (node.type === 'trigger') {
-      setSelectedTrigger(node.data.node)
-      setShowTriggerDialog(true)
     }
-  }
 
-  const handleSaveTrigger = async (triggerData: Omit<WorkflowNode, 'id'>) => {
-    if (selectedTrigger) {
-      // Editing existing trigger
-      const updatedTrigger: WorkflowNode = {
-        id: selectedTrigger.id,
-        ...triggerData,
-      }
-      const updatedNodes = nodes.map((node) => (node.id === selectedTrigger.id ? updatedTrigger : node))
-      await saveNodes(updatedNodes)
-      setNodes(updatedNodes)
-    } else {
-      // Creating new trigger
-      const newTrigger: WorkflowNode = {
-        id: 'trigger-1',
-        ...triggerData,
-      }
-      const updatedNodes = [newTrigger, ...nodes.filter((n) => n.type !== 'trigger')]
-      await saveNodes(updatedNodes)
-      setNodes(updatedNodes)
-    }
-    setShowTriggerDialog(false)
-    setSelectedTrigger(null)
-  }
+    return flowNodes
+  }, [workflow?.nodes, handleDeleteNode, triggerTypes, nodeTypeDefinitions])
 
-  useEffect(() => {
-    const loadWorkflow = async () => {
-      try {
-        const response = await fetch(`/api/workflows/${id}`)
-        if (!response.ok) throw new Error('Failed to load workflow')
-        const workflow = await response.json()
-        if (workflow.nodes?.length > 0) {
-          setNodes(workflow.nodes)
+  // Convert to edges for ReactFlow
+  const reactFlowEdges = useMemo(() => {
+    const flowEdges: Edge[] = []
+
+    const safeNodes = workflow?.nodes ?? []
+    const triggerNode = safeNodes.find((node) => node.type === 'trigger')
+    const actionNodes = safeNodes.filter((node) => node.type === 'action')
+
+    if (triggerNode) {
+      if (actionNodes.length > 0) {
+        // Connect trigger to first action
+        flowEdges.push({
+          id: `trigger-${actionNodes[0].id}`,
+          source: triggerNode.id,
+          target: actionNodes[0].id,
+          type: 'smoothstep',
+        })
+
+        // Connect action nodes in sequence
+        for (let i = 0; i < actionNodes.length - 1; i++) {
+          flowEdges.push({
+            id: `${actionNodes[i].id}-${actionNodes[i + 1].id}`,
+            source: actionNodes[i].id,
+            target: actionNodes[i + 1].id,
+            type: 'smoothstep',
+          })
         }
-      } catch (error) {
-        console.error('Failed to load workflow:', error)
+
+        // Connect last action to its plus node
+        const lastAction = actionNodes[actionNodes.length - 1]
+        flowEdges.push({
+          id: `${lastAction.id}-plus-${lastAction.id}`,
+          source: lastAction.id,
+          target: `plus-${lastAction.id}`,
+          type: 'smoothstep',
+        })
+      } else {
+        // No action nodes - connect trigger to its plus node
+        flowEdges.push({
+          id: `trigger-plus-trigger`,
+          source: triggerNode.id,
+          target: 'plus-trigger',
+          type: 'smoothstep',
+        })
       }
     }
 
-    loadWorkflow()
-  }, [id])
+    return flowEdges
+  }, [workflow?.nodes])
+
+  // Update nodes and edges when workflow changes
+  React.useEffect(() => {
+    setNodes(reactFlowNodes)
+    setEdges(reactFlowEdges)
+  }, [reactFlowNodes, reactFlowEdges, setNodes, setEdges])
+
+  const handleNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      onNodesChange(changes)
+    },
+    [onNodesChange],
+  )
+
+  const handleEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      onEdgesChange(changes)
+    },
+    [onEdgesChange],
+  )
+
+  const onConnect = useCallback(
+    (params: Connection) => {
+      setEdges((eds) => addEdge(params, eds))
+    },
+    [setEdges],
+  )
+
+  const handleNodeClick = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      const workflowNode = (workflow?.nodes ?? []).find((n) => n.id === node.id)
+      if (!workflowNode) return
+
+      if (workflowNode.type === 'trigger') {
+        setTriggerDialog({
+          isOpen: true,
+          node: workflowNode,
+        })
+      } else if (workflowNode.type === 'action') {
+        setActionDialog({
+          isOpen: true,
+          node: workflowNode,
+        })
+      }
+    },
+    [workflow?.nodes],
+  )
+
+  const handleTriggerSubmit = useCallback(
+    (nodeData: Omit<WorkflowNode, 'id'>) => {
+      if (!workflow) return
+      if (triggerDialog.node) {
+        const updatedNodes = workflow.nodes.map((node) =>
+          node.id === triggerDialog.node!.id ? { ...node, ...nodeData } : node,
+        )
+        setWorkflow({
+          ...workflow,
+          nodes: updatedNodes,
+        })
+        void saveNodes(updatedNodes)
+      }
+    },
+    [triggerDialog, workflow, setWorkflow, saveNodes],
+  )
+
+  const handleActionSubmit = useCallback(
+    (nodeData: Omit<WorkflowNode, 'id'>) => {
+      if (!workflow) return
+      if (actionDialog.node) {
+        const updatedNodes = workflow.nodes.map((node) =>
+          node.id === actionDialog.node!.id ? { ...node, ...nodeData } : node,
+        )
+        setWorkflow({
+          ...workflow,
+          nodes: updatedNodes,
+        })
+        void saveNodes(updatedNodes)
+      }
+    },
+    [actionDialog, workflow, setWorkflow, saveNodes],
+  )
+
+  const handleCreateNodeFromType = useCallback(
+    (selectedType: string) => {
+      if (!workflow) return
+
+      const baseName = (nodeTypeDefinitions[selectedType]?.name ?? selectedType) as string
+      const existingNodes = workflow.nodes ?? []
+
+      // Check if name already exists and find unique name
+      let finalName = baseName
+      let counter = 1
+      while (existingNodes.some((node) => node.name === finalName)) {
+        finalName = `${baseName} ${counter}`
+        counter++
+      }
+
+      const newNode: WorkflowNode = {
+        id: uuidv4(),
+        name: finalName,
+        type: 'action',
+        nodeType: selectedType,
+        inputMapping: {},
+      }
+      const updatedNodes = [...(workflow.nodes ?? [])]
+      if (pendingAfterId) {
+        const afterIndex = updatedNodes.findIndex((n) => n.id === pendingAfterId)
+        if (afterIndex >= 0) updatedNodes.splice(afterIndex + 1, 0, newNode)
+        else updatedNodes.push(newNode)
+      } else {
+        updatedNodes.push(newNode)
+      }
+      setPendingAfterId(undefined)
+      setNodeCreateDialogOpen(false)
+      setWorkflow({ ...workflow, nodes: updatedNodes })
+      void saveNodes(updatedNodes)
+    },
+    [workflow, nodeTypeDefinitions, pendingAfterId, setWorkflow, saveNodes],
+  )
+
+  const handleCreateTriggerFromType = useCallback(
+    (selectedType: string) => {
+      if (!workflow) return
+      const name = triggerTypes[selectedType]?.name ?? selectedType
+      const newTrigger: WorkflowNode = {
+        id: uuidv4(),
+        name,
+        type: 'trigger',
+        triggerType: selectedType,
+        inputMapping: {},
+      }
+      const updatedNodes = [...(workflow.nodes ?? [])]
+      const existingIndex = updatedNodes.findIndex((n) => n.type === 'trigger')
+      if (existingIndex >= 0) updatedNodes[existingIndex] = newTrigger
+      else updatedNodes.unshift(newTrigger)
+      setTriggerCreateDialogOpen(false)
+      setWorkflow({ ...workflow, nodes: updatedNodes })
+      void saveNodes(updatedNodes)
+    },
+    [workflow, triggerTypes, setWorkflow, saveNodes],
+  )
 
   return (
     <>
       <ReactFlow
-        nodes={flowElements.nodes}
-        edges={flowElements.edges}
-        nodeTypes={{ block: BlockNode, plus: PlusNode, trigger: TriggerNode }}
-        edgeTypes={{ connection: ConnectionEdge, simple: SimpleEdge }}
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={handleNodesChange}
+        onEdgesChange={handleEdgesChange}
+        onConnect={onConnect}
         onNodeClick={handleNodeClick}
-        className='w-full h-full'
+        nodeTypes={nodeTypes}
         nodesDraggable={false}
-        zoomOnScroll={false}
-        panOnScroll={false}
-        preventScrolling={true}
-        maxZoom={1}
-        minZoom={1}
-        edgesFocusable={false}
-        nodesConnectable={false}
         fitView
-        defaultViewport={{ x: 0, y: 0, zoom: DEFAULT_ZOOM }}
-        fitViewOptions={{ padding: FIT_VIEW_PADDING }}
+        fitViewOptions={{ padding: 0.1, minZoom: 0.1, maxZoom: 1.5 }}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.1 }}
+        className='bg-gray-50'
       >
-        <Background color='#ccc' variant={BackgroundVariant.Dots} />
+        <Background />
+        <Controls />
+        <MiniMap />
       </ReactFlow>
-      <TriggerDialog
-        mode={selectedTrigger ? 'edit' : 'create'}
-        node={selectedTrigger || undefined}
-        isOpen={showTriggerDialog}
-        onClose={() => {
-          setShowTriggerDialog(false)
-          setSelectedTrigger(null)
-        }}
-        onSubmit={handleSaveTrigger}
-      />
-      {selectedNode ? (
-        <NativeNodeDialog
-          mode='configure'
-          isOpen={Boolean(selectedNode)}
-          onClose={() => setSelectedNode(null)}
-          onSubmit={handleSaveNode}
-          node={selectedNode}
-        />
-      ) : (
-        <NativeNodeDialog
-          mode='create'
-          isOpen={Boolean(createNodeData)}
-          onClose={() => setCreateNodeData(null)}
-          onSubmit={handleCreateNode}
+
+      {triggerDialog.node && (
+        <EditTriggerDialog
+          isOpen={triggerDialog.isOpen}
+          onClose={() => setTriggerDialog({ isOpen: false })}
+          onUpdateWorkflow={handleTriggerSubmit}
+          node={triggerDialog.node}
+          triggerTypes={triggerTypes}
         />
       )}
+
+      {actionDialog.node && (
+        <EditNodeDialog
+          isOpen={actionDialog.isOpen}
+          onClose={() => setActionDialog({ isOpen: false })}
+          onSubmit={handleActionSubmit}
+          node={actionDialog.node}
+          nodeTypes={nodeTypeDefinitions}
+        />
+      )}
+
+      <NodeCreateDialog
+        isOpen={nodeCreateDialogOpen}
+        onClose={() => {
+          setNodeCreateDialogOpen(false)
+          setPendingAfterId(undefined)
+        }}
+        nodeTypes={nodeTypeDefinitions}
+        onCreate={handleCreateNodeFromType}
+      />
+
+      <TriggerCreateDialog
+        isOpen={triggerCreateDialogOpen}
+        onClose={() => setTriggerCreateDialogOpen(false)}
+        triggerTypes={triggerTypes}
+        onCreate={handleCreateTriggerFromType}
+      />
     </>
+  )
+}
+
+// Wrapper component with ReactFlowProvider
+export function WorkflowEditorWrapper(props: WorkflowEditorProps) {
+  return (
+    <ReactFlowProvider>
+      <WorkflowEditor {...props} />
+    </ReactFlowProvider>
   )
 }

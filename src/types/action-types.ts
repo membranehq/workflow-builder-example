@@ -10,7 +10,6 @@ export interface NodeTypeConfig {
     properties: Record<string, unknown>
     required?: string[]
   }
-  isAsync?: boolean
   requiresConnection?: boolean
   requiresCollection?: boolean
   icon?: string

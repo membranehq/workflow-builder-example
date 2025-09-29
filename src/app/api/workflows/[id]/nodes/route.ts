@@ -1,22 +1,20 @@
 import { NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
-import { ObjectId } from 'mongodb'
+import { Workflow } from '@/models/workflow'
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const { nodes } = await req.json()
-    const { db } = await connectToDatabase()
+    await connectToDatabase()
 
-    const result = await db
-      .collection('workflows')
-      .findOneAndUpdate({ _id: new ObjectId(id) }, { $set: { nodes } }, { returnDocument: 'after' })
+    const workflow = await Workflow.findByIdAndUpdate(id, { $set: { nodes } }, { new: true }).lean()
 
-    if (!result) {
+    if (!workflow) {
       return NextResponse.json({ error: 'Workflow not found' }, { status: 404 })
     }
 
-    return NextResponse.json(result)
+    return NextResponse.json(workflow)
   } catch (error) {
     console.error('Failed to update workflow nodes:', error)
     return NextResponse.json({ error: 'Failed to update workflow nodes' }, { status: 500 })

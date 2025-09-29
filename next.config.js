@@ -7,6 +7,10 @@ const nextConfig = {
         hostname: 'static.integration.app',
         pathname: '/files/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'static.integration.app',
+      },
     ],
   },
 }

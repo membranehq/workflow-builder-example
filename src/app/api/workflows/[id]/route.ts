@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
-import { ObjectId } from 'mongodb'
+import { Workflow } from '@/models/workflow'
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const { db } = await connectToDatabase()
+    await connectToDatabase()
 
-    const workflow = await db.collection('workflows').findOne({ _id: new ObjectId(id) })
+    const workflow = await Workflow.findById(id).lean()
 
     if (!workflow) {
       return NextResponse.json({ error: 'Workflow not found' }, { status: 404 })
@@ -23,18 +23,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const { name } = await req.json()
-    const { db } = await connectToDatabase()
+    const updateData = await req.json()
+    await connectToDatabase()
 
-    const result = await db
-      .collection('workflows')
-      .findOneAndUpdate({ _id: new ObjectId(id) }, { $set: { name } }, { returnDocument: 'after' })
+    const workflow = await Workflow.findByIdAndUpdate(id, { $set: updateData }, { new: true }).lean()
 
-    if (!result) {
+    if (!workflow) {
       return NextResponse.json({ error: 'Workflow not found' }, { status: 404 })
     }
 
-    return NextResponse.json(result)
+    return NextResponse.json(workflow)
   } catch (error) {
     console.error('Failed to update workflow:', error)
     return NextResponse.json({ error: 'Failed to update workflow' }, { status: 500 })
@@ -44,11 +42,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const { db } = await connectToDatabase()
+    await connectToDatabase()
 
-    const result = await db.collection('workflows').deleteOne({ _id: new ObjectId(id) })
+    const workflow = await Workflow.findByIdAndDelete(id)
 
-    if (result.deletedCount === 0) {
+    if (!workflow) {
       return NextResponse.json({ error: 'Workflow not found' }, { status: 404 })
     }
 

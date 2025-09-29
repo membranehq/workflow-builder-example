@@ -1,7 +1,7 @@
 import { Handle, Position } from '@xyflow/react'
 import { Button } from '@/components/ui/button'
 import { WorkflowNode } from '../types/workflow'
-import { TrashIcon } from 'lucide-react'
+import { X } from 'lucide-react'
 import { ReactNode } from 'react'
 
 interface BaseNodeProps {
@@ -55,28 +55,26 @@ export function BaseNode({
           }}
         />
       )}
+      {onDelete && node && (
+        <Button
+          variant='ghost'
+          size='icon'
+          className='absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-500 z-10'
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete(node.id)
+          }}
+        >
+          <X className='h-2.5 w-2.5' />
+        </Button>
+      )}
       <div className={baseClasses} onClick={onClick}>
-        <div className={'flex items-center justify-between w-full'}>
-          <div className='flex items-center gap-3'>
-            <div className='shrink-0'>{icon}</div>
-            <div className='grow'>
-              <div className='text-sm font-medium text-gray-900'>{title}</div>
-              {subtitle && <div className='text-sm text-gray-500'>{subtitle}</div>}
-            </div>
+        <div className='flex items-center gap-3'>
+          <div className='shrink-0 bg-muted rounded-md p-2'>{icon}</div>
+          <div className='grow'>
+            <div className='text-sm font-medium text-gray-900'>{title}</div>
+            {subtitle && <div className='text-sm text-gray-500'>{subtitle}</div>}
           </div>
-          {onDelete && node && (
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8 text-gray-500 hover:text-red-500'
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(node.id)
-              }}
-            >
-              <TrashIcon className='h-4 w-4' />
-            </Button>
-          )}
         </div>
       </div>
       {showSourceHandle && (
