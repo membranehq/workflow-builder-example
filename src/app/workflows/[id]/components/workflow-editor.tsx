@@ -104,10 +104,12 @@ export function WorkflowEditor() {
 
     // Add action nodes
     const actionNodes = safeNodes.filter((node) => node.type === 'action')
-    const nodeHeight = 80 // Height of each node
+    const nodeHeight = 48 // Height of each node (scaled to 60%)
+    const firstActionTop = 210 // reduced so gap from trigger ~60px
+    const actionStep = 109 // nodeHeight + ~61px desired gap between actions
     actionNodes.forEach((node, index) => {
       const nodeTypeMetadata = node.nodeType ? nodeTypeDefinitions[node.nodeType] : undefined
-      const actionY = 250 + index * 150
+      const actionY = firstActionTop + index * actionStep
       flowNodes.push({
         id: node.id,
         type: 'action',
@@ -122,7 +124,7 @@ export function WorkflowEditor() {
 
       // Add plus node between current action and next action (or at end)
       const currentActionBottom = actionY + nodeHeight
-      const nextActionTop = index < actionNodes.length - 1 ? 250 + (index + 1) * 150 : actionY + 150
+      const nextActionTop = index < actionNodes.length - 1 ? firstActionTop + (index + 1) * actionStep : actionY + actionStep
       const plusY = (currentActionBottom + nextActionTop) / 2
 
       flowNodes.push({
@@ -143,11 +145,11 @@ export function WorkflowEditor() {
     if (triggerNode) {
       if (actionNodes.length === 0) {
         // No action nodes - place plus node below trigger
-        const triggerBottom = 100 + nodeHeight // 100 (trigger top) + 80 (height)
+        const triggerBottom = 100 + nodeHeight // 100 (trigger top) + 48 (height)
         flowNodes.push({
           id: 'plus-trigger',
           type: 'plus',
-          position: { x: 100, y: triggerBottom + 35 }, // 35px spacing below trigger
+          position: { x: 100, y: triggerBottom + 31 }, // ~half of desired ~61px gap
           data: {
             parentId: triggerNode.id,
             createNewNode: (afterId: string) => {
@@ -158,9 +160,8 @@ export function WorkflowEditor() {
         })
       } else {
         // Has action nodes - place plus node between trigger and first action
-        const triggerBottom = 100 + nodeHeight // 100 + 80 = 180
-        const firstActionTop = 250
-        const plusY = (triggerBottom + firstActionTop) / 2 // (180 + 250) / 2 = 215
+        const triggerBottom = 100 + nodeHeight // 100 + 48 = 148
+        const plusY = (triggerBottom + firstActionTop) / 2 // midpoint between trigger bottom and first action top
 
         flowNodes.push({
           id: 'plus-trigger',
@@ -382,6 +383,7 @@ export function WorkflowEditor() {
         onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}
         nodesDraggable={false}
+        defaultEdgeOptions={{ style: { strokeDasharray: '2 4', strokeLinecap: 'round', strokeWidth: 2.1 } }}
         fitView
         fitViewOptions={{ padding: 0.1, minZoom: 0.1, maxZoom: 1.5 }}
         defaultViewport={{ x: 0, y: 0, zoom: 0.1 }}

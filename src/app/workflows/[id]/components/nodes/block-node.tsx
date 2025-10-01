@@ -1,4 +1,3 @@
-import { ZapIcon } from 'lucide-react'
 import { NodeTypeMetadata } from '@/lib/node-types'
 import { BaseNode } from './base-node'
 import { WorkflowNode } from '../types/workflow'
@@ -14,14 +13,11 @@ interface BlockNodeProps {
 }
 
 export function BlockNode({ data, selected }: BlockNodeProps) {
+  const Icon = data.nodeTypeMetadata?.icon
   return (
     <BaseNode
       selected={selected}
-      icon={(() => {
-        const Icon = data.nodeTypeMetadata?.icon
-        if (Icon) return <Icon className='w-5 h-5 text-gray-700' />
-        return <ZapIcon className='w-5 h-5 text-gray-700' />
-      })()}
+      icon={Icon ? <Icon className='w-4 h-4 text-gray-600' /> : null}
       title={data.label}
       subtitle="Action"
       node={data.node}

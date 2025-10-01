@@ -1,7 +1,6 @@
 import { BaseNode } from './base-node'
 import { WorkflowNode } from '../types/workflow'
 import { NodeTypeMetadata } from '@/lib/node-types'
-import { ZapIcon } from 'lucide-react'
 
 interface ActionNodeProps {
   data: {
@@ -34,18 +33,13 @@ export function ActionNode({ data, selected }: ActionNodeProps) {
 
   const nodeInfo = getNodeTypeInfo()
 
-  const getIconForNodeType = () => {
-    const Icon = data.nodeTypeMetadata?.icon
-    if (Icon) {
-      return <Icon className='h-5 w-5 text-gray-700' />
-    }
-    return <ZapIcon className='h-5 w-5 text-gray-700' />
-  }
 
   return (
     <BaseNode
       selected={selected}
-      icon={getIconForNodeType()}
+      icon={data.nodeTypeMetadata?.icon ? (
+        <data.nodeTypeMetadata.icon className='w-4 h-4 text-gray-600' />
+      ) : null}
       title={nodeInfo.title}
       subtitle={nodeInfo.subtitle}
       node={data.node}

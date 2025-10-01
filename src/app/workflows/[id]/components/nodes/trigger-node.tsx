@@ -18,14 +18,14 @@ interface TriggerNodeProps {
 export function TriggerNode({ data, selected }: TriggerNodeProps) {
   if (data.isEmpty) {
     return (
-      <div className='relative w-[400px]'>
-        <div className='border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 p-4 h-[80px] flex items-center justify-center'>
+      <div className='relative w-[240px]'>
+        <div className='border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 p-4 h-[48px] flex items-center justify-center'>
           <div className='flex items-center gap-3'>
-            <div className='w-8 h-8 bg-gray-200 rounded flex items-center justify-center'>
-              <ZapIcon className='w-4 h-4 text-gray-500' />
+            <div className='w-5 h-5 bg-gray-200 rounded flex items-center justify-center'>
+              <ZapIcon className='w-3 h-3 text-gray-500' />
             </div>
             <button
-              className='px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md font-medium transition-colors'
+              className='px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md font-medium transition-colors text-sm'
               onClick={data.onClick}
             >
               Trigger
@@ -53,20 +53,16 @@ export function TriggerNode({ data, selected }: TriggerNodeProps) {
       color: 'blue'
     }
   }
-  const getIconForTriggerType = () => {
-    const Icon = data.triggerTypeMetadata?.icon
-    if (Icon) {
-      return <Icon className='h-5 w-5 text-gray-700' />
-    }
-    return <ZapIcon className='h-5 w-5 text-gray-700' />
-  }
+
 
   const triggerInfo = getTriggerInfo()
 
   return (
     <BaseNode
       selected={selected}
-      icon={getIconForTriggerType()}
+      icon={data.triggerTypeMetadata?.icon ? (
+        <data.triggerTypeMetadata.icon className='w-4 h-4 text-gray-600' />
+      ) : null}
       title={triggerInfo.title}
       subtitle={triggerInfo.subtitle}
       node={data.node}

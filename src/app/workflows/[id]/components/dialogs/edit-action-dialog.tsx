@@ -133,7 +133,7 @@ export function EditNodeDialog({ isOpen, onClose, onSubmit, node, nodeTypes }: A
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='max-w-lg'>
+      <DialogContent className='max-w-xl'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             {(() => {

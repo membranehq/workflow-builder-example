@@ -61,7 +61,7 @@ export function EditTriggerDialog({ isOpen, onClose, onUpdateWorkflow, node, tri
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='max-w-lg'>
+      <DialogContent className='max-w-xl'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             {(() => {

@@ -6,7 +6,7 @@ import { ReactNode } from 'react'
 
 interface BaseNodeProps {
   selected?: boolean
-  icon: ReactNode
+  icon: ReactNode | null
   title: string
   subtitle?: string
   node?: WorkflowNode
@@ -30,7 +30,7 @@ export function BaseNode({
   className = '',
 }: BaseNodeProps) {
   const baseClasses = `
-    flex items-center p-4 rounded-lg border-2 bg-white w-[400px] h-[80px]
+    flex items-center p-4 rounded-lg border-2 bg-white w-[240px] h-[48px]
     ${selected ? 'border-blue-500' : 'border-gray-200'}
     ${onClick ? 'cursor-pointer hover:border-gray-400' : ''}
     ${className}
@@ -46,9 +46,9 @@ export function BaseNode({
           style={{
             top: 0,
             left: '50%',
-            width: '1px',
-            height: '1px',
-            transform: 'none',
+            width: '0px',
+            height: '0px',
+            transform: 'translateX(-1px)',
             border: 'none',
             borderRadius: 0,
             background: 'transparent',
@@ -59,21 +59,21 @@ export function BaseNode({
         <Button
           variant='ghost'
           size='icon'
-          className='absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-500 z-10'
+          className='absolute -top-2 -right-2 h-4 w-4 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-500 z-10 [&_svg]:!h-2 [&_svg]:!w-2'
           onClick={(e) => {
             e.stopPropagation()
             onDelete(node.id)
           }}
         >
-          <X className='h-2.5 w-2.5' />
+          <X />
         </Button>
       )}
       <div className={baseClasses} onClick={onClick}>
         <div className='flex items-center gap-3'>
-          <div className='shrink-0 bg-muted rounded-md p-2'>{icon}</div>
+          <div className='shrink-0 bg-muted rounded-md p-1'>{icon}</div>
           <div className='grow'>
-            <div className='text-sm font-medium text-gray-900'>{title}</div>
-            {subtitle && <div className='text-sm text-gray-500'>{subtitle}</div>}
+            <div className='text-[11px] font-medium text-gray-900'>{title}</div>
+            {subtitle && <div className='text-[10px] text-gray-500'>{subtitle}</div>}
           </div>
         </div>
       </div>
@@ -85,9 +85,9 @@ export function BaseNode({
           style={{
             bottom: 0,
             left: '50%',
-            width: '1px',
-            height: '1px',
-            transform: 'none',
+            width: '0px',
+            height: '0px',
+            transform: 'translateX(-1px)',
             border: 'none',
             borderRadius: 0,
             background: 'transparent',

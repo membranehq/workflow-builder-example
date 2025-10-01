@@ -20,7 +20,13 @@ export function ConnectionEdge({ source, sourceX, sourceY, targetX, targetY, dat
 
   return (
     <g className='react-flow__edge'>
-      <path className='react-flow__edge-path stroke-gray-300 dark:stroke-gray-600' d={edgePath} strokeWidth={2} />
+      <path
+        className='react-flow__edge-path stroke-gray-300 dark:stroke-gray-600'
+        d={edgePath}
+        strokeWidth={2}
+        strokeDasharray='2 4'
+        strokeLinecap='round'
+      />
       <foreignObject
         width={EDGE_PLUS_SIZE}
         height={EDGE_PLUS_SIZE}

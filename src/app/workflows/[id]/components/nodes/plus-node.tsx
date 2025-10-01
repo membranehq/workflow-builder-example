@@ -11,31 +11,30 @@ interface PlusNodeProps {
 
 export function PlusNode({ data }: PlusNodeProps) {
   return (
-    <div className="relative">
+    <div className='relative'>
       <Handle
-        type="target"
+        type='target'
         position={Position.Top}
-        className="opacity-0! top-0! pointer-events-none!"
+        className='opacity-0! top-0! pointer-events-none!'
         style={{
           top: 0,
           left: '50%',
-          width: '1px',
-          height: '1px',
-          transform: 'none',
+          width: '0px',
+          height: '0px',
+          transform: 'translateX(-1px)',
           border: 'none',
           borderRadius: 0,
           background: 'transparent',
         }}
       />
 
-      <div className="flex items-center justify-center w-[400px] h-[30px]">
+      <div className='flex items-center justify-center w-[240px] h-[18px]'>
         <Button
-          variant="outline"
-          size="sm"
-          className="h-6 w-6 rounded-none border-2 border-gray-300 hover:border-gray-400 bg-gray-100 hover:bg-gray-200"
+          variant='outline'
+          className='h-4 w-4 p-0 aspect-square rounded-none border-2 border-gray-300 hover:border-gray-400 bg-gray-100 hover:bg-gray-200 [&_svg]:!size-2'
           onClick={() => data.createNewNode(data.parentId)}
         >
-          <Plus className="h-3 w-3 text-gray-600" />
+          <Plus className='text-gray-600' />
         </Button>
       </div>
     </div>
