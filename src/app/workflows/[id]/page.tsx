@@ -91,13 +91,19 @@ function WorkflowDetailInner({ id }: { id: string }) {
   return (
     <div className='h-[calc(100vh-4rem)] flex flex-col'>
       <div className='border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950'>
-        <div className='flex h-14 items-center justify-between px-4 space-x-4 max-w-7xl mx-auto sm:px-6 lg:px-8'>
-          <div className='flex items-center flex-1 min-w-0'>
+        <div className='grid grid-cols-3 h-14 items-center px-4 max-w-7xl mx-auto sm:px-6 lg:px-8'>
+          {/* Left spacer to balance layout */}
+          <div className='min-w-0' />
+          {/* Centered name editor */}
+          <div className='min-w-0 justify-self-center flex items-center gap-2'>
+            <div>
+              Workflows /
+            </div>
             <h1
               ref={nameRef}
               contentEditable
               suppressContentEditableWarning
-              className='text-lg font-semibold text-gray-900 dark:text-white outline-none px-2 py-1 -mx-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:bg-gray-100 dark:focus:bg-gray-800 transition-colors cursor-text min-w-[300px]'
+              className=' font-semibold text-gray-900 dark:text-white outline-none px-2 py-1 -mx-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:bg-gray-100 dark:focus:bg-gray-800 transition-colors cursor-text  text-left'
               onFocus={(e) => {
                 originalNameRef.current = e.currentTarget.textContent || ''
                 // Select all text on focus
@@ -130,7 +136,8 @@ function WorkflowDetailInner({ id }: { id: string }) {
               {workflow.name}
             </h1>
           </div>
-          <div className='flex items-center space-x-2'>
+          {/* Actions on the right */}
+          <div className='flex items-center space-x-2 justify-self-end'>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -162,13 +169,13 @@ function WorkflowDetailInner({ id }: { id: string }) {
                       <div>
                         <h4 className='text-sm font-medium text-gray-900 mb-2'>Parameters</h4>
 
-                          <DataInput
-                            schema={triggerInputSchema}
-                            value={triggerInput}
-                            variablesSchema={{ type: 'object', properties: {} }}
-                            onChange={setTriggerInput}
-                          />
-                   
+                        <DataInput
+                          schema={triggerInputSchema}
+                          value={triggerInput}
+                          variablesSchema={{ type: 'object', properties: {} }}
+                          onChange={setTriggerInput}
+                        />
+
                       </div>
                     </div>
                   ) : (

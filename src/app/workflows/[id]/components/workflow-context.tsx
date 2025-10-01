@@ -18,6 +18,8 @@ type WorkflowContextValue = {
   triggerTypes: typeof TRIGGER_TYPES
   refresh: () => void
   deleteNode: (nodeId: string) => void
+  selectedNodeId: string | null
+  setSelectedNodeId: (nodeId: string | null) => void
 }
 
 const WorkflowContext = React.createContext<WorkflowContextValue | undefined>(undefined)
@@ -58,8 +60,17 @@ function patchJson(url: string, body: unknown) {
 
 export function WorkflowProvider({ id, children }: { id: string; children: React.ReactNode }) {
   const key = id ? `/api/workflows/${id}` : null
+  const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
 
   const { data, error, isLoading, mutate } = useSWR<WorkflowState>(key, authenticatedFetcher)
+
+  // Auto-select first node when workflow loads
+  React.useEffect(() => {
+    if (data?.nodes && data.nodes.length > 0 && !selectedNodeId) {
+      const firstNode = data.nodes[0]
+      setSelectedNodeId(firstNode.id)
+    }
+  }, [data?.nodes, selectedNodeId])
 
   const { trigger: triggerSave } = useSWRMutation(
     key ? `${key}/nodes` : null,
@@ -123,7 +134,9 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
     triggerTypes: TRIGGER_TYPES,
     refresh: () => mutate(),
     deleteNode,
-  }), [data, isLoading, error, setWorkflow, saveNodes, saveWorkflowName, mutate, deleteNode])
+    selectedNodeId,
+    setSelectedNodeId,
+  }), [data, isLoading, error, setWorkflow, saveNodes, saveWorkflowName, mutate, deleteNode, selectedNodeId, setSelectedNodeId])
 
   return <WorkflowContext.Provider value={value}>{children}</WorkflowContext.Provider>
 }

@@ -24,11 +24,10 @@ import { useWorkflow } from './workflow-context'
 import { TriggerNode } from './nodes/trigger-node'
 import { ActionNode } from './nodes/action-node'
 import { PlusNode } from './nodes/plus-node'
-import { EditNodeDialog } from './dialogs/edit-action-dialog'
 import { NodeCreateDialog } from './dialogs/node-create-dialog'
 import { TriggerCreateDialog } from './dialogs/trigger/trigger-create-dialog'
 import { v4 as uuidv4 } from 'uuid'
-import { EditTriggerDialog } from './dialogs/trigger/edit-trigger-dialog'
+import { ConfigPanel } from './config-panel'
 
 type WorkflowEditorProps = Record<string, never>
 
@@ -39,24 +38,11 @@ const nodeTypes: NodeTypes = {
 }
 
 export function WorkflowEditor() {
-  const { workflow, setWorkflow, saveNodes, nodeTypes: nodeTypeDefinitions, triggerTypes, deleteNode } = useWorkflow()
+  const { workflow, setWorkflow, saveNodes, nodeTypes: nodeTypeDefinitions, triggerTypes, deleteNode, selectedNodeId, setSelectedNodeId } = useWorkflow()
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
-  const [triggerDialog, setTriggerDialog] = useState<{
-    isOpen: boolean
-    node?: WorkflowNode
-  }>({
-    isOpen: false,
-  })
-
-  const [actionDialog, setActionDialog] = useState<{
-    isOpen: boolean
-    node?: WorkflowNode
-    afterNodeId?: string
-  }>({
-    isOpen: false,
-  })
+  const selectedNode = selectedNodeId ? (workflow?.nodes ?? []).find((n) => n.id === selectedNodeId) ?? null : null
 
   const [nodeCreateDialogOpen, setNodeCreateDialogOpen] = useState(false)
   const [triggerCreateDialogOpen, setTriggerCreateDialogOpen] = useState(false)
@@ -87,6 +73,8 @@ export function WorkflowEditor() {
           node: triggerNode,
           onDelete: handleDeleteNode,
           triggerTypeMetadata,
+          position: 1, // Trigger is always position 1
+          selectedNodeId,
         } as NodeData,
       })
     } else {
@@ -98,6 +86,7 @@ export function WorkflowEditor() {
         data: {
           isEmpty: true,
           onClick: () => setTriggerCreateDialogOpen(true),
+          position: 1, // Empty trigger is also position 1
         },
       })
     }
@@ -119,6 +108,8 @@ export function WorkflowEditor() {
           node: node,
           onDelete: handleDeleteNode,
           nodeTypeMetadata,
+          position: index + 2, // Actions start from position 2 (after trigger)
+          selectedNodeId,
         } as NodeData,
       })
 
@@ -179,7 +170,7 @@ export function WorkflowEditor() {
     }
 
     return flowNodes
-  }, [workflow?.nodes, handleDeleteNode, triggerTypes, nodeTypeDefinitions])
+  }, [workflow?.nodes, handleDeleteNode, triggerTypes, nodeTypeDefinitions, selectedNodeId])
 
   // Convert to edges for ReactFlow
   const reactFlowEdges = useMemo(() => {
@@ -263,53 +254,25 @@ export function WorkflowEditor() {
       const workflowNode = (workflow?.nodes ?? []).find((n) => n.id === node.id)
       if (!workflowNode) return
 
-      if (workflowNode.type === 'trigger') {
-        setTriggerDialog({
-          isOpen: true,
-          node: workflowNode,
-        })
-      } else if (workflowNode.type === 'action') {
-        setActionDialog({
-          isOpen: true,
-          node: workflowNode,
-        })
-      }
+      setSelectedNodeId(workflowNode.id)
     },
-    [workflow?.nodes],
+    [workflow?.nodes, setSelectedNodeId],
   )
 
-  const handleTriggerSubmit = useCallback(
+  const handleNodeUpdate = useCallback(
     (nodeData: Omit<WorkflowNode, 'id'>) => {
-      if (!workflow) return
-      if (triggerDialog.node) {
-        const updatedNodes = workflow.nodes.map((node) =>
-          node.id === triggerDialog.node!.id ? { ...node, ...nodeData } : node,
-        )
-        setWorkflow({
-          ...workflow,
-          nodes: updatedNodes,
-        })
-        void saveNodes(updatedNodes)
-      }
-    },
-    [triggerDialog, workflow, setWorkflow, saveNodes],
-  )
+      if (!workflow || !selectedNode) return
 
-  const handleActionSubmit = useCallback(
-    (nodeData: Omit<WorkflowNode, 'id'>) => {
-      if (!workflow) return
-      if (actionDialog.node) {
-        const updatedNodes = workflow.nodes.map((node) =>
-          node.id === actionDialog.node!.id ? { ...node, ...nodeData } : node,
-        )
-        setWorkflow({
-          ...workflow,
-          nodes: updatedNodes,
-        })
-        void saveNodes(updatedNodes)
-      }
+      const updatedNodes = workflow.nodes.map((node) =>
+        node.id === selectedNode.id ? { ...node, ...nodeData } : node,
+      )
+      setWorkflow({
+        ...workflow,
+        nodes: updatedNodes,
+      })
+      void saveNodes(updatedNodes)
     },
-    [actionDialog, workflow, setWorkflow, saveNodes],
+    [selectedNode, workflow, setWorkflow, saveNodes],
   )
 
   const handleCreateNodeFromType = useCallback(
@@ -373,46 +336,36 @@ export function WorkflowEditor() {
   )
 
   return (
-    <>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={handleNodesChange}
-        onEdgesChange={handleEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={handleNodeClick}
-        nodeTypes={nodeTypes}
-        nodesDraggable={false}
-        defaultEdgeOptions={{ style: { strokeDasharray: '2 4', strokeLinecap: 'round', strokeWidth: 2.1 } }}
-        fitView
-        fitViewOptions={{ padding: 0.1, minZoom: 0.1, maxZoom: 1.5 }}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.1 }}
-        className='bg-gray-50'
-      >
-        <Background />
-        <Controls />
-        <MiniMap />
-      </ReactFlow>
+    <div className="flex h-full">
+      <div className="flex-1">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={handleNodesChange}
+          onEdgesChange={handleEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={handleNodeClick}
+          nodeTypes={nodeTypes}
+          nodesDraggable={false}
+          defaultEdgeOptions={{ style: { strokeDasharray: '2 4', strokeLinecap: 'round', strokeWidth: 2.1 } }}
+          fitView
+          fitViewOptions={{ padding: 0.1, minZoom: 0.1, maxZoom: 1.5 }}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.1 }}
+          className='bg-gray-50'
+        >
+          <Background />
+          <Controls />
+          <MiniMap />
+        </ReactFlow>
+      </div>
 
-      {triggerDialog.node && (
-        <EditTriggerDialog
-          isOpen={triggerDialog.isOpen}
-          onClose={() => setTriggerDialog({ isOpen: false })}
-          onUpdateWorkflow={handleTriggerSubmit}
-          node={triggerDialog.node}
-          triggerTypes={triggerTypes}
-        />
-      )}
-
-      {actionDialog.node && (
-        <EditNodeDialog
-          isOpen={actionDialog.isOpen}
-          onClose={() => setActionDialog({ isOpen: false })}
-          onSubmit={handleActionSubmit}
-          node={actionDialog.node}
-          nodeTypes={nodeTypeDefinitions}
-        />
-      )}
+      <ConfigPanel
+        selectedNode={selectedNode}
+        onClose={() => setSelectedNodeId(null)}
+        onUpdateNode={handleNodeUpdate}
+        nodeTypes={nodeTypeDefinitions}
+        triggerTypes={triggerTypes}
+      />
 
       <NodeCreateDialog
         isOpen={nodeCreateDialogOpen}
@@ -430,7 +383,7 @@ export function WorkflowEditor() {
         triggerTypes={triggerTypes}
         onCreate={handleCreateTriggerFromType}
       />
-    </>
+    </div>
   )
 }
 

@@ -1,8 +1,7 @@
 import { Handle, Position } from '@xyflow/react'
-import { Button } from '@/components/ui/button'
 import { WorkflowNode } from '../types/workflow'
-import { X } from 'lucide-react'
 import { ReactNode } from 'react'
+import { NodeOptionsMenu } from './node-options-menu'
 
 interface BaseNodeProps {
   selected?: boolean
@@ -15,6 +14,8 @@ interface BaseNodeProps {
   showSourceHandle?: boolean
   showTargetHandle?: boolean
   className?: string
+  position?: number
+  selectedNodeId?: string | null
 }
 
 export function BaseNode({
@@ -28,11 +29,16 @@ export function BaseNode({
   showSourceHandle = true,
   showTargetHandle = true,
   className = '',
+  position,
+  selectedNodeId,
 }: BaseNodeProps) {
+  const isSelected = selected || (node && selectedNodeId === node.id)
+
   const baseClasses = `
-    flex items-center p-4 rounded-lg border-2 bg-white w-[240px] h-[48px]
-    ${selected ? 'border-blue-500' : 'border-gray-200'}
-    ${onClick ? 'cursor-pointer hover:border-gray-400' : ''}
+    flex items-center p-2 rounded-md border border-gray-200 bg-white w-[240px] h-[48px] shadow-sm
+    transition-all duration-200 ease-in-out
+    ${isSelected ? 'shadow-md ring-2 ring-blue-500 border-blue-500' : ''}
+    ${onClick ? 'cursor-pointer hover:shadow-md hover:border-gray-300' : ''}
     ${className}
   `
 
@@ -55,26 +61,26 @@ export function BaseNode({
           }}
         />
       )}
-      {onDelete && node && (
-        <Button
-          variant='ghost'
-          size='icon'
-          className='absolute -top-2 -right-2 h-4 w-4 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-500 z-10 [&_svg]:!h-2 [&_svg]:!w-2'
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete(node.id)
-          }}
-        >
-          <X />
-        </Button>
-      )}
       <div className={baseClasses} onClick={onClick}>
         <div className='flex items-center gap-3'>
           <div className='shrink-0 bg-muted rounded-md p-1'>{icon}</div>
-          <div className='grow'>
-            <div className='text-[11px] font-medium text-gray-900'>{title}</div>
+          <div className='flex-1'>
+            <div className='text-[11px] font-medium text-gray-900 flex items-center gap-2'>
+              {position && (
+                <span className='text-xs font-medium'>
+                  {position}.
+                </span>
+              )}
+              {title}
+            </div>
             {subtitle && <div className='text-[10px] text-gray-500'>{subtitle}</div>}
           </div>
+          {onDelete && node && (
+            <NodeOptionsMenu
+              onDelete={onDelete}
+              nodeId={node.id}
+            />
+          )}
         </div>
       </div>
       {showSourceHandle && (

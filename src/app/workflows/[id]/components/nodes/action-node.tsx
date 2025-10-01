@@ -8,6 +8,8 @@ interface ActionNodeProps {
     node: WorkflowNode
     onDelete: (nodeId: string) => void
     nodeTypeMetadata?: NodeTypeMetadata
+    position?: number
+    selectedNodeId?: string | null
   }
   selected?: boolean
 }
@@ -44,6 +46,8 @@ export function ActionNode({ data, selected }: ActionNodeProps) {
       subtitle={nodeInfo.subtitle}
       node={data.node}
       onDelete={data.onDelete}
+      position={data.position}
+      selectedNodeId={data.selectedNodeId}
     />
   )
 }

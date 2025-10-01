@@ -29,6 +29,8 @@ export interface NodeData extends Record<string, unknown> {
   onDelete: (nodeId: string) => void
   nodeTypeMetadata?: NodeTypeMetadata
   triggerTypeMetadata?: TriggerType
+  position?: number
+  selectedNodeId?: string | null
 }
 
 export interface PlusNodeData extends Record<string, unknown> {

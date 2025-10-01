@@ -11,6 +11,8 @@ interface TriggerNodeProps {
     node?: WorkflowNode
     onDelete?: (nodeId: string) => void
     triggerTypeMetadata?: TriggerType
+    position?: number
+    selectedNodeId?: string | null
   }
   selected?: boolean
 }
@@ -19,15 +21,20 @@ export function TriggerNode({ data, selected }: TriggerNodeProps) {
   if (data.isEmpty) {
     return (
       <div className='relative w-[240px]'>
-        <div className='border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 p-4 h-[48px] flex items-center justify-center'>
+        <div className='border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 p-2 h-[48px] flex items-center justify-center'>
           <div className='flex items-center gap-3'>
             <div className='w-5 h-5 bg-gray-200 rounded flex items-center justify-center'>
               <ZapIcon className='w-3 h-3 text-gray-500' />
             </div>
             <button
-              className='px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md font-medium transition-colors text-sm'
+              className='px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md font-medium transition-colors text-sm flex items-center gap-2'
               onClick={data.onClick}
             >
+              {data.position && (
+                <span className='text-xs font-medium'>
+                  {data.position}.
+                </span>
+              )}
               Trigger
             </button>
           </div>
@@ -68,6 +75,8 @@ export function TriggerNode({ data, selected }: TriggerNodeProps) {
       node={data.node}
       onDelete={data.onDelete}
       showTargetHandle={false}
+      position={data.position}
+      selectedNodeId={data.selectedNodeId}
     />
   )
 }
