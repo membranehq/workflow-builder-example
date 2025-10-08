@@ -1,0 +1,32 @@
+{
+  "name": "@repo/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "dev": "tsc --build --watch",
+    "start": "node -r dotenv/config dist/worker.js",
+    "start:watch": "nodemon -r dotenv/config dist/worker.js"
+  },
+  "dependencies": {
+    "@repo/shared": "workspace:*",
+    "@membranehq/sdk": "^0.7.1",
+    "@temporalio/activity": "^1.13.0",
+    "@temporalio/client": "^1.13.0",
+    "@temporalio/worker": "^1.13.0",
+    "@temporalio/workflow": "^1.13.0",
+    "dotenv": "^17.2.1",
+    "mongodb": "^6.20.0",
+    "mongoose": "^8.18.0",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "nodemon": "^3.1.10",
+    "typescript": "^5.9.2"
+  }
+}
