@@ -1,7 +1,10 @@
 import { v4 as uuidv4 } from 'uuid'
 
 // Type-safe window and localStorage access for both browser and Node.js
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const window: any
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const localStorage: any
 
 const AUTH_ID_KEY = 'integration_customer_id'
