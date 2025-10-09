@@ -1,4 +1,3 @@
-import { HttpMethod } from '@temporal/types'
 import type { ElementType } from 'react'
 import { GlobeIcon, Package, MousePointerClickIcon, BoltIcon } from 'lucide-react'
 
@@ -76,7 +75,7 @@ export const NODE_TYPES: Record<string, NodeTypeMetadata> = {
         },
         method: {
           type: 'string',
-          enum: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as HttpMethod[],
+          enum: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
           description: 'HTTP method to use for the request',
         },
         headers: {

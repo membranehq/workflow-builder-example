@@ -1,4 +1,6 @@
-import { NodeType, HttpMethod } from '@temporal/types'
+export type NodeType = 'http' | 'filter' | 'condition' | 'transform' | 'trigger' | 'action'
+
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
 
 export interface NodeTypeConfig {
   type: NodeType

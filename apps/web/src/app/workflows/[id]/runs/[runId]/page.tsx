@@ -141,7 +141,7 @@ export default function WorkflowRunDetailPage() {
         </div>
         <div className="flex-1 p-8">
           <div className="max-w-5xl mx-auto space-y-4">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 5 }, (_, i) => (
               <Skeleton key={i} className="h-24 w-full" />
             ))}
           </div>
@@ -276,7 +276,7 @@ export default function WorkflowRunDetailPage() {
           </div>
 
           {/* Input */}
-          {run.input && (
+          {run.input != null && (
             <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
                 Input
@@ -307,8 +307,8 @@ export default function WorkflowRunDetailPage() {
                 <div
                   key={index}
                   className={`p-4 rounded-lg border ${result.success
-                      ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10'
-                      : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10'
+                    ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10'
+                    : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10'
                     }`}
                 >
                   <div className="flex items-center justify-between mb-3">
@@ -329,7 +329,7 @@ export default function WorkflowRunDetailPage() {
                   <div className="text-sm text-gray-700 dark:text-gray-300 mb-3">
                     {result.message}
                   </div>
-                  {result.output && (
+                  {result.output != null && (
                     <div className="mt-3">
                       <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
                         Output:
@@ -350,7 +350,7 @@ export default function WorkflowRunDetailPage() {
                           Code: {result.error.code}
                         </div>
                       )}
-                      {result.error.details && (
+                      {result.error.details != null && (
                         <div className="mt-2">
                           <JsonViewer data={result.error.details} />
                         </div>
