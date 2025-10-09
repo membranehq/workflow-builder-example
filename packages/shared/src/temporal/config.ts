@@ -15,3 +15,5 @@ export const TEMPORAL_CONFIG = {
   API_KEY: envVars.TEMPORAL_API_KEY,
   NAMESPACE: envVars.TEMPORAL_NAMESPACE,
 } as const
+
+

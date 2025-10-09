@@ -1,13 +1,14 @@
 import 'dotenv/config'
 import { NativeConnection, Worker } from '@temporalio/worker'
-import * as activities from './activities.js'
-import { TEMPORAL_CONFIG } from './config.js'
+import * as activities from '@repo/shared/temporal/activities'
+import { TEMPORAL_CONFIG } from '@repo/shared'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export async function runWorker(): Promise<void> {
+  console.log("✨ Spinning up worker")
   const connection = await NativeConnection.connect({
     address: TEMPORAL_CONFIG.ADDRESS,
     apiKey: TEMPORAL_CONFIG.API_KEY,
@@ -18,7 +19,7 @@ export async function runWorker(): Promise<void> {
     const worker = await Worker.create({
       connection,
       activities,
-      workflowsPath: path.resolve(__dirname, './workflows.js'),
+      workflowsPath: fileURLToPath(import.meta.resolve('@repo/shared/temporal/workflows')),
       taskQueue: TEMPORAL_CONFIG.TASK_QUEUE_NAME,
       namespace: TEMPORAL_CONFIG.NAMESPACE,
       maxConcurrentWorkflowTaskExecutions: 10,

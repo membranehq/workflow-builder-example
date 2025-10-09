@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectToDatabase, WorkflowRun } from '@repo/shared'
+import { connectToDatabase, WorkflowRun, createTemporalClient, TEMPORAL_CONFIG, executeWorkflow, type WorkflowNode } from '@repo/shared'
 import { Workflow } from '@/models/workflow'
 import { getAuthFromRequest } from '@/lib/server-auth'
-import { createTemporalClient, TEMPORAL_CONFIG, executeWorkflow, type WorkflowNode } from '@repo/worker'
 import { generateIntegrationToken } from '@/lib/integration-token'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

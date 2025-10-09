@@ -1,7 +1,8 @@
 import { executeWorkflowNode, EnhancedNodeExecutionResult } from './node-execution.js'
 import { RetryPolicy } from '@temporalio/common'
 import { WorkflowNode } from './types.js'
-import { connectToDatabase, WorkflowRun } from '@repo/shared'
+import { connectToDatabase } from '../lib/mongodb.js'
+import { WorkflowRun } from '../models/workflow-run.js'
 
 export const activityRetryPolicy: RetryPolicy = {
   maximumAttempts: 2,
@@ -118,3 +119,5 @@ async function updateWorkflowRun(
     // Don't throw - we don't want to fail the workflow just because we couldn't update the run record
   }
 }
+
+

@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@repo/shared": "workspace:*",
-    "@repo/worker": "workspace:*",
     "@membranehq/react": "^0.5.5",
     "@membranehq/sdk": "^0.7.1",
     "@radix-ui/react-alert-dialog": "^1.1.15",

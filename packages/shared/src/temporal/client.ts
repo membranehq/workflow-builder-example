@@ -23,3 +23,5 @@ export async function createTemporalClient(): Promise<WorkflowClient> {
     namespace: TEMPORAL_CONFIG.NAMESPACE,
   })
 }
+
+
