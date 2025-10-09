@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -40,7 +40,6 @@ interface WorkflowRun {
 
 export default function WorkflowRunDetailPage() {
   const { id, runId } = useParams()
-  const router = useRouter()
   const workflowId = Array.isArray(id) ? id[0] : (id as string)
   const resolvedRunId = Array.isArray(runId) ? runId[0] : (runId as string)
 
@@ -171,7 +170,7 @@ export default function WorkflowRunDetailPage() {
               {error || 'Run not found'}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 mb-4">
-              The workflow run you're looking for doesn't exist or has been deleted.
+              The workflow run you are looking for does not exist or has been deleted.
             </p>
             <Link href={`/workflows/${workflowId}/runs`}>
               <Button variant="outline">
