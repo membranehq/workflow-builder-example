@@ -19,6 +19,7 @@
     "@temporalio/client": "^1.13.0",
     "@temporalio/worker": "^1.13.0",
     "@temporalio/workflow": "^1.13.0",
+    "@temporalio/common": "^1.13.0",
     "dotenv": "^17.2.1",
     "mongodb": "^6.20.0",
     "mongoose": "^8.18.0",
