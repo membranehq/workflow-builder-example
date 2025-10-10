@@ -107,10 +107,10 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
             <Minimizer title="Configure Action Input" defaultOpen={true}>
               <DataInput
                 schema={selectedAction?.inputSchema}
-                value={value.inputMapping}
+                value={value.config?.inputMapping}
                 variablesSchema={variableSchema}
                 onChange={(configuration) => {
-                  onChange({ ...value, inputMapping: configuration })
+                  onChange({ ...value, config: { ...value.config, inputMapping: configuration } })
                 }}
               />
             </Minimizer>

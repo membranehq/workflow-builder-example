@@ -108,11 +108,11 @@ export interface WorkflowNode {
   type: NodeType
   triggerType?: TriggerType
   nodeType?: ActionNodeType
-  inputMapping?: Record<string, unknown>
   config?: {
     inputSchema?: Record<string, unknown>
     outputSchema?: Record<string, unknown>
     actionId?: string
+    inputMapping?: Record<string, unknown>
   }
 }
 

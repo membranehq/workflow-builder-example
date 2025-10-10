@@ -11,7 +11,6 @@ export interface WorkflowNode {
   nodeType?: string
   triggerType?: string // Specific trigger type (e.g., 'manual', 'webhook', 'schedule')
   parametersSchema?: DataSchema
-  inputMapping?: Record<string, unknown>
   outputSchema?: JSONSchema
   config?: Record<string, unknown>
 }

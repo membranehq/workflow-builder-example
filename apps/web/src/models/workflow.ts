@@ -8,7 +8,7 @@ export interface IWorkflowNode {
   nodeType?: string
   triggerType?: string
   parametersSchema?: DataSchema
-  inputMapping?: Record<string, unknown>
+
   config?: Record<string, unknown>
 }
 
@@ -70,11 +70,6 @@ const workflowNodeSchema = new mongoose.Schema<IWorkflowNode>(
     triggerType: {
       type: String,
       trim: true,
-    },
-    inputMapping: {
-      type: Map,
-      of: mongoose.Schema.Types.Mixed,
-      default: null,
     },
     config: {
       type: Map,

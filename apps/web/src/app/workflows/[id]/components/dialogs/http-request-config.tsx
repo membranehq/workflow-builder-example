@@ -23,12 +23,15 @@ export function HttpRequestConfig({ value, onChange, variableSchema, nodeTypeCon
         >
           <DataInput
             schema={nodeTypeConfig.configurationSchema as DataSchema}
-            value={value.inputMapping}
+            value={value.config?.inputMapping}
             variablesSchema={variableSchema}
             onChange={(configuration) => {
               onChange({
                 ...value,
-                inputMapping: configuration,
+                config: {
+                  ...value.config,
+                  inputMapping: configuration,
+                },
               })
             }}
           />

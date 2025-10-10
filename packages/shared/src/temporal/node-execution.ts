@@ -106,7 +106,7 @@ export async function executeTriggerNode(
         output = {
           triggerType: 'manual',
           timestamp: new Date().toISOString(),
-          event: node.inputMapping?.event || 'manual.trigger',
+          event: node.config?.inputMapping?.event || 'manual.trigger',
           ...triggerInput,
         }
         break
@@ -114,7 +114,7 @@ export async function executeTriggerNode(
         output = {
           triggerType: 'event',
           timestamp: new Date().toISOString(),
-          event: node.inputMapping?.event || 'workflow.triggered',
+          event: node.config?.inputMapping?.event || 'workflow.triggered',
           // Include trigger input data
           ...triggerInput,
         }
@@ -127,7 +127,7 @@ export async function executeTriggerNode(
       id: `${node.id}-${Date.now()}`,
       nodeId: node.id,
       success: true,
-      input: { ...node.inputMapping, ...triggerInput },
+      input: { ...node.config?.inputMapping, ...triggerInput },
       output,
     }
   } catch (error) {
@@ -135,7 +135,7 @@ export async function executeTriggerNode(
       id: `${node.id}-${Date.now()}`,
       nodeId: node.id,
       success: false,
-      input: { ...node.inputMapping, ...triggerInput },
+      input: { ...node.config?.inputMapping, ...triggerInput },
       error: {
         message: error instanceof Error ? error.message : 'Unknown error',
         code: 'TRIGGER_EXECUTION_ERROR',
@@ -297,7 +297,9 @@ export async function executeWorkflowNode(
   triggerInput: Record<string, unknown> = {},
 ): Promise<EnhancedNodeExecutionResult> {
   const resolvedInputs =
-    Object.keys(node.inputMapping || {}).length > 0 ? resolveVariables(node.inputMapping!, previousResults) : {}
+    Object.keys(node?.config?.inputMapping || {}).length > 0
+      ? resolveVariables(node?.config?.inputMapping!, previousResults)
+      : {}
 
   let result: NodeExecutionResult
 
@@ -329,5 +331,3 @@ export async function executeWorkflowNode(
     nodeName: node.name,
   }
 }
-
-
