@@ -140,6 +140,12 @@ export function ConfigPanel({ selectedNode, onClose, onUpdateNode, nodeTypes, tr
   const availableTriggerTypes = Object.values(triggerTypes)
   const selectedTriggerTypeConfig = formData?.triggerType ? triggerTypes[formData.triggerType] : undefined
 
+  // Don't show the panel if workflow has no nodes
+  const hasNodes = workflow?.nodes && workflow.nodes.length > 0
+  if (!hasNodes) {
+    return null
+  }
+
   if (!selectedNode || !formData) {
     return (
       <div className='w-[420px] bg-white border-l border-gray-200 p-6 flex items-center justify-center'>

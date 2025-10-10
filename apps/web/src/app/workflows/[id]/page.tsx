@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useRef, useMemo } from 'react'
-import { Play, History } from 'lucide-react'
+import { Play, History, Workflow } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DataInput, DataSchema } from '@membranehq/react'
 import { getAuthHeaders } from '@/lib/fetch-utils'
@@ -69,7 +69,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
 
   if (isLoading) {
     return (
-      <div className='h-[calc(100vh-4rem)] flex items-center justify-center'>
+      <div className='h-full flex items-center justify-center'>
         <div className='h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse' />
       </div>
     )
@@ -77,7 +77,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
 
   if (!workflow) {
     return (
-      <div className='h-[calc(100vh-4rem)] flex items-center justify-center'>
+      <div className='h-full flex items-center justify-center'>
         <div className='text-center'>
           <h2 className='text-lg font-medium text-gray-900 dark:text-white'>Workflow not found</h2>
         </div>
@@ -86,17 +86,21 @@ function WorkflowDetailInner({ id }: { id: string }) {
   }
 
   return (
-    <div className='h-[calc(100vh-4rem)] flex flex-col'>
-      <div className='border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 pr-4 pl-[135px] py-3'>
+    <div className='h-full flex flex-col'>
+      <div className='border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-8 py-3'>
         <div className='flex items-center justify-between'>
           {/* Name editor on the left */}
           <div className='flex items-center gap-2'>
-            <div className='text-sm text-gray-500'>Workflows /</div>
+            <Link href='/workflows' className='flex items-center gap-1.5 text-base text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors'>
+              <Workflow className='h-4 w-4' />
+              Workflows
+            </Link>
+            <span className='text-base text-gray-500'>/</span>
             <h1
               ref={nameRef}
               contentEditable
               suppressContentEditableWarning
-              className='font-semibold text-gray-900 dark:text-white outline-none px-2 py-1 -mx-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:bg-gray-100 dark:focus:bg-gray-800 transition-colors cursor-text'
+              className='text-base font-semibold text-gray-900 dark:text-white outline-none px-2 py-1 -mx-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:bg-gray-100 dark:focus:bg-gray-800 transition-colors cursor-text min-w-[200px]'
               onFocus={(e) => {
                 originalNameRef.current = e.currentTarget.textContent || ''
                 // Select all text on focus
@@ -132,14 +136,13 @@ function WorkflowDetailInner({ id }: { id: string }) {
 
           {/* Run button and View Runs button on the far right */}
           <div className='flex items-center gap-2'>
-            <Link href={`/workflows/${id}/runs`}>
+            <Link href={`/workflows/${id}/runs`} className='no-underline'>
               <Button
                 size='sm'
                 variant='outline'
-                className='flex items-center gap-2'
+                className='p-2'
               >
                 <History className='h-4 w-4' />
-                View Runs
               </Button>
             </Link>
             <Popover>

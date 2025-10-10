@@ -2,13 +2,13 @@
 
 import { useParams } from 'next/navigation'
 import useSWR from 'swr'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ArrowLeft, Clock, CheckCircle, XCircle, Play, Eye } from 'lucide-react'
+import { Play, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { authenticatedFetcher } from '@/lib/fetch-utils'
+import { PageWrapper } from '@/components/page-wrapper'
 
 interface WorkflowRun {
   _id: string
@@ -38,12 +38,28 @@ interface WorkflowRun {
   error?: string
 }
 
+interface Workflow {
+  _id: string
+  name: string
+  description?: string
+}
+
 export default function WorkflowRunsPage() {
   const { id } = useParams()
+  const router = useRouter()
   const workflowId = Array.isArray(id) ? id[0] : (id as string)
 
+  // Fetch workflow details
+  const { data: workflow, isLoading: isLoadingWorkflow } = useSWR<Workflow>(
+    workflowId ? `/api/workflows/${workflowId}` : null,
+    authenticatedFetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  )
+
   // Fetch runs with SWR
-  const { data: runs, isLoading } = useSWR<WorkflowRun[]>(
+  const { data: runs, isLoading: isLoadingRuns } = useSWR<WorkflowRun[]>(
     workflowId ? `/api/workflows/${workflowId}/runs` : null,
     authenticatedFetcher,
     {
@@ -56,16 +72,18 @@ export default function WorkflowRunsPage() {
     }
   )
 
+  const isLoading = isLoadingWorkflow || isLoadingRuns
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-600" />
+        return <div className="h-3 w-3 rounded-full bg-green-600" />
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-600" />
+        return <div className="h-3 w-3 rounded-full bg-red-600" />
       case 'running':
-        return <Clock className="h-4 w-4 text-blue-600 animate-spin" />
+        return <div className="h-3 w-3 rounded-full bg-blue-600 animate-pulse" />
       default:
-        return <Clock className="h-4 w-4 text-gray-600" />
+        return <div className="h-3 w-3 rounded-full bg-gray-600" />
     }
   }
 
@@ -94,116 +112,98 @@ export default function WorkflowRunsPage() {
 
   if (isLoading) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex flex-col">
-        <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 py-3">
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-8 w-8" />
-            <Skeleton className="h-6 w-32" />
+      <PageWrapper className="h-full">
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="border-b border-gray-200 dark:border-gray-800 py-3">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-4" />
+              <Skeleton className="h-6 w-20" />
+            </div>
+          </div>
+          <div className="flex-1 p-4">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="py-4 px-4">
+                  <Skeleton className="h-6 w-full" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="flex-1 p-4">
-          <div className="space-y-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        </div>
-      </div>
+      </PageWrapper>
     )
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
-      {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 py-3">
-        <div className="flex items-center gap-4">
-          <Link href={`/workflows/${workflowId}`}>
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Workflow
-            </Button>
-          </Link>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Workflow Runs
-          </h1>
+    <PageWrapper className="h-full">
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="border-b border-gray-200 dark:border-gray-800 py-3">
+          <div className="flex items-center gap-2">
+            {workflow && (
+              <>
+                <Link href={`/workflows/${workflowId}`}>
+                  <h1 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer">
+                    {workflow.name}
+                  </h1>
+                </Link>
+                <ChevronRight className="h-5 w-5 text-gray-400" />
+              </>
+            )}
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Runs
+            </h1>
+          </div>
         </div>
-      </div>
 
-      {/* Runs List */}
-      <div className="flex-1 overflow-auto p-4">
-        <div className="space-y-4">
-          {!runs || runs.length === 0 ? (
-            <div className="text-center py-8">
-              <Play className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                No runs yet
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400">
-                Run your workflow to see execution history here.
-              </p>
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Started</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Success Rate</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {runs.map((run) => (
-                    <TableRow key={run._id}>
-                      <TableCell>
+        {/* Runs List */}
+        <div className="flex-1 overflow-auto p-4">
+          <div className="space-y-4">
+            {!runs || runs.length === 0 ? (
+              <div className="text-center py-8">
+                <Play className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  No runs yet
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Run your workflow to see execution history here.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {runs.map((run) => (
+                  <div
+                    key={run._id}
+                    onClick={() => router.push(`/workflows/${workflowId}/runs/${run._id}`)}
+                    className="py-4 px-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors rounded-lg"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {getStatusIcon(run.status)}
                         <div className="flex items-center gap-2">
-                          {getStatusIcon(run.status)}
                           {getStatusBadge(run.status)}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium">
-                            {formatDate(run.startedAt)}
-                          </div>
-                          {run.completedAt && (
-                            <div className="text-gray-500">
-                              Completed: {formatDate(run.completedAt)}
-                            </div>
-                          )}
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {formatDate(run.startedAt)}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {formatDuration(run.executionTime)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium">
-                            {run.summary.successRate.toFixed(1)}%
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {run.executionTime && (
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            {formatDuration(run.executionTime)}
                           </div>
-                          <div className="text-gray-500">
-                            {run.summary.successfulNodes}/{run.summary.totalNodes} nodes
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Link href={`/workflows/${workflowId}/runs/${run._id}`}>
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </PageWrapper>
   )
 }

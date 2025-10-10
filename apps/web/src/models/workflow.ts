@@ -16,7 +16,7 @@ export interface IWorkflowNode {
 export interface IWorkflow {
   name: string
   description?: string
-  status: 'draft' | 'active' | 'inactive'
+  status: 'active' | 'inactive'
   nodes: IWorkflowNode[]
   userId?: string
   customerId?: string
@@ -36,7 +36,7 @@ export interface IWorkflowMethods {
 // Static methods interface
 export interface IWorkflowModel extends Model<IWorkflow, object, IWorkflowMethods> {
   findByUser(userId: string): Promise<IWorkflowDocument[]>
-  findByStatus(status: 'draft' | 'active' | 'inactive'): Promise<IWorkflowDocument[]>
+  findByStatus(status: 'active' | 'inactive'): Promise<IWorkflowDocument[]>
 }
 
 // Document type
@@ -99,8 +99,8 @@ const workflowSchema = new mongoose.Schema<IWorkflow>(
     },
     status: {
       type: String,
-      enum: ['draft', 'active', 'inactive'],
-      default: 'draft',
+      enum: ['active', 'inactive'],
+      default: 'inactive',
       index: true,
     },
     nodes: {
@@ -160,7 +160,7 @@ workflowSchema.statics = {
     return this.find({ userId }).sort({ createdAt: -1 })
   },
 
-  findByStatus: function (status: 'draft' | 'active' | 'inactive') {
+  findByStatus: function (status: 'active' | 'inactive') {
     return this.find({ status }).sort({ createdAt: -1 })
   },
 }

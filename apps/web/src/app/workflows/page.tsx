@@ -4,25 +4,24 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useState } from 'react'
-import { CreateWorkflowDialog } from './components/create-workflow-dialog'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { authenticatedFetcher, getAuthHeaders } from '@/lib/fetch-utils'
 import {
   Play,
-  Settings,
   Calendar,
   Activity,
   FileText,
   Zap,
   Clock,
+  History,
 } from 'lucide-react'
 
 interface Workflow {
   _id: string
   name: string
   description?: string
-  status: 'draft' | 'active' | 'inactive'
+  status: 'active' | 'inactive'
   nodes: Array<{ id: string; type: string }>
   createdAt: string
   updatedAt: string
@@ -30,10 +29,10 @@ interface Workflow {
 }
 
 export default function WorkflowsPage() {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
   const router = useRouter()
 
-  const { data: workflows, isLoading, mutate } = useSWR<Workflow[]>(
+  const { data: workflows, isLoading } = useSWR<Workflow[]>(
     '/api/workflows',
     authenticatedFetcher,
     {
@@ -41,17 +40,48 @@ export default function WorkflowsPage() {
     }
   )
 
+  const handleCreateWorkflow = async () => {
+    try {
+      setIsCreating(true)
+      const response = await fetch('/api/workflows', {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Untitled Workflow',
+          description: ''
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create workflow')
+      }
+
+      const data = await response.json()
+      router.push(`/workflows/${data.id}`)
+    } catch (error) {
+      console.error('Failed to create workflow:', error)
+      setIsCreating(false)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
       case 'inactive':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-      case 'draft':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
     }
+  }
+
+  const getStatusText = (status: string) => {
+    // Filter out 'draft' status - treat it as inactive
+    if (status === 'draft') return 'Inactive'
+    return status.charAt(0).toUpperCase() + status.slice(1)
   }
 
   const formatDate = (dateString: string) => {
@@ -69,11 +99,11 @@ export default function WorkflowsPage() {
   }
 
   return (
-    <div className='container mx-auto px-4 py-8 max-w-7xl'>
+    <div className='container mx-auto py-8 max-w-7xl '>
       {/* Header Section */}
       <div className='flex items-center justify-between mb-8'>
         <div>
-          <h1 className='text-4xl font-bold text-gray-900 dark:text-white mb-2'>
+          <h1 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
             Workflows
           </h1>
           <p className='text-gray-600 dark:text-gray-400'>
@@ -81,21 +111,22 @@ export default function WorkflowsPage() {
           </p>
         </div>
         <Button
-          onClick={() => setIsCreateDialogOpen(true)}
+          onClick={handleCreateWorkflow}
+          disabled={isCreating}
           className='gap-2'
         >
           <Zap className='h-4 w-4' />
-          Create Workflow
+          {isCreating ? 'Creating...' : 'Create Workflow'}
         </Button>
       </div>
 
       {/* Workflows List */}
       {isLoading ? (
-        <div className='space-y-4'>
+        <div className='divide-y divide-gray-200 dark:divide-gray-700'>
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className='bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6'
+              className='py-6 px-4'
             >
               <div className='flex items-center justify-between'>
                 <div className='flex-1'>
@@ -110,6 +141,7 @@ export default function WorkflowsPage() {
                 <div className='flex gap-2'>
                   <Skeleton className='h-9 w-24' />
                   <Skeleton className='h-9 w-20' />
+                  <Skeleton className='h-9 w-16' />
                 </div>
               </div>
             </div>
@@ -127,102 +159,97 @@ export default function WorkflowsPage() {
             <p className='text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto'>
               Get started by creating your first workflow to automate your processes.
             </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Button onClick={handleCreateWorkflow} disabled={isCreating}>
               <Zap className='h-4 w-4 mr-2' />
-              Create Your First Workflow
+              {isCreating ? 'Creating...' : 'Create Your First Workflow'}
             </Button>
           </div>
         </div>
       ) : (
-        <div className='space-y-4'>
+        <div className='divide-y divide-gray-200 dark:divide-gray-700'>
           {workflows.map((workflow) => (
             <div
               key={workflow._id}
-              className='bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 hover:shadow-lg group'
+              className='py-6 px-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group cursor-pointer'
+              onClick={() => router.push(`/workflows/${workflow._id}`)}
             >
-              <div className='p-6'>
-                <div className='flex items-center justify-between gap-6'>
-                  {/* Left Section - Info */}
-                  <div className='flex-1 min-w-0'>
-                    <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors'>
-                      {workflow.name}
-                    </h3>
-                    {workflow.description && (
-                      <p className='text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-1'>
-                        {workflow.description}
-                      </p>
+              <div className='flex items-center justify-between gap-6'>
+                {/* Left Section - Info */}
+                <div className='flex-1 min-w-0'>
+                  <h3 className='text-base font-semibold text-gray-700 dark:text-gray-200 mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors'>
+                    {workflow.name}
+                  </h3>
+                  {workflow.description && (
+                    <p className='text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-1'>
+                      {workflow.description}
+                    </p>
+                  )}
+
+                  {/* Metadata Row */}
+                  <div className='flex flex-wrap items-center gap-4 text-sm'>
+                    <Badge className={getStatusColor(workflow.status)}>
+                      {workflow.status === 'active' && <Activity className='h-3 w-3 mr-1' />}
+                      {getStatusText(workflow.status)}
+                    </Badge>
+
+                    <span className='text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5'>
+                      <Zap className='h-3.5 w-3.5' />
+                      {workflow.nodes?.length || 0} nodes
+                    </span>
+
+                    <span className='text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5'>
+                      <Calendar className='h-3.5 w-3.5' />
+                      Created {formatDate(workflow.createdAt)}
+                    </span>
+
+                    {workflow.lastRunAt && (
+                      <span className='text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5'>
+                        <Clock className='h-3.5 w-3.5' />
+                        Last run {formatDate(workflow.lastRunAt)}
+                      </span>
                     )}
-
-                    {/* Metadata Row */}
-                    <div className='flex flex-wrap items-center gap-4 text-sm'>
-                      <Badge className={getStatusColor(workflow.status)}>
-                        {workflow.status === 'active' && <Activity className='h-3 w-3 mr-1' />}
-                        {workflow.status}
-                      </Badge>
-
-                      <span className='text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5'>
-                        <Zap className='h-3.5 w-3.5' />
-                        {workflow.nodes?.length || 0} nodes
-                      </span>
-
-                      <span className='text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5'>
-                        <Calendar className='h-3.5 w-3.5' />
-                        Created {formatDate(workflow.createdAt)}
-                      </span>
-
-                      {workflow.lastRunAt && (
-                        <span className='text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5'>
-                          <Clock className='h-3.5 w-3.5' />
-                          Last run {formatDate(workflow.lastRunAt)}
-                        </span>
-                      )}
-                    </div>
                   </div>
+                </div>
 
-                  {/* Right Section - Actions */}
-                  <div className='flex items-center gap-2 flex-shrink-0'>
+                {/* Right Section - Actions */}
+                <div className='flex items-center gap-2 flex-shrink-0'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      router.push(`/workflows/${workflow._id}/runs`)
+                    }}
+                  >
+                    <History className='h-4 w-4 mr-1.5' />
+                    Runs
+                  </Button>
+                  {workflow.status === 'active' && (
                     <Button
-                      variant='outline'
+                      variant='default'
                       size='sm'
-                      onClick={() => router.push(`/workflows/${workflow._id}`)}
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        try {
+                          await fetch(`/api/workflows/${workflow._id}/run`, {
+                            method: 'POST',
+                            headers: getAuthHeaders(),
+                          })
+                        } catch (error) {
+                          console.error('Failed to run workflow:', error)
+                        }
+                      }}
                     >
-                      <Settings className='h-4 w-4 mr-1.5' />
-                      Configure
+                      <Play className='h-4 w-4 mr-1.5' />
+                      Run
                     </Button>
-                    {workflow.status === 'active' && (
-                      <Button
-                        variant='default'
-                        size='sm'
-                        onClick={async () => {
-                          try {
-                            await fetch(`/api/workflows/${workflow._id}/run`, {
-                              method: 'POST',
-                              headers: getAuthHeaders(),
-                            })
-                          } catch (error) {
-                            console.error('Failed to run workflow:', error)
-                          }
-                        }}
-                      >
-                        <Play className='h-4 w-4 mr-1.5' />
-                        Run
-                      </Button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
-
-      <CreateWorkflowDialog
-        open={isCreateDialogOpen}
-        onOpenChange={(open) => {
-          setIsCreateDialogOpen(open)
-          if (!open) mutate()
-        }}
-      />
     </div>
   )
 }

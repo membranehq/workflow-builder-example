@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       name,
       description,
       userId,
-      status: 'draft',
+      status: 'inactive',
       nodes: [],
     })
 
@@ -28,7 +28,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url)
     const userId = searchParams.get('userId')
-    const status = searchParams.get('status') as 'draft' | 'active' | 'inactive' | null
+    const status = searchParams.get('status') as 'active' | 'inactive' | null
 
     let workflows
 

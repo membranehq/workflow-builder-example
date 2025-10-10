@@ -20,9 +20,9 @@ export const metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang='en' suppressHydrationWarning>
+    <html lang='en' suppressHydrationWarning className='h-full'>
       <body
-        className={`${instrumentSans.className} antialiased bg-white text-gray-900`}
+        className={`${instrumentSans.className} antialiased bg-white text-gray-900 h-full`}
       >
         <AuthProvider>
           <IntegrationProvider>
