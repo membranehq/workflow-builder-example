@@ -2,12 +2,6 @@ import 'dotenv/config'
 import { NativeConnection, Worker } from '@temporalio/worker'
 import * as activities from '@repo/shared/temporal/activities'
 import { TEMPORAL_CONFIG } from '@repo/shared'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { createRequire } from 'node:module'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const require = createRequire(import.meta.url)
 
 export async function runWorker(): Promise<void> {
   console.log('✨ Spinning up worker')
