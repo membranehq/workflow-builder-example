@@ -28,7 +28,7 @@ export function NodeOptionsMenu({ onDelete, nodeId }: NodeOptionsMenuProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-4 w-4 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 [&_svg]:!h-2 [&_svg]:!w-2"
+          className="h-6 w-6 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 [&_svg]:!h-4 [&_svg]:!w-4"
           onClick={(e) => e.stopPropagation()}
         >
           <MoreVertical />

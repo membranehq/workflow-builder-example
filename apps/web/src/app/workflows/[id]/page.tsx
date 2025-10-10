@@ -7,7 +7,7 @@ import { Play, History, Workflow } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DataInput, DataSchema } from '@membranehq/react'
 import { getAuthHeaders } from '@/lib/fetch-utils'
-import { WorkflowEditorWrapper } from './components/workflow-editor'
+import { WorkflowEditor } from './components/workflow-editor'
 import { WorkflowProvider, useWorkflow } from './components/workflow-context'
 import Link from 'next/link'
 
@@ -86,7 +86,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
   }
 
   return (
-    <div className='h-full flex flex-col'>
+    <div className='h-screen flex flex-col w-full'>
       <div className='border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-8 py-3'>
         <div className='flex items-center justify-between'>
           {/* Name editor on the left */}
@@ -235,7 +235,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
       )}
 
       <div className='flex-1 relative bg-gray-50 dark:bg-gray-900'>
-        <WorkflowEditorWrapper />
+        <WorkflowEditor />
       </div>
     </div>
   )

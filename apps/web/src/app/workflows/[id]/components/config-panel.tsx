@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
 import { WorkflowNode } from './types/workflow'
 import { NodeTypeMetadata, TriggerType } from '@/lib/node-types'
 import { DataSchema } from '@membranehq/react'
@@ -11,10 +10,10 @@ import { HttpRequestConfig } from './dialogs/http-request-config'
 import { useWorkflow } from './workflow-context'
 import { authenticatedFetcher } from '@/lib/fetch-utils'
 import { Action } from '@membranehq/react'
+import { useDebounce } from '@/hooks/use-debounce'
 
 interface ConfigPanelProps {
   selectedNode: WorkflowNode | null
-  onClose: () => void
   onUpdateNode: (node: Omit<WorkflowNode, 'id'>) => void
   nodeTypes: Record<string, NodeTypeMetadata>
   triggerTypes: Record<string, TriggerType>
@@ -80,11 +79,11 @@ const constructVariableSchema = async (nodes: WorkflowNode[], currentNodeId?: st
   }
 }
 
-export function ConfigPanel({ selectedNode, onClose, onUpdateNode, nodeTypes, triggerTypes }: ConfigPanelProps) {
+export function ConfigPanel({ selectedNode, onUpdateNode, nodeTypes, triggerTypes }: ConfigPanelProps) {
   const { workflow } = useWorkflow()
-  const [formData, setFormData] = useState<Omit<WorkflowNode, 'id'> | undefined>()
+  const [formData, setFormData] = useState<WorkflowNode | undefined>()
   const [variableSchema, setVariableSchema] = useState<DataSchema>({ type: 'object', properties: {} })
-  const [isSaving, setIsSaving] = useState(false)
+  const debouncedFormData = useDebounce(formData, 500)
 
   useEffect(() => {
     const buildSchema = async () => {
@@ -102,37 +101,40 @@ export function ConfigPanel({ selectedNode, onClose, onUpdateNode, nodeTypes, tr
     buildSchema()
   }, [workflow?.nodes, selectedNode])
 
+  // Update formData when selectedNode changes
   useEffect(() => {
     if (selectedNode) {
       setFormData(selectedNode)
     }
   }, [selectedNode])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    if (!formData) return
+  // Auto-save when debounced formData changes
+  useEffect(() => {
+    if (!debouncedFormData || !selectedNode) return
 
-    e.preventDefault()
-    if (!formData.name.trim()) return
+    // Skip if the node name is empty
+    if (!debouncedFormData.name.trim()) return
 
-    setIsSaving(true)
-    try {
-      const updateData = { ...formData }
+    // Only save if the debounced data is for the currently selected node
+    // This prevents saving old data when switching between nodes quickly
+    if (debouncedFormData.id !== selectedNode.id) return
 
-      // For triggers, ensure triggerType is preserved
-      if (selectedNode?.type === 'trigger') {
-        updateData.triggerType = formData.triggerType
-      } else {
-        // For actions, ensure nodeType is set
-        updateData.nodeType = formData.nodeType || DEFAULT_NODE_TYPE
-      }
+    // Skip if this is the initial load (formData matches selectedNode exactly)
+    if (JSON.stringify(debouncedFormData) === JSON.stringify(selectedNode)) return
 
-      onUpdateNode(updateData)
-    } catch (error) {
-      console.error('Failed to save node:', error)
-    } finally {
-      setIsSaving(false)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, ...updateData } = debouncedFormData
+
+    // For triggers, ensure triggerType is preserved
+    if (selectedNode?.type === 'trigger') {
+      updateData.triggerType = debouncedFormData.triggerType
+    } else {
+      // For actions, ensure nodeType is set
+      updateData.nodeType = debouncedFormData.nodeType || DEFAULT_NODE_TYPE
     }
-  }
+
+    onUpdateNode(updateData)
+  }, [debouncedFormData, selectedNode, onUpdateNode])
 
   const selectedNodeType = formData?.nodeType || selectedNode?.nodeType || DEFAULT_NODE_TYPE
   const availableNodeTypes = Object.values(nodeTypes)
@@ -158,32 +160,34 @@ export function ConfigPanel({ selectedNode, onClose, onUpdateNode, nodeTypes, tr
   }
 
   return (
-    <div className='w-[420px] bg-white border-l border-gray-200 flex flex-col h-full'>
+    <div className='w-[420px] bg-white border-l border-gray-200 flex flex-col overflow-y-auto'>
       <div className='flex-1 overflow-y-auto p-4'>
-        <form onSubmit={handleSubmit} className='space-y-4'>
+        <div className='space-y-4'>
           <NodeEditForm
             name={formData.name}
-            onNameChange={(name) => setFormData((prev) => prev ? { ...prev, name } : undefined)}
-            selectedType={selectedNode.type === 'trigger' ? (formData.triggerType || '') : (formData.nodeType || selectedNodeType)}
+            onNameChange={(name) => setFormData((prev) => (prev ? { ...prev, name } : undefined))}
+            selectedType={
+              selectedNode.type === 'trigger' ? formData.triggerType || '' : formData.nodeType || selectedNodeType
+            }
             onTypeChange={(type) => {
               if (selectedNode.type === 'trigger') {
-                setFormData((prev) => prev ? { ...prev, triggerType: type } : undefined)
+                setFormData((prev) => (prev ? { ...prev, triggerType: type } : undefined))
               } else {
-                setFormData((prev) => prev ? { ...prev, nodeType: type } : undefined)
+                setFormData((prev) => (prev ? { ...prev, nodeType: type } : undefined))
               }
             }}
             availableTypes={selectedNode.type === 'trigger' ? availableTriggerTypes : availableNodeTypes}
-            typeLabel={selectedNode.type === 'trigger' ? 'Trigger Type' : 'Node Type'}
+            typeLabel={'Type'}
             nameLabel='Name'
             namePlaceholder='Enter node name'
-            disabled={isSaving}
+            disabled={false}
           />
 
           {selectedNode.type === 'trigger' && selectedTriggerTypeConfig && formData.triggerType === 'manual' && (
             <ManualTriggerConfig
               value={formData}
               onChange={(updatedNode) => {
-                setFormData(updatedNode)
+                setFormData((prev) => prev ? { ...updatedNode, id: prev.id } : undefined)
               }}
             />
           )}
@@ -192,7 +196,7 @@ export function ConfigPanel({ selectedNode, onClose, onUpdateNode, nodeTypes, tr
             <EventTriggerConfig
               value={formData}
               onChange={(updatedNode) => {
-                setFormData(updatedNode)
+                setFormData((prev) => prev ? { ...updatedNode, id: prev.id } : undefined)
               }}
               variableSchema={variableSchema}
               triggerTypeConfig={selectedTriggerTypeConfig}
@@ -204,7 +208,7 @@ export function ConfigPanel({ selectedNode, onClose, onUpdateNode, nodeTypes, tr
               variableSchema={variableSchema}
               value={formData}
               onChange={(configuration) => {
-                setFormData(configuration)
+                setFormData((prev) => prev ? { ...configuration, id: prev.id } : undefined)
               }}
             />
           )}
@@ -215,21 +219,10 @@ export function ConfigPanel({ selectedNode, onClose, onUpdateNode, nodeTypes, tr
               value={formData}
               nodeTypeConfig={selectedNodeTypeConfig}
               onChange={(configuration) => {
-                setFormData(configuration)
+                setFormData((prev) => prev ? { ...configuration, id: prev.id } : undefined)
               }}
             />
           )}
-        </form>
-      </div>
-
-      <div className='p-4 border-t border-gray-200'>
-        <div className='flex justify-end gap-3'>
-          <Button variant='outline' onClick={onClose} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={!formData.name.trim() || isSaving}>
-            {isSaving ? 'Saving...' : 'Update'}
-          </Button>
         </div>
       </div>
     </div>

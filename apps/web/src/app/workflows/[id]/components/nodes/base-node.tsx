@@ -62,18 +62,20 @@ export function BaseNode({
         />
       )}
       <div className={baseClasses} onClick={onClick}>
-        <div className='flex items-center gap-3'>
-          <div className='shrink-0 bg-muted rounded-md p-1'>{icon}</div>
-          <div className='flex-1'>
-            <div className='text-[11px] font-medium text-gray-900 flex items-center gap-2'>
-              {position && (
-                <span className='text-xs font-medium'>
-                  {position}.
-                </span>
-              )}
-              {title}
+        <div className='flex items-center gap-3 w-full justify-between'>
+          <div className='flex items-center gap-3 flex-1 min-w-0'>
+            <div className='shrink-0 bg-muted rounded-md p-1'>{icon}</div>
+            <div className='flex-1 min-w-0'>
+              <div className='text-[11px] font-medium text-gray-900 flex items-center gap-2'>
+                {position && (
+                  <span className='text-xs font-medium'>
+                    {position}.
+                  </span>
+                )}
+                {title}
+              </div>
+              {subtitle && <div className='text-[10px] text-gray-500'>{subtitle}</div>}
             </div>
-            {subtitle && <div className='text-[10px] text-gray-500'>{subtitle}</div>}
           </div>
           {onDelete && node && (
             <NodeOptionsMenu

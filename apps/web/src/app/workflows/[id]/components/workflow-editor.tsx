@@ -29,8 +29,6 @@ import { TriggerCreateDialog } from './dialogs/trigger/trigger-create-dialog'
 import { v4 as uuidv4 } from 'uuid'
 import { ConfigPanel } from './config-panel'
 
-type WorkflowEditorProps = Record<string, never>
-
 const nodeTypes: NodeTypes = {
   trigger: TriggerNode,
   action: ActionNode,
@@ -334,62 +332,54 @@ export function WorkflowEditor() {
   )
 
   return (
-    <div className="flex h-full">
-      <div className="flex-1">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={handleEdgesChange}
-          onConnect={onConnect}
-          onNodeClick={handleNodeClick}
-          nodeTypes={nodeTypes}
-          nodesDraggable={false}
-          defaultEdgeOptions={{ style: { strokeDasharray: '2 4', strokeLinecap: 'round', strokeWidth: 2.1 } }}
-          fitView
-          fitViewOptions={{ padding: 0.1, minZoom: 0.1, maxZoom: 1.5 }}
-          defaultViewport={{ x: 0, y: 0, zoom: 0.1 }}
-          className='bg-gray-50'
-        >
-          <Background />
-          <Controls />
-          <MiniMap />
-        </ReactFlow>
-      </div>
-
-      <ConfigPanel
-        selectedNode={selectedNode}
-        onClose={() => setSelectedNodeId(null)}
-        onUpdateNode={handleNodeUpdate}
-        nodeTypes={nodeTypeDefinitions}
-        triggerTypes={triggerTypes}
-      />
-
-      <NodeCreateDialog
-        isOpen={nodeCreateDialogOpen}
-        onClose={() => {
-          setNodeCreateDialogOpen(false)
-          setPendingAfterId(undefined)
-        }}
-        nodeTypes={nodeTypeDefinitions}
-        onCreate={handleCreateNodeFromType}
-      />
-
-      <TriggerCreateDialog
-        isOpen={triggerCreateDialogOpen}
-        onClose={() => setTriggerCreateDialogOpen(false)}
-        triggerTypes={triggerTypes}
-        onCreate={handleCreateTriggerFromType}
-      />
-    </div>
-  )
-}
-
-// Wrapper component with ReactFlowProvider
-export function WorkflowEditorWrapper(props: WorkflowEditorProps) {
-  return (
     <ReactFlowProvider>
-      <WorkflowEditor {...props} />
+      <div className="flex h-full">
+        <div className="flex-1">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={handleNodesChange}
+            onEdgesChange={handleEdgesChange}
+            onConnect={onConnect}
+            onNodeClick={handleNodeClick}
+            nodeTypes={nodeTypes}
+            nodesDraggable={false}
+            defaultEdgeOptions={{ style: { strokeDasharray: '2 4', strokeLinecap: 'round', strokeWidth: 2.1 } }}
+            fitView
+            fitViewOptions={{ padding: 0.1, minZoom: 0.1, maxZoom: 1.5 }}
+            defaultViewport={{ x: 0, y: 0, zoom: 0.1 }}
+            className='bg-gray-50'
+          >
+            <Background />
+            <Controls />
+            <MiniMap />
+          </ReactFlow>
+        </div>
+
+        <ConfigPanel
+          selectedNode={selectedNode}
+          onUpdateNode={handleNodeUpdate}
+          nodeTypes={nodeTypeDefinitions}
+          triggerTypes={triggerTypes}
+        />
+
+        <NodeCreateDialog
+          isOpen={nodeCreateDialogOpen}
+          onClose={() => {
+            setNodeCreateDialogOpen(false)
+            setPendingAfterId(undefined)
+          }}
+          nodeTypes={nodeTypeDefinitions}
+          onCreate={handleCreateNodeFromType}
+        />
+
+        <TriggerCreateDialog
+          isOpen={triggerCreateDialogOpen}
+          onClose={() => setTriggerCreateDialogOpen(false)}
+          triggerTypes={triggerTypes}
+          onCreate={handleCreateTriggerFromType}
+        />
+      </div>
     </ReactFlowProvider>
   )
 }

@@ -79,8 +79,6 @@ export default function WorkflowsPage() {
   }
 
   const getStatusText = (status: string) => {
-    // Filter out 'draft' status - treat it as inactive
-    if (status === 'draft') return 'Inactive'
     return status.charAt(0).toUpperCase() + status.slice(1)
   }
 
