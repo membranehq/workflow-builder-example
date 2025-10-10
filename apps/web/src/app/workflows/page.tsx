@@ -99,7 +99,7 @@ export default function WorkflowsPage() {
   }
 
   return (
-    <div className='container mx-auto py-8 max-w-7xl '>
+    <>
       {/* Header Section */}
       <div className='flex items-center justify-between mb-8'>
         <div>
@@ -250,6 +250,6 @@ export default function WorkflowsPage() {
           ))}
         </div>
       )}
-    </div>
+    </>
   )
 }

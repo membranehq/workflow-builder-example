@@ -17,19 +17,13 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
     <div className='h-full flex flex-col'>
       {!isWorkflowPage && <Header />}
       <main className='flex-1 flex flex-col items-center'>
-        <div className={
-          isWorkflowPage
-            ? 'w-full h-full'
-            : 'w-full py-6'
-        }>
-          {isWorkflowPage ? (
-            children
-          ) : (
-            <PageWrapper>
-              {children}
-            </PageWrapper>
-          )}
-        </div>
+        {isWorkflowPage ? (
+          children
+        ) : (
+          <PageWrapper>
+            {children}
+          </PageWrapper>
+        )}
       </main>
     </div>
   )
