@@ -9,7 +9,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { id: workflowId } = await params
     await connectToDatabase()
 
-    // Verify workflow exists
     const workflow = await Workflow.findById(workflowId)
     if (!workflow) {
       return NextResponse.json({ error: 'Workflow not found' }, { status: 404 })
