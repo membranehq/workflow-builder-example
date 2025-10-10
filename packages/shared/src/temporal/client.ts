@@ -1,4 +1,4 @@
-import { WorkflowClient, Connection } from '@temporalio/client'
+import { Client, Connection } from '@temporalio/client'
 import { TEMPORAL_CONFIG } from './config.js'
 
 async function createTemporalConnection(): Promise<Connection> {
@@ -15,13 +15,11 @@ async function createTemporalConnection(): Promise<Connection> {
   }
 }
 
-export async function createTemporalClient(): Promise<WorkflowClient> {
+export async function createTemporalClient() {
   const connection = await createTemporalConnection()
 
-  return new WorkflowClient({
+  return new Client({
     connection,
     namespace: TEMPORAL_CONFIG.NAMESPACE,
   })
 }
-
-

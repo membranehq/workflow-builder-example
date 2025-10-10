@@ -48,7 +48,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const membraneToken = await generateIntegrationToken(auth)
 
     const temporalWorkflowId = `workflow-${workflowId}-${Date.now()}`
-    await client.start(executeWorkflow, {
+    await client.workflow.start(executeWorkflow, {
       args: [workflow.nodes as WorkflowNode[], membraneToken, triggerInput, workflowRun._id.toString()],
       taskQueue: TEMPORAL_CONFIG.TASK_QUEUE_NAME,
       workflowId: temporalWorkflowId,
