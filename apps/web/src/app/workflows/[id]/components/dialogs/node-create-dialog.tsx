@@ -39,7 +39,7 @@ export function NodeCreateDialog({ isOpen, onClose, onCreate }: NodeCreateDialog
 
         <div className='flex h-full'>
           {/* Left Navigation */}
-          <div className='w-48 border-r bg-gray-50 p-4'>
+          <div className='w-48 border-r bg-gray-50 p-4 rounded-l-lg'>
             <nav className='space-y-1'>
               <Button
                 variant={activeNav === 'apps' ? 'secondary' : 'ghost'}

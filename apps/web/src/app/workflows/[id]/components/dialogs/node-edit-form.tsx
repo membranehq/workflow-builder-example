@@ -33,7 +33,9 @@ export function NodeEditForm({
     <div className='space-y-4'>
       {/* Name Input */}
       <div className='space-y-2'>
-        <Label htmlFor='name'>{nameLabel}</Label>
+        <Label htmlFor='name'>
+          {nameLabel} <span className='text-red-500'>*</span>
+        </Label>
         <Input
           id='name'
           value={name}
@@ -47,7 +49,9 @@ export function NodeEditForm({
       {/* Type Selector */}
       {availableTypes.length > 0 && (
         <div className='space-y-2'>
-          <Label htmlFor='type'>{typeLabel}</Label>
+          <Label htmlFor='type'>
+            {typeLabel} <span className='text-red-500'>*</span>
+          </Label>
           <Select value={selectedType} onValueChange={onTypeChange} disabled={disabled}>
             <SelectTrigger aria-label={`Select ${typeLabel.toLowerCase()}`}>
               <div className='flex items-center gap-2'>

@@ -14,7 +14,7 @@ interface HttpRequestConfigProps {
 
 export function HttpRequestConfig({ value, onChange, variableSchema, nodeTypeConfig }: HttpRequestConfigProps) {
   return (
-    <div className='space-y-2 border-t pt-4'>
+    <div className='space-y-2 pt-4'>
       <Minimizer title="Configure HTTP Request" defaultOpen={true}>
         <div
           className='relative z-[1] isolate'

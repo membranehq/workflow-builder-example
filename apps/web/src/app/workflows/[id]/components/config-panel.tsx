@@ -163,26 +163,6 @@ export function ConfigPanel({ selectedNode, onUpdateNode, nodeTypes, triggerType
     <div className='w-[420px] bg-white border-l border-gray-200 flex flex-col overflow-y-auto'>
       <div className='flex-1 overflow-y-auto p-4'>
         <div className='space-y-4'>
-          <NodeEditForm
-            name={formData.name}
-            onNameChange={(name) => setFormData((prev) => (prev ? { ...prev, name } : undefined))}
-            selectedType={
-              selectedNode.type === 'trigger' ? formData.triggerType || '' : formData.nodeType || selectedNodeType
-            }
-            onTypeChange={(type) => {
-              if (selectedNode.type === 'trigger') {
-                setFormData((prev) => (prev ? { ...prev, triggerType: type } : undefined))
-              } else {
-                setFormData((prev) => (prev ? { ...prev, nodeType: type } : undefined))
-              }
-            }}
-            availableTypes={selectedNode.type === 'trigger' ? availableTriggerTypes : availableNodeTypes}
-            typeLabel={'Type'}
-            nameLabel='Name'
-            namePlaceholder='Enter node name'
-            disabled={false}
-          />
-
           {selectedNode.type === 'trigger' && selectedTriggerTypeConfig && formData.triggerType === 'manual' && (
             <ManualTriggerConfig
               value={formData}

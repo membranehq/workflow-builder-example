@@ -19,7 +19,6 @@ export function BlockNode({ data, selected }: BlockNodeProps) {
       selected={selected}
       icon={Icon ? <Icon className='w-4 h-4 text-gray-600' /> : null}
       title={data.label}
-      subtitle="Action"
       node={data.node}
       onDelete={data.onDelete}
     />

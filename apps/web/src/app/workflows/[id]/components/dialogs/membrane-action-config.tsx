@@ -16,6 +16,7 @@ import {
 } from '@membranehq/react'
 import Image from 'next/image'
 import { WorkflowNode } from '../types/workflow'
+import { useIntegrationConnection } from '@/hooks/use-integration-connection'
 
 interface MembraneActionConfigProps {
   value: Omit<WorkflowNode, 'id'>
@@ -36,11 +37,18 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
     integrationKey: selectedIntegrationKey,
   })
 
+  // Integration connection hook
+  const { data: connection, isLoading: isConnectionLoading, isConnecting, connect } = useIntegrationConnection({
+    integrationKey: selectedIntegrationKey,
+  })
+
+  const isConnected = !!connection
+
   return (
     <>
       {/* Show selected integration info if we have an integrationKey */}
       {selectedIntegrationKey && selectedIntegration && (
-        <div className='space-y-2 border-t pt-4'>
+        <div className='space-y-2 pt-4'>
           <Label>App *</Label>
           <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border'>
             <div className='flex items-center gap-3'>
@@ -111,111 +119,193 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
         </div>
       )}
 
-      <div className='space-y-2 border-t pt-4'>
-        <Label>Action</Label>
-        {actionsForSelectedIntegration.loading ? (
-          <div className='space-y-2'>
-            <Skeleton className='h-10 w-full' />
-          </div>
-        ) : actionsForSelectedIntegration.items.length === 0 ? (
-          <div className='p-4 border rounded-lg text-sm text-muted-foreground text-center'>
-            There are no actions available for this integration
-          </div>
-        ) : (
-          <div className='space-y-2'>
-            <Select
-              value={selectedActionId as string}
-              onValueChange={(actionId) => {
-                onChange({ ...value, config: { ...value.config, actionId } })
-              }}
-            >
-              <SelectTrigger aria-label='Select action'>
-                <div className='flex items-center gap-2'>
-                  {(() => {
-                    const selectedActionData = actionsForSelectedIntegration.items.find(
-                      (a: Action) => a.id === selectedActionId,
-                    )
-                    return selectedActionData?.integration?.logoUri ? (
-                      <Image
-                        width={16}
-                        height={16}
-                        src={selectedActionData.integration.logoUri}
-                        alt='Integration logo'
-                        className='w-4 h-4 rounded'
-                      />
-                    ) : null
-                  })()}
-                  <span>
-                    {actionsForSelectedIntegration.items.find((a: Action) => a.id === selectedActionId)?.name ||
-                      'Select an action'}
+      {/* Connection Status Section */}
+      {selectedIntegrationKey && selectedIntegration && (
+        <div className='space-y-2 pt-4'>
+          <Label>Account *</Label>
+          {isConnectionLoading ? (
+            <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border'>
+              <div className='flex items-center gap-3'>
+                <Skeleton className='h-5 w-5 rounded' />
+                <Skeleton className='h-4 w-32' />
+              </div>
+            </div>
+          ) : isConnected ? (
+            <div className='flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200'>
+              <div className='flex items-center gap-3'>
+                <div className='flex items-center gap-2 px-3 py-1 bg-green-100 rounded-md'>
+                  {selectedIntegration.logoUri ? (
+                    <Image
+                      width={20}
+                      height={20}
+                      src={selectedIntegration.logoUri}
+                      alt={`${selectedIntegration.name} logo`}
+                      className='w-5 h-5 rounded'
+                    />
+                  ) : (
+                    <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
+                      {selectedIntegration.name[0]}
+                    </div>
+                  )}
+                  <span className='text-sm font-medium text-green-900'>
+                    Connected to {selectedIntegration.name}
                   </span>
                 </div>
-              </SelectTrigger>
-              <SelectContent>
-                {actionsForSelectedIntegration.items.map((action) => (
-                  <SelectItem key={action.id} value={action.id}>
-                    <div className='flex items-center gap-2'>
-                      {action.integration?.logoUri ? (
+              </div>
+              <Button
+                onClick={connect}
+                disabled={isConnecting}
+                variant='default'
+                size='sm'
+              >
+                {isConnecting ? 'Reconnecting...' : 'Reconnect'}
+              </Button>
+            </div>
+          ) : (
+            <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border'>
+              <div className='flex items-center gap-3'>
+                <div className='flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-md'>
+                  {selectedIntegration.logoUri ? (
+                    <Image
+                      width={20}
+                      height={20}
+                      src={selectedIntegration.logoUri}
+                      alt={`${selectedIntegration.name} logo`}
+                      className='w-5 h-5 rounded'
+                    />
+                  ) : (
+                    <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
+                      {selectedIntegration.name[0]}
+                    </div>
+                  )}
+                  <span className='text-sm font-medium text-gray-900'>
+                    Connect {selectedIntegration.name}
+                  </span>
+                </div>
+              </div>
+              <Button
+                onClick={connect}
+                disabled={isConnecting}
+                className='bg-purple-600 hover:bg-purple-700 text-white'
+                size='sm'
+              >
+                {isConnecting ? 'Connecting...' : 'Sign in'}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Only show actions if user is connected */}
+      {isConnected && (
+        <div className='space-y-2 pt-4'>
+          <Label>Select an action</Label>
+          {actionsForSelectedIntegration.loading ? (
+            <div className='space-y-2'>
+              <Skeleton className='h-10 w-full' />
+            </div>
+          ) : actionsForSelectedIntegration.items.length === 0 ? (
+            <div className='p-4 border rounded-lg text-sm text-muted-foreground text-center'>
+              There are no actions available for this integration
+            </div>
+          ) : (
+            <div className='space-y-2'>
+              <Select
+                value={selectedActionId as string}
+                onValueChange={(actionId) => {
+                  onChange({ ...value, config: { ...value.config, actionId } })
+                }}
+              >
+                <SelectTrigger aria-label='Select action'>
+                  <div className='flex items-center gap-2'>
+                    {(() => {
+                      const selectedActionData = actionsForSelectedIntegration.items.find(
+                        (a: Action) => a.id === selectedActionId,
+                      )
+                      return selectedActionData?.integration?.logoUri ? (
                         <Image
                           width={16}
                           height={16}
-                          src={action.integration.logoUri}
+                          src={selectedActionData.integration.logoUri}
                           alt='Integration logo'
                           className='w-4 h-4 rounded'
                         />
-                      ) : null}
-                      <span>{action.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      </div>
+                      ) : null
+                    })()}
+                    <span>
+                      {actionsForSelectedIntegration.items.find((a: Action) => a.id === selectedActionId)?.name ||
+                        'Select an action'}
+                    </span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {actionsForSelectedIntegration.items.map((action) => (
+                    <SelectItem key={action.id} value={action.id}>
+                      <div className='flex items-center gap-2'>
+                        {action.integration?.logoUri ? (
+                          <Image
+                            width={16}
+                            height={16}
+                            src={action.integration.logoUri}
+                            alt='Integration logo'
+                            className='w-4 h-4 rounded'
+                          />
+                        ) : null}
+                        <span>{action.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* Always render the action configuration section to prevent layout jumps */}
-      <div className='space-y-2 border-t pt-4'>
-        {!selectedActionId ? (
-          /* Show placeholder when no action is selected */
-          actionsForSelectedIntegration.items.length > 0 ? (
-            <div className='text-sm text-muted-foreground'>Select an action above to configure it</div>
-          ) : null
-        ) : isLoadingSelectedAction ? (
-          /* Show compact skeleton while loading selected action */
-          <div className='space-y-3'>
-            <Skeleton className='h-5 w-44' />
-            <Skeleton className='h-20 w-full' />
-            <Skeleton className='h-5 w-36 mt-2' />
-            <Skeleton className='h-16 w-full' />
-          </div>
-        ) : selectedActionData ? (
-          /* Show actual content when loaded */
-          <>
-            {selectedActionData?.inputSchema && (
-              <Minimizer title='Configure Action Input' defaultOpen={true}>
-                <DataInput
-                  schema={selectedActionData?.inputSchema}
-                  value={value.config?.inputMapping}
-                  variablesSchema={variableSchema}
-                  onChange={(configuration) => {
-                    onChange({ ...value, config: { ...value.config, inputMapping: configuration } })
-                  }}
-                />
+      {/* Only show action configuration if user is connected */}
+      {isConnected && (
+        <div className='space-y-2 pt-4'>
+          {!selectedActionId ? (
+            /* Show placeholder when no action is selected */
+            actionsForSelectedIntegration.items.length > 0 ? (
+              <div className='text-sm text-muted-foreground'>Select an action above to configure it</div>
+            ) : null
+          ) : isLoadingSelectedAction ? (
+            /* Show compact skeleton while loading selected action */
+            <div className='space-y-3'>
+              <Skeleton className='h-5 w-44' />
+              <Skeleton className='h-20 w-full' />
+              <Skeleton className='h-5 w-36 mt-2' />
+              <Skeleton className='h-16 w-full' />
+            </div>
+          ) : selectedActionData ? (
+            /* Show actual content when loaded */
+            <>
+              {selectedActionData?.inputSchema && (
+                <Minimizer title='Configure Action Input' defaultOpen={true}>
+                  <DataInput
+                    schema={selectedActionData?.inputSchema}
+                    value={value.config?.inputMapping}
+                    variablesSchema={variableSchema}
+                    onChange={(configuration) => {
+                      onChange({ ...value, config: { ...value.config, inputMapping: configuration } })
+                    }}
+                  />
+                </Minimizer>
+              )}
+
+              <Minimizer title='Output Schema' defaultOpen={false} className='mt-4'>
+                <div className='h-40 overflow-y-auto border rounded-md p-2 w-full'>
+                  <pre className='text-xs'>{JSON.stringify(selectedActionData?.outputSchema, null, 2)}</pre>
+                </div>
               </Minimizer>
-            )}
-
-            <Minimizer title='Output Schema' defaultOpen={false} className='mt-4'>
-              <div className='h-40 overflow-y-auto border rounded-md p-2 w-full'>
-                <pre className='text-xs'>{JSON.stringify(selectedActionData?.outputSchema, null, 2)}</pre>
-              </div>
-            </Minimizer>
-          </>
-        ) : (
-          /* Show error state */
-          <div className='text-sm text-muted-foreground'>Failed to load action details</div>
-        )}
-      </div>
+            </>
+          ) : (
+            /* Show error state */
+            <div className='text-sm text-muted-foreground'>Failed to load action details</div>
+          )}
+        </div>
+      )}
     </>
   )
 }

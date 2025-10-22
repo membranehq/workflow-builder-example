@@ -111,6 +111,7 @@ export interface WorkflowNode {
   config?: {
     inputSchema?: Record<string, unknown>
     outputSchema?: Record<string, unknown>
+    integrationKey?: string
     actionId?: string
     inputMapping?: Record<string, unknown>
   }

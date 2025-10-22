@@ -13,7 +13,7 @@ interface EventTriggerConfigProps {
 
 export function EventTriggerConfig({ value, onChange, variableSchema, triggerTypeConfig }: EventTriggerConfigProps) {
   return (
-    <div className='space-y-2 border-t pt-4'>
+    <div className='space-y-2 pt-4'>
       <Minimizer
         title='Event Trigger Configuration'
         defaultOpen={true}

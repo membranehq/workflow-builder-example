@@ -151,7 +151,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
                   size='sm'
                   variant='default'
                   disabled={isRunning || !isFirstNodeManualTrigger}
-                  className='bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'
+                 
                 >
                   <Play className='h-4 w-4 mr-1' />
                   Run Workflow
@@ -199,7 +199,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
                       size='sm'
                       onClick={handleRunWorkflow}
                       disabled={isRunning}
-                      className='bg-green-600 hover:bg-green-700 text-white px-4'
+                      className=' text-white px-4'
                     >
                       {isRunning ? (
                         <div className='flex items-center gap-2'>

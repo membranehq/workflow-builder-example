@@ -24,8 +24,7 @@ export function SimpleEdge({
       d={edgePath}
       className='react-flow__edge-path'
       strokeWidth={2}
-      stroke='#b1b1b7'
-      strokeDasharray='2 4'
+      stroke='#cbd5e1'
       strokeLinecap='round'
       style={style}
       markerEnd={markerEnd}

@@ -28,7 +28,7 @@
     "dev": "tsc --build --watch"
   },
   "dependencies": {
-    "@membranehq/sdk": "^0.7.1",
+    "@membranehq/sdk": "^0.7.5",
     "@temporalio/client": "^1.13.0",
     "@temporalio/common": "^1.13.0",
     "@temporalio/workflow": "^1.13.0",

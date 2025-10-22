@@ -3,6 +3,7 @@
 import React from 'react'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { authenticatedFetcher, getAuthHeaders } from '@/lib/fetch-utils'
 import type { WorkflowNode, WorkflowState } from './types/workflow'
 import { NODE_TYPES, TRIGGER_TYPES } from '@/lib/node-types'
@@ -60,17 +61,49 @@ function patchJson(url: string, body: unknown) {
 
 export function WorkflowProvider({ id, children }: { id: string; children: React.ReactNode }) {
   const key = id ? `/api/workflows/${id}` : null
-  const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Initialize selectedNodeId from URL if available
+  const [selectedNodeId, setSelectedNodeIdState] = React.useState<string | null>(
+    searchParams.get('nodeId') || null
+  )
 
   const { data, error, isLoading, mutate } = useSWR<WorkflowState>(key, authenticatedFetcher)
 
-  // Auto-select first node when workflow loads
+  // Wrapper function to update both state and URL
+  const setSelectedNodeId = React.useCallback(
+    (nodeId: string | null) => {
+      setSelectedNodeIdState(nodeId)
+
+      // Update URL with the selected node
+      const params = new URLSearchParams(searchParams.toString())
+      if (nodeId) {
+        params.set('nodeId', nodeId)
+      } else {
+        params.delete('nodeId')
+      }
+
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+      router.replace(newUrl, { scroll: false })
+    },
+    [router, pathname, searchParams]
+  )
+
+  // Validate and sync selectedNodeId with workflow data
   React.useEffect(() => {
-    if (data?.nodes && data.nodes.length > 0 && !selectedNodeId) {
+    if (!data?.nodes || data.nodes.length === 0) return
+
+    // Check if the currently selected node exists in the workflow
+    const nodeExists = selectedNodeId && data.nodes.some(node => node.id === selectedNodeId)
+
+    if (!nodeExists) {
+      // If no valid node is selected, select the first node
       const firstNode = data.nodes[0]
       setSelectedNodeId(firstNode.id)
     }
-  }, [data?.nodes, selectedNodeId])
+  }, [data?.nodes, selectedNodeId, setSelectedNodeId])
 
   const { trigger: triggerSave } = useSWRMutation(
     key ? `${key}/nodes` : null,
@@ -104,12 +137,18 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
       const current = data
       if (!current) return
       const updatedNodes = (current.nodes ?? []).filter((n) => n.id !== nodeId)
+
+      // If the deleted node was selected, clear the selection
+      if (selectedNodeId === nodeId) {
+        setSelectedNodeId(null)
+      }
+
       // Optimistic update
       setWorkflow({ ...current, nodes: updatedNodes })
       // Persist
       void saveNodes(updatedNodes)
     },
-    [data, setWorkflow, saveNodes]
+    [data, setWorkflow, saveNodes, selectedNodeId, setSelectedNodeId]
   )
 
   const saveWorkflowName = React.useCallback(

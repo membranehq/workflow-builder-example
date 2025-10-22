@@ -2,6 +2,8 @@ import { ZapIcon } from 'lucide-react'
 import { BaseNode } from './base-node'
 import { WorkflowNode } from '../types/workflow'
 import { TriggerType } from '@/lib/node-types'
+import { useIntegration } from '@membranehq/react'
+import Image from 'next/image'
 
 interface TriggerNodeProps {
   data: {
@@ -18,6 +20,10 @@ interface TriggerNodeProps {
 }
 
 export function TriggerNode({ data, selected }: TriggerNodeProps) {
+  // Get integration key from node config for membrane triggers
+  const integrationKey = data.node?.config?.integrationKey as string
+  const { integration } = useIntegration(integrationKey)
+
   if (data.isEmpty) {
     return (
       <div className='relative w-[240px]'>
@@ -48,7 +54,7 @@ export function TriggerNode({ data, selected }: TriggerNodeProps) {
     if (data.triggerTypeMetadata && data.node?.triggerType) {
       return {
         title: data.label || data.node.name,
-        subtitle: data.triggerTypeMetadata.name,
+        logoTitle: data.triggerTypeMetadata.name,
         color: data.triggerTypeMetadata.color
       }
     }
@@ -56,22 +62,51 @@ export function TriggerNode({ data, selected }: TriggerNodeProps) {
     // Fallback for triggers without specific type metadata
     return {
       title: data.label || 'Manual Trigger',
-      subtitle: 'Manual Trigger - Start workflow manually',
+      logoTitle: 'Manual Trigger - Start workflow manually',
       color: 'blue'
     }
   }
 
-
   const triggerInfo = getTriggerInfo()
+
+  // Determine which icon to show
+  const getIcon = () => {
+    // For membrane triggers with integration, show integration logo
+    if (integrationKey && integration) {
+      if (integration.logoUri) {
+        return (
+          <Image
+            width={16}
+            height={16}
+            src={integration.logoUri}
+            alt={`${integration.name} logo`}
+            className='w-4 h-4 rounded'
+          />
+        )
+      } else {
+        // Fallback to first letter of integration name
+        return (
+          <div className='w-4 h-4 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
+            {integration.name[0]}
+          </div>
+        )
+      }
+    }
+
+    // For other trigger types, use the trigger type metadata icon
+    if (data.triggerTypeMetadata?.icon) {
+      return <data.triggerTypeMetadata.icon className='w-4 h-4 text-gray-600' />
+    }
+
+    return null
+  }
 
   return (
     <BaseNode
       selected={selected}
-      icon={data.triggerTypeMetadata?.icon ? (
-        <data.triggerTypeMetadata.icon className='w-4 h-4 text-gray-600' />
-      ) : null}
       title={triggerInfo.title}
-      subtitle={triggerInfo.subtitle}
+      logoTitle={triggerInfo.logoTitle}
+      icon={getIcon()}
       node={data.node}
       onDelete={data.onDelete}
       showTargetHandle={false}

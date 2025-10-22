@@ -10,7 +10,7 @@ interface ManualTriggerConfigProps {
 
 export function ManualTriggerConfig({ value, onChange }: ManualTriggerConfigProps) {
   return (
-    <div className='space-y-2 border-t pt-4'>
+    <div className='space-y-2 pt-4'>
       <Minimizer title='Input Schema' defaultOpen={true} tooltip="Configure Input Schema for this trigger">
         <div className='space-y-4'>
           <SchemaBuilder

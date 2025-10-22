@@ -1,3 +1,4 @@
+import { IntegrationAppClient } from '@membranehq/sdk'
 import { WorkflowNode, NodeExecutionResult } from './types.js'
 
 /**
@@ -235,38 +236,35 @@ export async function executeActionNode(
       throw new Error('Action node requires actionId in config')
     }
 
-    // Call the integration.app API to execute the action
-    const response = await fetch(`http://api.integration.app/actions/${node.config.actionId}/run`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${membraneToken}`, // Assuming the client has a token property
-      },
-      body: JSON.stringify(resolvedInputs),
+    const membraneClient = new IntegrationAppClient({
+      token: membraneToken,
     })
 
-    const responseText = await response.text()
-    let responseData: unknown
-
     try {
-      responseData = JSON.parse(responseText)
-    } catch {
-      responseData = responseText
-    }
+      const result = await membraneClient
+        .connection(node.config.integrationKey!)
+        .action(node.config.actionId)
+        .run(resolvedInputs)
 
-    return {
-      id: `${node.id}-${Date.now()}`,
-      nodeId: node.id,
-      success: response.ok,
-      input: resolvedInputs,
-      output: responseData,
-      error: !response.ok
-        ? {
-            message: `Action execution failed with status ${response.status}`,
-            code: 'ACTION_ERROR',
-            details: { status: response.status, statusText: response.statusText, response: responseData },
-          }
-        : undefined,
+      return {
+        id: `${node.id}-${Date.now()}`,
+        nodeId: node.id,
+        success: true,
+        input: resolvedInputs,
+        output: result,
+      }
+    } catch (error) {
+      return {
+        id: `${node.id}-${Date.now()}`,
+        nodeId: node.id,
+        success: false,
+        input: resolvedInputs,
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          code: 'ACTION_EXECUTION_ERROR',
+          details: error,
+        },
+      }
     }
   } catch (error) {
     return {

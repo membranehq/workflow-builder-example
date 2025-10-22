@@ -1,13 +1,12 @@
 import { Handle, Position } from '@xyflow/react'
 import { WorkflowNode } from '../types/workflow'
-import { ReactNode } from 'react'
 import { NodeOptionsMenu } from './node-options-menu'
 
 interface BaseNodeProps {
   selected?: boolean
-  icon: ReactNode | null
   title: string
-  subtitle?: string
+  logoTitle?: string
+  icon?: React.ReactNode
   node?: WorkflowNode
   onDelete?: (nodeId: string) => void
   onClick?: () => void
@@ -16,13 +15,14 @@ interface BaseNodeProps {
   className?: string
   position?: number
   selectedNodeId?: string | null
+  isPlaceholder?: boolean
 }
 
 export function BaseNode({
   selected,
-  icon,
   title,
-  subtitle,
+  logoTitle,
+  icon,
   node,
   onDelete,
   onClick,
@@ -31,13 +31,14 @@ export function BaseNode({
   className = '',
   position,
   selectedNodeId,
+  isPlaceholder = false,
 }: BaseNodeProps) {
   const isSelected = selected || (node && selectedNodeId === node.id)
 
   const baseClasses = `
-    flex items-center p-2 rounded-md border border-gray-200 bg-white w-[240px] h-[48px] shadow-sm
+    flex items-center px-3 py-1.5 rounded-md border border-gray-200 bg-white w-[240px] shadow-sm
     transition-all duration-200 ease-in-out
-    ${isSelected ? 'shadow-md ring-2 ring-blue-500 border-blue-500' : ''}
+    ${isSelected ? 'shadow-xl ring-2 ring-blue-500 border-blue-500' : ''}
     ${onClick ? 'cursor-pointer hover:shadow-md hover:border-gray-300' : ''}
     ${className}
   `
@@ -62,26 +63,28 @@ export function BaseNode({
         />
       )}
       <div className={baseClasses} onClick={onClick}>
-        <div className='flex items-center gap-3 w-full justify-between'>
-          <div className='flex items-center gap-3 flex-1 min-w-0'>
-            <div className='shrink-0 bg-muted rounded-md p-1'>{icon}</div>
-            <div className='flex-1 min-w-0'>
-              <div className='text-[11px] font-medium text-gray-900 flex items-center gap-2'>
-                {position && (
-                  <span className='text-xs font-medium'>
-                    {position}.
-                  </span>
-                )}
-                {title}
-              </div>
-              {subtitle && <div className='text-[10px] text-gray-500'>{subtitle}</div>}
+        <div className='flex flex-col gap-1.5 w-full relative'>
+          {/* Integration label section */}
+          {logoTitle && (
+            <div className=' border border-gray-200 rounded px-1 py-0.5 flex items-center gap-1 w-fit'>
+              {icon && <div className='flex-shrink-0'>{icon}</div>}
+              <span className='text-[9px] text-gray-700 font-bold'>{logoTitle}</span>
+            </div>
+          )}
+
+          {/* Title content */}
+          <div className='flex-1 min-w-0'>
+            <div className={`text-[11px] font-medium ${isPlaceholder ? 'text-gray-400' : 'text-gray-900'} flex items-center gap-2`}>
+              {position && <span className='text-xs font-bold'>{position}.</span>}
+              {title}
             </div>
           </div>
+
+          {/* Options menu positioned absolutely */}
           {onDelete && node && (
-            <NodeOptionsMenu
-              onDelete={onDelete}
-              nodeId={node.id}
-            />
+            <div className='absolute top-1 right-1'>
+              <NodeOptionsMenu onDelete={onDelete} nodeId={node.id} />
+            </div>
           )}
         </div>
       </div>
