@@ -5,7 +5,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/u
 import { Minimizer } from '@/components/ui/minimizer'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
-import { Action, DataInput, DataSchema, useAction, useActions, useIntegration, useIntegrations } from '@membranehq/react'
+import {
+  Action,
+  DataInput,
+  DataSchema,
+  useAction,
+  useActions,
+  useIntegration,
+  useIntegrations,
+} from '@membranehq/react'
 import Image from 'next/image'
 import { WorkflowNode } from '../types/workflow'
 
@@ -184,16 +192,18 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
         ) : selectedActionData ? (
           /* Show actual content when loaded */
           <>
-            <Minimizer title='Configure Action Input' defaultOpen={true}>
-              <DataInput
-                schema={selectedActionData?.inputSchema}
-                value={value.config?.inputMapping}
-                variablesSchema={variableSchema}
-                onChange={(configuration) => {
-                  onChange({ ...value, config: { ...value.config, inputMapping: configuration } })
-                }}
-              />
-            </Minimizer>
+            {selectedActionData?.inputSchema && (
+              <Minimizer title='Configure Action Input' defaultOpen={true}>
+                <DataInput
+                  schema={selectedActionData?.inputSchema}
+                  value={value.config?.inputMapping}
+                  variablesSchema={variableSchema}
+                  onChange={(configuration) => {
+                    onChange({ ...value, config: { ...value.config, inputMapping: configuration } })
+                  }}
+                />
+              </Minimizer>
+            )}
 
             <Minimizer title='Output Schema' defaultOpen={false} className='mt-4'>
               <div className='h-40 overflow-y-auto border rounded-md p-2 w-full'>
