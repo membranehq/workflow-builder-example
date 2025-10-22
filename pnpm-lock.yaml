@@ -206,7 +206,7 @@ importers:
   packages/shared:
     dependencies:
       '@membranehq/sdk':
-        specifier: ^0.7.1
+        specifier: ^0.7.5
         version: 0.7.5
       '@temporalio/client':
         specifier: ^1.13.0
