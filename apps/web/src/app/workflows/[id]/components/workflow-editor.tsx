@@ -274,7 +274,7 @@ export function WorkflowEditor() {
   )
 
   const handleCreateNodeFromType = useCallback(
-    (selectedType: string) => {
+    (selectedType: string, config?: Record<string, unknown>) => {
       if (!workflow) return
 
       const baseName = (nodeTypeDefinitions[selectedType]?.name ?? selectedType) as string
@@ -293,6 +293,7 @@ export function WorkflowEditor() {
         name: finalName,
         type: 'action',
         nodeType: selectedType,
+        config: config || {},
       }
       const updatedNodes = [...(workflow.nodes ?? [])]
       if (pendingAfterId) {
@@ -304,10 +305,11 @@ export function WorkflowEditor() {
       }
       setPendingAfterId(undefined)
       setNodeCreateDialogOpen(false)
+      setSelectedNodeId(newNode.id)
       setWorkflow({ ...workflow, nodes: updatedNodes })
       void saveNodes(updatedNodes)
     },
-    [workflow, nodeTypeDefinitions, pendingAfterId, setWorkflow, saveNodes],
+    [workflow, nodeTypeDefinitions, pendingAfterId, setWorkflow, saveNodes, setSelectedNodeId],
   )
 
   const handleCreateTriggerFromType = useCallback(
@@ -369,7 +371,6 @@ export function WorkflowEditor() {
             setNodeCreateDialogOpen(false)
             setPendingAfterId(undefined)
           }}
-          nodeTypes={nodeTypeDefinitions}
           onCreate={handleCreateNodeFromType}
         />
 
