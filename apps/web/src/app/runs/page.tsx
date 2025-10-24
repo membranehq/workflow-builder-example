@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, Suspense } from 'react'
 
 interface WorkflowRun {
   _id: string
@@ -68,7 +68,7 @@ interface FilterOption {
 }
 
 
-export default function RunsPage() {
+function RunsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [filters, setFilters] = useState<Filter[]>([])
@@ -398,6 +398,33 @@ export default function RunsPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function RunsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col h-full">
+        <div className="border-b border-gray-200 dark:border-gray-800 py-3">
+          <div className="flex items-center justify-between">
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Workflow Runs
+            </h1>
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto pt-4 pr-4 pb-4">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="py-4 px-4">
+                <Skeleton className="h-6 w-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
+      <RunsPageContent />
+    </Suspense>
   )
 }
 

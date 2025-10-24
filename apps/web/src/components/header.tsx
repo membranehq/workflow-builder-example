@@ -16,9 +16,7 @@ export function Header() {
               <Link href='/' className='inline-flex items-center px-1 pt-1 text-sm font-medium'>
                 Overview
               </Link>
-              <Link href='/integrations' className='inline-flex items-center px-1 pt-1 text-sm font-medium'>
-                Integrations
-              </Link>
+
               <Link href='/workflows' className='inline-flex items-center px-1 pt-1 text-sm font-medium'>
                 Workflows
               </Link>

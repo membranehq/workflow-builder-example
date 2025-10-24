@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { useParams, useRouter } from 'next/navigation'
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, Suspense } from 'react'
 import { Play, History, Workflow } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DataInput, DataSchema } from '@membranehq/react'
@@ -10,6 +10,7 @@ import { getAuthHeaders } from '@/lib/fetch-utils'
 import { WorkflowEditor } from './components/workflow-editor'
 import { WorkflowProvider, useWorkflow } from './components/workflow-context'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ui/skeleton'
 
 function WorkflowDetailInner({ id }: { id: string }) {
   const { workflow, isLoading, saveWorkflowName } = useWorkflow()
@@ -246,8 +247,21 @@ export default function WorkflowDetailPage() {
   const resolvedId = Array.isArray(id) ? id[0] : (id as string)
   if (!resolvedId) return null
   return (
-    <WorkflowProvider id={resolvedId}>
-      <WorkflowDetailInner id={resolvedId} />
-    </WorkflowProvider>
+    <Suspense fallback={
+      <div className="flex flex-col h-full">
+        <div className="border-b border-gray-200 dark:border-gray-800 py-3">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-6 w-48" />
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto p-4">
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </div>
+    }>
+      <WorkflowProvider id={resolvedId}>
+        <WorkflowDetailInner id={resolvedId} />
+      </WorkflowProvider>
+    </Suspense>
   )
 }

@@ -1,9 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { WorkflowNodeRenderer } from '@/app/workflows/[id]/components/workflow-node-renderer'
 import { WorkflowProvider, useWorkflow } from '@/app/workflows/[id]/components/workflow-context'
 import { WorkflowNode } from '@/app/workflows/[id]/components/types/workflow'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface WorkflowRun {
   _id: string
@@ -52,12 +53,18 @@ export function WorkflowRunViewer({ run, onNodeClick }: WorkflowRunViewerProps) 
   }
 
   return (
-    <WorkflowProvider id={run.workflowId}>
-      <WorkflowRunViewerContent
-        run={run}
-        onNodeClick={handleNodeClick}
-      />
-    </WorkflowProvider>
+    <Suspense fallback={
+      <div className="h-full flex items-center justify-center">
+        <Skeleton className="h-96 w-full" />
+      </div>
+    }>
+      <WorkflowProvider id={run.workflowId}>
+        <WorkflowRunViewerContent
+          run={run}
+          onNodeClick={handleNodeClick}
+        />
+      </WorkflowProvider>
+    </Suspense>
   )
 }
 
