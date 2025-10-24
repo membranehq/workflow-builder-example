@@ -116,8 +116,8 @@ export function WorkflowNodeRenderer({
     // Add action nodes
     const actionNodes = safeNodes.filter((node) => node.type === 'action')
     const nodeHeight = 56 // Height of each node
-    const firstActionTop = 200 // adjusted for reduced node height
     const actionStep = 117 // nodeHeight + ~61px desired gap between actions
+    const firstActionTop = 100 + actionStep // trigger top (100) + consistent step
     actionNodes.forEach((node, index) => {
       const nodeTypeMetadata = node.nodeType ? nodeTypeDefinitions[node.nodeType] : undefined
       const actionY = firstActionTop + index * actionStep
@@ -164,12 +164,12 @@ export function WorkflowNodeRenderer({
     // Add plus node between trigger and first action, or after trigger if no actions (only in edit mode)
     if (!viewOnly && triggerNode) {
       if (actionNodes.length === 0) {
-        // No action nodes - place plus node below trigger
+        // No action nodes - place plus node below trigger with consistent spacing
         const triggerBottom = 100 + nodeHeight // 100 (trigger top) + 56 (height)
         flowNodes.push({
           id: 'plus-trigger',
           type: 'plus',
-          position: { x: 100, y: triggerBottom + 31 }, // ~half of desired ~61px gap
+          position: { x: 100, y: triggerBottom + (actionStep - nodeHeight) / 2 }, // consistent spacing
           data: {
             parentId: triggerNode.id,
             createNewNode: onPlusNodeClick || (() => { }),

@@ -31,8 +31,6 @@ export function Minimizer({
 }: MinimizerProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
-  // don't remove this its for debugging
-  return null
 
   return (
     <div className={cn('border rounded-lg', className)}>
