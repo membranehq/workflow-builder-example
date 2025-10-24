@@ -3,7 +3,8 @@
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, History } from 'lucide-react'
 import Link from 'next/link'
 import { formatTimeAgo } from '@/lib/utils'
 import { useRun } from '@/hooks/use-run'
@@ -46,10 +47,18 @@ export default function WorkflowRunDetailPage() {
     return (
       <>
         <div className="flex flex-col h-screen">
-          <div className="border-b border-gray-200 dark:border-gray-800 py-3">
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-8 w-8" />
-              <Skeleton className="h-6 w-32" />
+          <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-8 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-4 w-1" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-6 w-16" />
+              </div>
             </div>
           </div>
           <div className="flex-1 p-8">
@@ -68,14 +77,16 @@ export default function WorkflowRunDetailPage() {
     return (
       <>
         <div className="flex flex-col h-screen">
-          <div className="border-b border-gray-200 dark:border-gray-800 py-3">
-            <div className="flex items-center gap-4">
-              <Link href="/runs">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Runs
-                </Button>
+          <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-8 py-3">
+            <div className="flex items-center gap-2">
+              <Link href="/runs" className="flex items-center gap-1.5 text-base text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                <History className="h-4 w-4" />
+                Runs
               </Link>
+              <span className="text-base text-gray-500">/</span>
+              <h1 className="text-base font-semibold text-gray-900 dark:text-white">
+                Error
+              </h1>
             </div>
           </div>
           <div className="flex-1 flex items-center justify-center">
@@ -104,14 +115,16 @@ export default function WorkflowRunDetailPage() {
     return (
       <>
         <div className="flex flex-col h-screen">
-          <div className="border-b border-gray-200 dark:border-gray-800 py-3">
-            <div className="flex items-center gap-4">
-              <Link href="/runs">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Runs
-                </Button>
+          <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-8 py-3">
+            <div className="flex items-center gap-2">
+              <Link href="/runs" className="flex items-center gap-1.5 text-base text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                <History className="h-4 w-4" />
+                Runs
               </Link>
+              <span className="text-base text-gray-500">/</span>
+              <h1 className="text-base font-semibold text-gray-900 dark:text-white">
+                Not Found
+              </h1>
             </div>
           </div>
           <div className="flex-1 flex items-center justify-center">
@@ -140,22 +153,32 @@ export default function WorkflowRunDetailPage() {
     <>
       <div className="flex flex-col h-screen w-full">
         {/* Header */}
-        <div className="border-b border-gray-200 dark:border-gray-800 py-3">
-          <div className="flex items-center gap-4">
-            <Link href="/runs">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Runs
-              </Button>
-            </Link>
+        <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-8 py-3">
+          <div className="flex items-center justify-between">
+            {/* Breadcrumb navigation on the left */}
             <div className="flex items-center gap-2">
-              {getStatusIcon(run.status)}
-              <span className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-                {run.status}
-              </span>
+              <Link href="/runs" className="flex items-center gap-1.5 text-base text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                <History className="h-4 w-4" />
+                Runs
+              </Link>
+              <span className="text-base text-gray-500">/</span>
+              <h1 className="text-base font-semibold text-gray-900 dark:text-white">
+                {run.workflow?.name || 'Workflow Run'}
+              </h1>
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {formatDate(run.startedAt)} • {formatDuration(run.executionTime)}
+
+            {/* Status badge and timing info on the right */}
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                {formatDate(run.startedAt)} • {formatDuration(run.executionTime)}
+              </div>
+              <Badge
+                variant={run.status === 'completed' ? 'default' : run.status === 'failed' ? 'destructive' : 'secondary'}
+                className="flex items-center gap-1.5"
+              >
+                {getStatusIcon(run.status)}
+                <span className="capitalize">{run.status}</span>
+              </Badge>
             </div>
           </div>
         </div>
