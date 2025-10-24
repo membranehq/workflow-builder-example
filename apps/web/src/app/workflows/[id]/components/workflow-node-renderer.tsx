@@ -95,7 +95,10 @@ export function WorkflowNodeRenderer({
           nodeState: nodeResult ? {
             status: nodeResult.success ? 'success' : 'error',
             isDisabled: false,
-          } : undefined,
+          } : {
+            status: 'pending',
+            isDisabled: true,
+          },
           hasResults: !!nodeResult,
         } as NodeData,
       })
@@ -138,7 +141,10 @@ export function WorkflowNodeRenderer({
           nodeState: nodeResult ? {
             status: nodeResult.success ? 'success' : 'error',
             isDisabled: false,
-          } : undefined,
+          } : {
+            status: 'pending',
+            isDisabled: true,
+          },
           hasResults: !!nodeResult,
         } as NodeData,
       })

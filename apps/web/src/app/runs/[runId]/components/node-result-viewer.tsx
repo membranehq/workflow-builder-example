@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { Badge } from '@/components/ui/badge'
-import { JsonViewer } from '@/components/ui/json-viewer'
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import type { IWorkflowRunResult } from '@repo/shared/models/workflow-run'
 
@@ -77,7 +76,9 @@ export function NodeResultViewer({ selectedNodeId, runResults }: NodeResultViewe
               Output
             </h4>
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-              <JsonViewer data={selectedResult.output} />
+              <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
+                {JSON.stringify(selectedResult.output, null, 2)}
+              </pre>
             </div>
           </div>
         )}
@@ -114,7 +115,9 @@ export function NodeResultViewer({ selectedNodeId, runResults }: NodeResultViewe
                   <div className="text-sm font-medium text-red-900 dark:text-red-100 mb-2">
                     Details:
                   </div>
-                  <JsonViewer data={selectedResult.error.details} />
+                  <pre className="text-sm text-red-800 dark:text-red-200 whitespace-pre-wrap overflow-auto bg-red-100 dark:bg-red-900/30 rounded p-2">
+                    {JSON.stringify(selectedResult.error.details, null, 2)}
+                  </pre>
                 </div>
               )}
             </div>

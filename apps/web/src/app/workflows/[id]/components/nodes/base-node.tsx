@@ -1,7 +1,6 @@
 import { Handle, Position } from '@xyflow/react'
 import { WorkflowNode } from '../types/workflow'
 import { NodeOptionsMenu } from './node-options-menu'
-import { CheckCircle, XCircle, Clock } from 'lucide-react'
 
 interface BaseNodeProps {
   selected?: boolean
@@ -47,9 +46,9 @@ export function BaseNode({
 }: BaseNodeProps) {
   const isSelected = selected || (node && selectedNodeId === node.id)
 
-  // Determine node state styling
+  // Determine node state styling - only show status colors in view-only mode
   const getNodeStateStyling = () => {
-    if (!nodeState) return ''
+    if (!nodeState || !viewOnly) return ''
 
     switch (nodeState.status) {
       case 'success':
@@ -64,15 +63,15 @@ export function BaseNode({
   }
 
   const getStatusIcon = () => {
-    if (!nodeState) return null
+    if (!nodeState || !viewOnly) return null
 
     switch (nodeState.status) {
       case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-600" />
+        return <div className="h-2 w-2 rounded-full bg-green-500" />
       case 'error':
-        return <XCircle className="h-4 w-4 text-red-600" />
+        return <div className="h-2 w-2 rounded-full bg-red-500" />
       case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-600" />
+        return <div className="h-2 w-2 rounded-full bg-yellow-500" />
       default:
         return null
     }
@@ -108,7 +107,7 @@ export function BaseNode({
           }}
         />
       )}
-      <div className={baseClasses} onClick={onClick}>
+      <div className={baseClasses} onClick={isDisabled ? undefined : onClick}>
         <div className='flex flex-col gap-1.5 w-full relative'>
           {/* Integration label section */}
           {logoTitle && (
@@ -119,12 +118,16 @@ export function BaseNode({
           )}
 
           {/* Title content */}
-          <div className='flex-1 min-w-0'>
+          <div className='flex-1 min-w-0 flex items-center justify-between'>
             <div className={`text-[11px] font-medium ${isPlaceholder ? 'text-gray-400' : 'text-gray-900'} flex items-center gap-2`}>
               {position && <span className='text-xs font-bold'>{position}.</span>}
               {title}
-              {getStatusIcon()}
             </div>
+            {getStatusIcon() && (
+              <div className='flex-shrink-0 ml-2'>
+                {getStatusIcon()}
+              </div>
+            )}
           </div>
 
           {/* Options menu positioned absolutely - only show if not in viewOnly mode */}
