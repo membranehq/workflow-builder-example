@@ -12,6 +12,13 @@ interface ActionNodeProps {
     nodeTypeMetadata?: NodeTypeMetadata
     position?: number
     selectedNodeId?: string | null
+    viewOnly?: boolean
+    nodeState?: {
+      status: 'pending' | 'success' | 'error'
+      isDisabled: boolean
+    }
+    isDisabled?: boolean
+    hasResults?: boolean
   }
   selected?: boolean
 }
@@ -95,6 +102,10 @@ export function ActionNode({ data, selected }: ActionNodeProps) {
       position={data.position}
       selectedNodeId={data.selectedNodeId}
       isPlaceholder={nodeInfo.title === 'Select action'}
+      viewOnly={data.viewOnly}
+      nodeState={data.nodeState}
+      isDisabled={data.isDisabled}
+      hasResults={data.hasResults}
     />
   )
 }

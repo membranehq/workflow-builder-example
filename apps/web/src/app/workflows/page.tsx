@@ -40,6 +40,7 @@ export default function WorkflowsPage() {
     }
   )
 
+
   const handleCreateWorkflow = async () => {
     try {
       setIsCreating(true)
@@ -117,6 +118,7 @@ export default function WorkflowsPage() {
           {isCreating ? 'Creating...' : 'Create Workflow'}
         </Button>
       </div>
+
 
       {/* Workflows List */}
       {isLoading ? (
@@ -216,7 +218,14 @@ export default function WorkflowsPage() {
                     size='sm'
                     onClick={(e) => {
                       e.stopPropagation()
-                      router.push(`/workflows/${workflow._id}/runs`)
+                      const filter = {
+                        id: Date.now().toString(),
+                        field: 'workflow',
+                        operator: 'equals',
+                        value: workflow._id
+                      }
+                      const filtersParam = encodeURIComponent(JSON.stringify([filter]))
+                      router.push(`/runs?filters=${filtersParam}`)
                     }}
                   >
                     <History className='h-4 w-4 mr-1.5' />

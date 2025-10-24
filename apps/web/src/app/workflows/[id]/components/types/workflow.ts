@@ -30,6 +30,13 @@ export interface NodeData extends Record<string, unknown> {
   triggerTypeMetadata?: TriggerType
   position?: number
   selectedNodeId?: string | null
+  viewOnly?: boolean
+  nodeState?: {
+    status: 'pending' | 'success' | 'error'
+    isDisabled: boolean
+  }
+  isDisabled?: boolean
+  hasResults?: boolean
 }
 
 export interface PlusNodeData extends Record<string, unknown> {

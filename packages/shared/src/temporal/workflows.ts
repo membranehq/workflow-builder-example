@@ -25,7 +25,7 @@ export async function executeWorkflow(
   nodes: WorkflowNode[],
   membraneToken: string,
   triggerInput: Record<string, unknown> = {},
-  runId?: string,
+  runId: string,
 ): Promise<EnhancedNodeExecutionResult[]> {
   return await executeWorkflowNodes(nodes, membraneToken, triggerInput, runId)
 }

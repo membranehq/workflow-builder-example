@@ -59,7 +59,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
       const result = await response.json()
 
       // Navigate to the specific run page immediately after starting the workflow
-      router.push(`/workflows/${id}/runs/${result.runId}`)
+      router.push(`/runs/${result.runId}`)
     } catch (error) {
       console.error('Failed to run workflow:', error)
       setWorkflowResult('Error: Failed to run workflow')
@@ -136,7 +136,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
 
           {/* Run button and View Runs button on the far right */}
           <div className='flex items-center gap-2'>
-            <Link href={`/workflows/${id}/runs`} className='no-underline'>
+            <Link href={`/runs?filters=${encodeURIComponent(JSON.stringify([{ id: Date.now().toString(), field: 'workflow', operator: 'equals', value: id }]))}`} className='no-underline'>
               <Button
                 size='sm'
                 variant='outline'
@@ -151,7 +151,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
                   size='sm'
                   variant='default'
                   disabled={isRunning || !isFirstNodeManualTrigger}
-                 
+
                 >
                   <Play className='h-4 w-4 mr-1' />
                   Run Workflow

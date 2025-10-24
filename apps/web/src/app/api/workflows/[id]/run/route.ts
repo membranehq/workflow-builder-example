@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectToDatabase, WorkflowRun, createTemporalClient, TEMPORAL_CONFIG, executeWorkflow, type WorkflowNode } from '@repo/shared'
+import {
+  connectToDatabase,
+  WorkflowRun,
+  createTemporalClient,
+  TEMPORAL_CONFIG,
+  executeWorkflow,
+  type WorkflowNode,
+} from '@repo/shared'
 import { Workflow } from '@/models/workflow'
 import { getAuthFromRequest } from '@/lib/server-auth'
 import { generateIntegrationToken } from '@/lib/integration-token'
@@ -30,6 +37,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       workflowId: workflowId,
       status: 'running',
       input: triggerInput,
+      nodesSnapshot: workflow.nodes, // Capture snapshot of nodes at execution time
       results: [],
       summary: {
         totalNodes: workflow.nodes.length,
@@ -47,6 +55,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const membraneToken = await generateIntegrationToken(auth)
 
     const temporalWorkflowId = `workflow-${workflowId}-${Date.now()}`
+
     await client.workflow.start(executeWorkflow, {
       args: [workflow.nodes as WorkflowNode[], membraneToken, triggerInput, workflowRun._id.toString()],
       taskQueue: TEMPORAL_CONFIG.TASK_QUEUE_NAME,

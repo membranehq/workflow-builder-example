@@ -15,27 +15,32 @@ export async function executeWorkflowNodes(
   nodes: WorkflowNode[],
   membraneToken: string,
   triggerInput: Record<string, unknown> = {},
-  runId?: string,
+  runId: string,
 ): Promise<EnhancedNodeExecutionResult[]> {
   const results: EnhancedNodeExecutionResult[] = []
   const startTime = Date.now()
 
+  let failed = false
+
   try {
     for (const node of nodes) {
       const result = await executeWorkflowNode(node, results, membraneToken, triggerInput)
+
+      console.log('Result:', result)
       results.push(result)
 
       // Stop executing further nodes if the current node failed
       if (!result.success) {
+        failed = true
         console.log('Node failed, stopping execution', result)
-        break
+
+        return results
       }
     }
 
-    // Update the workflow run in the database with results
-    if (runId) {
-      await updateWorkflowRun(runId, results, startTime, 'completed')
-    }
+    console.log('Results:', results)
+
+    await updateWorkflowRun(runId!, results, startTime, !failed ? 'completed' : 'failed')
 
     return results
   } catch (error) {
@@ -119,5 +124,3 @@ async function updateWorkflowRun(
     // Don't throw - we don't want to fail the workflow just because we couldn't update the run record
   }
 }
-
-

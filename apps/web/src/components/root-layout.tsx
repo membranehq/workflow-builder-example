@@ -11,13 +11,14 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
     return <>{children}</>
   }
 
-  const isWorkflowPage = pathname.match(/^\/workflows\/[^/]+$/) || pathname === '/notes'
+  const isWorkflowPage = pathname.match(/^\/workflows\/[^/]+$/)
+  const isRunPage = pathname.match(/^\/runs\/[^/]+$/)
 
   return (
     <div className='h-full flex flex-col'>
-      {!isWorkflowPage && <Header />}
+      {!isWorkflowPage && !isRunPage && <Header />}
       <main className='flex-1 flex flex-col items-center'>
-        {isWorkflowPage ? (
+        {isWorkflowPage || isRunPage ? (
           children
         ) : (
           <PageWrapper>

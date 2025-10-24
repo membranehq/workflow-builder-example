@@ -22,6 +22,9 @@ export function Header() {
               <Link href='/workflows' className='inline-flex items-center px-1 pt-1 text-sm font-medium'>
                 Workflows
               </Link>
+              <Link href='/runs' className='inline-flex items-center px-1 pt-1 text-sm font-medium'>
+                Runs
+              </Link>
             </div>
           </div>
         </div>

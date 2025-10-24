@@ -15,6 +15,13 @@ interface TriggerNodeProps {
     triggerTypeMetadata?: TriggerType
     position?: number
     selectedNodeId?: string | null
+    viewOnly?: boolean
+    nodeState?: {
+      status: 'pending' | 'success' | 'error'
+      isDisabled: boolean
+    }
+    isDisabled?: boolean
+    hasResults?: boolean
   }
   selected?: boolean
 }
@@ -112,6 +119,10 @@ export function TriggerNode({ data, selected }: TriggerNodeProps) {
       showTargetHandle={false}
       position={data.position}
       selectedNodeId={data.selectedNodeId}
+      viewOnly={data.viewOnly}
+      nodeState={data.nodeState}
+      isDisabled={data.isDisabled}
+      hasResults={data.hasResults}
     />
   )
 }

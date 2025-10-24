@@ -18,6 +18,7 @@ export interface IWorkflowRun {
   workflowId: string
   status: 'running' | 'completed' | 'failed'
   input?: unknown
+  nodesSnapshot?: unknown[] // Snapshot of workflow nodes at the time of execution
   results: IWorkflowRunResult[]
   summary: {
     totalNodes: number
@@ -81,6 +82,9 @@ const workflowRunSchema = new mongoose.Schema<IWorkflowRun>(
     input: {
       type: mongoose.Schema.Types.Mixed,
     },
+    nodesSnapshot: {
+      type: [mongoose.Schema.Types.Mixed],
+    },
     results: {
       type: [workflowRunResultSchema],
       default: [],
@@ -135,8 +139,3 @@ workflowRunSchema.index({ status: 1, startedAt: -1 })
 
 export const WorkflowRun =
   (mongoose.models.WorkflowRun as Model<IWorkflowRun>) || mongoose.model<IWorkflowRun>('WorkflowRun', workflowRunSchema)
-
-
-
-
-
