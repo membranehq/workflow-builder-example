@@ -1,8 +1,9 @@
 'use client'
 
 import React from 'react'
-import { WorkflowEditor } from '@/app/workflows/[id]/components/workflow-editor'
-import { WorkflowProvider } from '@/app/workflows/[id]/components/workflow-context'
+import { WorkflowNodeRenderer } from '@/app/workflows/[id]/components/workflow-node-renderer'
+import { WorkflowProvider, useWorkflow } from '@/app/workflows/[id]/components/workflow-context'
+import { WorkflowNode } from '@/app/workflows/[id]/components/types/workflow'
 
 interface WorkflowRun {
   _id: string
@@ -35,7 +36,7 @@ interface WorkflowRun {
     name: string
     description?: string
   }
-  nodesSnapshot?: unknown[]
+  nodesSnapshot?: WorkflowNode[]
 }
 
 interface WorkflowRunViewerProps {
@@ -44,16 +45,35 @@ interface WorkflowRunViewerProps {
 }
 
 export function WorkflowRunViewer({ run, onNodeClick }: WorkflowRunViewerProps) {
+  const handleNodeClick = (nodeId: string) => {
+    if (onNodeClick) {
+      onNodeClick(nodeId)
+    }
+  }
 
   return (
     <WorkflowProvider id={run.workflowId}>
-      <div className="h-full">
-        <WorkflowEditor
-          viewOnly={true}
-          onNodeClick={onNodeClick}
-          runResults={run.results}
-        />
-      </div>
+      <WorkflowRunViewerContent
+        run={run}
+        onNodeClick={handleNodeClick}
+      />
     </WorkflowProvider>
+  )
+}
+
+function WorkflowRunViewerContent({ run, onNodeClick }: WorkflowRunViewerProps) {
+  const { workflow, nodeTypes, triggerTypes } = useWorkflow()
+
+  return (
+    <div className="h-full">
+      <WorkflowNodeRenderer
+        nodes={workflow?.nodes || run.nodesSnapshot || []}
+        nodeTypes={nodeTypes}
+        triggerTypes={triggerTypes}
+        onNodeClick={(event, node) => onNodeClick?.(node.id)}
+        viewOnly={true}
+        runResults={run.results}
+      />
+    </div>
   )
 }
