@@ -31,7 +31,7 @@ export function PlusNode({ data }: PlusNodeProps) {
       <div className='flex items-center justify-center w-[240px] h-[18px]'>
         <Button
           variant='outline'
-          className='h-4 w-4 p-0 aspect-square rounded-none border-2 border-gray-300 hover:border-gray-400 bg-gray-100 hover:bg-gray-200 [&_svg]:!size-2'
+          className='h-4 w-4 p-0 aspect-square rounded-full border-2 border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-200 [&_svg]:!size-2'
           onClick={() => data.createNewNode(data.parentId)}
         >
           <Plus className='text-gray-600' />

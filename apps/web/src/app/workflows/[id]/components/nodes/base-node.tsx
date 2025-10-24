@@ -80,9 +80,10 @@ export function BaseNode({
 
   const baseClasses = `
     flex items-center px-3 py-1.5 rounded-md border w-[240px] shadow-sm
+    bg-white border-gray-200
     transition-all duration-200 ease-in-out
-    ${isSelected ? 'shadow-xl ring-2 ring-blue-500 border-blue-500' : ''}
-    ${onClick && !isDisabled && hasResults ? 'cursor-pointer hover:shadow-md hover:border-gray-300' : ''}
+    ${isSelected ? 'shadow-xl ring-2 ring-blue-500 border-blue-500 bg-blue-50' : ''}
+    ${onClick && !isDisabled && hasResults ? 'cursor-pointer hover:shadow-md hover:border-gray-300 hover:bg-gray-50' : ''}
     ${isDisabled || (viewOnly && !hasResults) ? 'opacity-50 cursor-not-allowed' : ''}
     ${getNodeStateStyling()}
     ${className}
