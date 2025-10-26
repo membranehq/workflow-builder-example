@@ -33,6 +33,9 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
 
   const membrane = useIntegrationApp()
 
+
+
+
   // Event type options
   const eventTypes = [
     { value: 'created', label: 'Created' },
@@ -44,6 +47,11 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
   const [dataCollections, setDataCollections] = useState<Array<{ key: string; name: string }>>([])
   const [isLoadingDataCollections, setIsLoadingDataCollections] = useState(false)
   const [dataCollectionError, setDataCollectionError] = useState<string | null>(null)
+
+  // State for output schema
+  const [outputSchema, setOutputSchema] = useState<unknown>(null)
+  const [isLoadingSchema, setIsLoadingSchema] = useState(false)
+  const [schemaError, setSchemaError] = useState<string | null>(null)
 
   // Copy to clipboard functionality
   const copyToClipboard = async (text: string) => {
@@ -57,17 +65,8 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
   // Generate event ingest URL
   const workflowId = workflow?.id || params.id as string
   const eventIngestUrl = workflowId
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/inngest/${workflowId}`
+    ? `${process.env.NEXT_PUBLIC_APP_HOST_NAME || ''}/inngest/${workflowId}`
     : ''
-
-  // Debug logging
-  console.log('EventTriggerConfig Debug:', {
-    workflowId,
-    workflow: workflow?.id,
-    paramsId: params.id,
-    eventIngestUrl,
-    windowOrigin: typeof window !== 'undefined' ? window.location.origin : 'undefined'
-  })
 
   // Integration connection hook
   const {
@@ -113,6 +112,32 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
 
     fetchDataCollections()
   }, [isConnected, selectedIntegrationKey, membrane])
+
+  // Fetch output schema when data collection is selected
+  useEffect(() => {
+    const fetchOutputSchema = async () => {
+      if (!isConnected || !selectedIntegrationKey || !selectedDataCollection) {
+        setOutputSchema(null)
+        return
+      }
+
+      setIsLoadingSchema(true)
+      setSchemaError(null)
+
+      try {
+        const schema = await membrane.connection(selectedIntegrationKey).dataCollection(selectedDataCollection).get()
+        setOutputSchema(schema.fieldsSchema)
+      } catch (error) {
+        console.error('Failed to fetch output schema:', error)
+        setSchemaError('Failed to fetch output schema')
+        setOutputSchema(null)
+      } finally {
+        setIsLoadingSchema(false)
+      }
+    }
+
+    fetchOutputSchema()
+  }, [isConnected, selectedIntegrationKey, selectedDataCollection, membrane])
 
   return (
     <div className='space-y-2 pt-4'>
@@ -402,10 +427,43 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
           </Minimizer>
         )}
 
+        {/* Output Schema - Show when data collection is selected */}
+        {selectedDataCollection && (
+          <Minimizer
+            title='Output Schema'
+            defaultOpen={false}
+            tooltip='View the schema of data that will be available when this event triggers.'
+          >
+            <div className='space-y-2'>
+              {isLoadingSchema ? (
+                <div className='space-y-2'>
+                  <Skeleton className='h-4 w-full' />
+                  <Skeleton className='h-4 w-3/4' />
+                  <Skeleton className='h-4 w-1/2' />
+                </div>
+              ) : schemaError ? (
+                <div className='p-4 border rounded-lg text-sm text-red-600 text-center'>
+                  {schemaError}
+                </div>
+              ) : outputSchema ? (
+                <div className='p-3 bg-gray-50 rounded-md border'>
+                  <pre className='text-xs text-gray-700 overflow-auto max-h-60'>
+                    {JSON.stringify(outputSchema, null, 2)}
+                  </pre>
+                </div>
+              ) : (
+                <div className='p-4 border rounded-lg text-sm text-muted-foreground text-center'>
+                  No schema available for this data collection
+                </div>
+              )}
+            </div>
+          </Minimizer>
+        )}
+
         {/* Event Ingest URL - Always show at the end */}
         <div className='space-y-2'>
           <Label>Event Ingest URL</Label>
-          <div className='p-3 bg-gray-50 text-gray-700 rounded-md border min-h-[40px] flex items-center justify-between'>
+          <div className='p-3 bg-gray-50 text-gray-500 rounded-md border min-h-[40px] flex items-center justify-between'>
             <div className='flex-1 truncate pr-2'>
               {eventIngestUrl || 'Event ingest URL will appear here...'}
             </div>

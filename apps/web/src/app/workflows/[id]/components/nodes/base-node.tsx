@@ -1,6 +1,7 @@
 import { Handle, Position } from '@xyflow/react'
 import { WorkflowNode } from '../types/workflow'
 import { NodeOptionsMenu } from './node-options-menu'
+import { Badge } from '@/components/ui/badge'
 
 interface BaseNodeProps {
   selected?: boolean
@@ -111,18 +112,18 @@ export function BaseNode({
         <div className='flex flex-col gap-1.5 w-full relative'>
           {/* Integration label section */}
           {logoTitle && (
-            <div className=' border border-gray-200 rounded px-1 py-0.5 flex items-center gap-1 w-fit'>
+            <Badge variant="secondary" className="px-1.5 py-0.5 h-auto flex items-center gap-1 w-fit">
               {icon && <div className='flex-shrink-0'>{icon}</div>}
-              <span className='text-[9px] text-gray-700 font-bold'>{logoTitle}</span>
-            </div>
+              <span className='text-[9px] font-bold'>{logoTitle}</span>
+            </Badge>
           )}
 
           {/* Title content */}
           <div className='flex-1 min-w-0 flex items-center justify-between'>
-            <div className={`text-[11px] font-medium ${isPlaceholder ? 'text-gray-400' : 'text-gray-900'} flex items-center gap-2`}>
+            <Badge variant="outline" className={`text-[11px] font-medium px-2 py-1 h-auto flex items-center gap-2 ${isPlaceholder ? 'text-gray-400' : 'text-gray-900'}`}>
               {position && <span className='text-xs font-bold'>{position}.</span>}
               {title}
-            </div>
+            </Badge>
             {getStatusIcon() && (
               <div className='flex-shrink-0 ml-2'>
                 {getStatusIcon()}
