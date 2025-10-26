@@ -59,6 +59,21 @@ export function TriggerNode({ data, selected }: TriggerNodeProps) {
   // Determine trigger type and display info
   const getTriggerInfo = () => {
     if (data.triggerTypeMetadata && data.node?.triggerType) {
+      // For event triggers, show collection name and event type in title
+      if (data.node.triggerType === 'event' && data.node.config?.dataCollection && data.node.config?.eventType) {
+        const collectionName = data.node.config.dataCollection as string
+        const eventType = data.node.config.eventType as string
+        const collectionNameLabel = collectionName.charAt(0).toUpperCase() + collectionName.slice(1) // Capitalize first letter
+        const eventTypeLabel = eventType.charAt(0).toUpperCase() + eventType.slice(1) // Capitalize first letter
+
+        return {
+          title: `${collectionNameLabel}: ${eventTypeLabel}`,
+          logoTitle: integration?.name || 'Integration',
+          color: data.triggerTypeMetadata.color
+        }
+      }
+
+      // For other trigger types, use the trigger type metadata name
       return {
         title: data.label || data.node.name,
         logoTitle: data.triggerTypeMetadata.name,
