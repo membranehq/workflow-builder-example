@@ -112,7 +112,7 @@ export default function WorkflowsPage() {
         <Button
           onClick={handleCreateWorkflow}
           disabled={isCreating}
-          className='gap-2'
+          className='gap-2 rounded-full'
         >
           <Zap className='h-4 w-4' />
           {isCreating ? 'Creating...' : 'Create Workflow'}
@@ -159,7 +159,7 @@ export default function WorkflowsPage() {
             <p className='text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto'>
               Get started by creating your first workflow to automate your processes.
             </p>
-            <Button onClick={handleCreateWorkflow} disabled={isCreating}>
+            <Button onClick={handleCreateWorkflow} disabled={isCreating} className='rounded-full'>
               <Zap className='h-4 w-4 mr-2' />
               {isCreating ? 'Creating...' : 'Create Your First Workflow'}
             </Button>
@@ -216,6 +216,7 @@ export default function WorkflowsPage() {
                   <Button
                     variant='outline'
                     size='sm'
+                    className='rounded-full'
                     onClick={(e) => {
                       e.stopPropagation()
                       const filter = {
@@ -235,6 +236,7 @@ export default function WorkflowsPage() {
                     <Button
                       variant='default'
                       size='sm'
+                      className='rounded-full'
                       onClick={async (e) => {
                         e.stopPropagation()
                         try {

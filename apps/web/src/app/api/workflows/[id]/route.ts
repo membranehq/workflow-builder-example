@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@repo/shared/lib/mongodb'
 import { Workflow } from '@/models/workflow'
+import { updateNodesWithOutputSchemas } from '@/lib/output-schema-calculator'
+import { getAuthFromRequest } from '@/lib/server-auth'
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     await connectToDatabase()
@@ -20,11 +22,25 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  console.log('PATCH request received')
   try {
     const { id } = await params
     const updateData = await req.json()
     await connectToDatabase()
+
+    // Get auth for schema calculation
+    const auth = getAuthFromRequest(req)
+
+    // If nodes are being updated, calculate output schemas
+    if (updateData.nodes && Array.isArray(updateData.nodes)) {
+      try {
+        updateData.nodes = await updateNodesWithOutputSchemas(updateData.nodes, auth)
+      } catch (error) {
+        console.error('Error calculating output schemas:', error)
+        // Continue without output schemas if calculation fails
+      }
+    }
 
     const workflow = await Workflow.findByIdAndUpdate(id, { $set: updateData }, { new: true }).lean()
 

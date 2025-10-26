@@ -1,23 +1,23 @@
 import { Node, Edge } from '@xyflow/react'
 import { DataSchema } from '@membranehq/sdk'
 import { NodeTypeMetadata, TriggerType } from '@/lib/node-types'
-import { JSONSchema } from '@/components/ui/schema-builder'
 
 // Core workflow types
 export interface WorkflowNode {
   id: string
   name: string
-  type: 'trigger' | 'action'
+  type: 'trigger' | 'action' | 'http'
   nodeType?: string
   triggerType?: string // Specific trigger type (e.g., 'manual', 'webhook', 'schedule')
   parametersSchema?: DataSchema
-  outputSchema?: JSONSchema
+  outputSchema?: DataSchema
   config?: Record<string, unknown>
 }
 
 export interface WorkflowState {
   id: string
   name: string
+  status: 'active' | 'inactive'
   nodes: WorkflowNode[]
 }
 

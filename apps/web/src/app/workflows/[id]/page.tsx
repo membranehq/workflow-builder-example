@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useRef, useMemo, Suspense } from 'react'
 import { Play, History, Workflow } from 'lucide-react'
@@ -13,7 +14,7 @@ import Link from 'next/link'
 import { Skeleton } from '@/components/ui/skeleton'
 
 function WorkflowDetailInner({ id }: { id: string }) {
-  const { workflow, isLoading, saveWorkflowName } = useWorkflow()
+  const { workflow, isLoading, saveWorkflowName, activateWorkflow, deactivateWorkflow } = useWorkflow()
   const router = useRouter()
   const nameRef = useRef<HTMLHeadingElement>(null)
   const originalNameRef = useRef<string>('')
@@ -135,13 +136,29 @@ function WorkflowDetailInner({ id }: { id: string }) {
             </h1>
           </div>
 
-          {/* Run button and View Runs button on the far right */}
-          <div className='flex items-center gap-2'>
+          {/* Status toggle, Run button and View Runs button on the right */}
+          <div className='flex items-center gap-3'>
+            {/* Status toggle */}
+            <div className='flex items-center gap-2'>
+              <span className='text-sm text-gray-600 dark:text-gray-400'>
+                {workflow.status === 'active' ? 'Active' : 'Inactive'}
+              </span>
+              <Switch
+                checked={workflow.status === 'active'}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    activateWorkflow()
+                  } else {
+                    deactivateWorkflow()
+                  }
+                }}
+              />
+            </div>
             <Link href={`/runs?filters=${encodeURIComponent(JSON.stringify([{ id: Date.now().toString(), field: 'workflow', operator: 'equals', value: id }]))}`} className='no-underline'>
               <Button
                 size='sm'
                 variant='outline'
-                className='p-2'
+                className='p-2 rounded-full'
               >
                 <History className='h-4 w-4' />
               </Button>
@@ -152,7 +169,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
                   size='sm'
                   variant='default'
                   disabled={isRunning || !isFirstNodeManualTrigger}
-
+                  className='rounded-full'
                 >
                   <Play className='h-4 w-4 mr-1' />
                   Run Workflow
@@ -200,7 +217,7 @@ function WorkflowDetailInner({ id }: { id: string }) {
                       size='sm'
                       onClick={handleRunWorkflow}
                       disabled={isRunning}
-                      className=' text-white px-4'
+                      className='text-white px-4 rounded-full'
                     >
                       {isRunning ? (
                         <div className='flex items-center gap-2'>

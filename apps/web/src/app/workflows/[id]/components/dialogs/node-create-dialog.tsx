@@ -43,14 +43,14 @@ export function NodeCreateDialog({ isOpen, onClose, onCreate }: NodeCreateDialog
             <nav className='space-y-1'>
               <Button
                 variant={activeNav === 'apps' ? 'secondary' : 'ghost'}
-                className='w-full justify-start'
+                className='w-full justify-start rounded-full'
                 onClick={() => setActiveNav('apps')}
               >
                 Apps
               </Button>
               <Button
                 variant={activeNav === 'others' ? 'secondary' : 'ghost'}
-                className='w-full justify-start'
+                className='w-full justify-start rounded-full'
                 onClick={() => setActiveNav('others')}
               >
                 Others

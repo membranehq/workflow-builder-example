@@ -7,8 +7,6 @@ import { EventTriggerConfig } from './dialogs/trigger/event-trigger-config'
 import { MembraneActionConfig } from './dialogs/membrane-action-config'
 import { HttpRequestConfig } from './dialogs/http-request-config'
 import { useWorkflow } from './workflow-context'
-import { authenticatedFetcher } from '@/lib/fetch-utils'
-import { Action } from '@membranehq/react'
 import { useDebounce } from '@/hooks/use-debounce'
 
 interface ConfigPanelProps {
@@ -22,9 +20,9 @@ const DEFAULT_NODE_TYPE = 'action'
 
 /**
  * Schema for all the variables from the previous nodes
- * For membraneAction nodes, fetches the action's outputSchema
+ * Uses the stored outputSchema from each node
  */
-const constructVariableSchema = async (nodes: WorkflowNode[], currentNodeId?: string): Promise<DataSchema> => {
+const constructVariableSchema = (nodes: WorkflowNode[], currentNodeId?: string): DataSchema => {
   const nodesBeforeCurrent = currentNodeId
     ? nodes.slice(
       0,
@@ -42,28 +40,8 @@ const constructVariableSchema = async (nodes: WorkflowNode[], currentNodeId?: st
   const nodeSchemas: { [key: string]: DataSchema } = {}
 
   for (const node of nodesBeforeCurrent) {
-    let outputSchema: DataSchema
-
-    if (node.nodeType === 'action' && node.config?.actionId) {
-      try {
-        const data = await authenticatedFetcher<{ action: Action }>(`/api/membrane/actions/${node.config.actionId}`)
-        const actionOutputSchema = data.action?.outputSchema || { type: 'object', properties: {} }
-
-        delete actionOutputSchema.title
-
-        outputSchema = actionOutputSchema
-      } catch (error) {
-        console.error('Error fetching action output schema:', error)
-        outputSchema = { type: 'object', properties: {} }
-      }
-    } else if (node.nodeType === 'http' && node.config?.outputSchema) {
-      outputSchema = node.config.outputSchema as DataSchema
-    } else if (node.type === 'trigger' && node.triggerType === 'manual' && node.config?.inputSchema) {
-      outputSchema = node.config.inputSchema as DataSchema
-    } else {
-      outputSchema = { type: 'object', properties: {} }
-    }
-
+    // Use the stored outputSchema if available, otherwise fallback to empty schema
+    const outputSchema = node.outputSchema || { type: 'object', properties: {} }
     nodeSchemas[node.name] = outputSchema
   }
 
@@ -85,19 +63,15 @@ export function ConfigPanel({ selectedNode, onUpdateNode, nodeTypes, triggerType
   const debouncedFormData = useDebounce(formData, 500)
 
   useEffect(() => {
-    const buildSchema = async () => {
-      if (!workflow?.nodes || !selectedNode) return
+    if (!workflow?.nodes || !selectedNode) return
 
-      try {
-        const schema = await constructVariableSchema(workflow.nodes, selectedNode?.id)
-        setVariableSchema(schema)
-      } catch (error) {
-        console.error('Error constructing variable schema:', error)
-        setVariableSchema({ type: 'object', properties: {} })
-      }
+    try {
+      const schema = constructVariableSchema(workflow.nodes, selectedNode?.id)
+      setVariableSchema(schema)
+    } catch (error) {
+      console.error('Error constructing variable schema:', error)
+      setVariableSchema({ type: 'object', properties: {} })
     }
-
-    buildSchema()
   }, [workflow?.nodes, selectedNode])
 
   // Update formData when selectedNode changes
@@ -136,9 +110,7 @@ export function ConfigPanel({ selectedNode, onUpdateNode, nodeTypes, triggerType
   }, [debouncedFormData, selectedNode, onUpdateNode])
 
   const selectedNodeType = formData?.nodeType || selectedNode?.nodeType || DEFAULT_NODE_TYPE
-  const availableNodeTypes = Object.values(nodeTypes)
   const selectedNodeTypeConfig = nodeTypes[selectedNodeType]
-  const availableTriggerTypes = Object.values(triggerTypes)
   const selectedTriggerTypeConfig = formData?.triggerType ? triggerTypes[formData.triggerType] : undefined
 
   // Don't show the panel if workflow has no nodes

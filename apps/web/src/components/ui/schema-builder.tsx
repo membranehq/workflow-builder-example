@@ -138,7 +138,7 @@ export const SchemaBuilder: React.FC<SchemaBuilderProps> = ({ value, onChange, t
             size='sm'
             variant='outline'
             onClick={generateRandomSchema}
-            className='h-6 px-2 text-xs'
+            className='h-6 px-2 text-xs rounded-full'
           >
             Random
           </Button>

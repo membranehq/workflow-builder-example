@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { DataSchema, useIntegration, useIntegrations, useIntegrationApp } from '@membranehq/react'
+import { Connection } from '@membranehq/sdk'
 import { WorkflowNode } from '../../types/workflow'
 import { TriggerType } from '@/lib/node-types'
 import { Label } from '@/components/ui/label'
@@ -11,7 +12,7 @@ import { Minimizer } from '@/components/ui/minimizer'
 import Image from 'next/image'
 import { useIntegrationConnection } from '@/hooks/use-integration-connection'
 import { useWorkflow } from '../../workflow-context'
-import { Copy } from 'lucide-react'
+import { Copy, Send } from 'lucide-react'
 import { useParams } from 'next/navigation'
 
 interface EventTriggerConfigProps {
@@ -19,6 +20,20 @@ interface EventTriggerConfigProps {
   onChange: (value: Omit<WorkflowNode, 'id'>) => void
   variableSchema?: DataSchema
   triggerTypeConfig?: TriggerType
+}
+
+interface JsonSchemaProperty {
+  type?: string
+  properties?: Record<string, JsonSchemaProperty>
+  items?: JsonSchemaProperty
+  enum?: unknown[]
+  example?: unknown
+}
+
+interface JsonSchema {
+  type?: string
+  properties?: Record<string, JsonSchemaProperty>
+  items?: JsonSchemaProperty
 }
 
 export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps) {
@@ -32,9 +47,6 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
   const { workflow } = useWorkflow()
 
   const membrane = useIntegrationApp()
-
-
-
 
   // Event type options
   const eventTypes = [
@@ -53,6 +65,10 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
   const [isLoadingSchema, setIsLoadingSchema] = useState(false)
   const [schemaError, setSchemaError] = useState<string | null>(null)
 
+  // State for sample event sending
+  const [isSendingSample, setIsSendingSample] = useState(false)
+  const [sampleEventResult, setSampleEventResult] = useState<{ success: boolean; message: string } | null>(null)
+
   // Copy to clipboard functionality
   const copyToClipboard = async (text: string) => {
     try {
@@ -63,22 +79,123 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
   }
 
   // Generate event ingest URL
-  const workflowId = workflow?.id || params.id as string
-  const eventIngestUrl = workflowId
-    ? `${process.env.NEXT_PUBLIC_APP_HOST_NAME || ''}/inngest/${workflowId}`
-    : ''
+  const workflowId = workflow?.id || (params.id as string)
+  const eventIngestUrl = `${process.env.NEXT_PUBLIC_APP_HOST_NAME}/api/ingest-event?workflowId=${workflowId}`
+
+  // Generate sample data from JSON schema
+  const generateSampleData = (schema: unknown): unknown => {
+    if (!schema || typeof schema !== 'object') {
+      return {}
+    }
+
+    const jsonSchema = schema as JsonSchema
+
+    // Handle different schema types
+    if (jsonSchema.type === 'object' && jsonSchema.properties) {
+      const sampleData: Record<string, unknown> = {}
+      for (const [key, property] of Object.entries(jsonSchema.properties)) {
+        sampleData[key] = generateSampleValue(property)
+      }
+      return sampleData
+    } else if (Array.isArray(schema)) {
+      // Handle array schemas
+      return schema.map(item => generateSampleData(item))
+    } else if (jsonSchema.type) {
+      return generateSampleValue(jsonSchema)
+    }
+
+    return {}
+  }
+
+  const generateSampleValue = (property: JsonSchemaProperty): unknown => {
+    const type = property.type || 'string'
+
+    switch (type) {
+      case 'string':
+        if (property.enum && property.enum.length > 0) {
+          return property.enum[0]
+        }
+        return property.example || 'sample_string'
+      case 'number':
+      case 'integer':
+        return property.example || (type === 'integer' ? 42 : 3.14)
+      case 'boolean':
+        return property.example || true
+      case 'array':
+        if (property.items) {
+          return [generateSampleValue(property.items)]
+        }
+        return []
+      case 'object':
+        if (property.properties) {
+          const obj: Record<string, unknown> = {}
+          for (const [key, prop] of Object.entries(property.properties)) {
+            obj[key] = generateSampleValue(prop)
+          }
+          return obj
+        }
+        return {}
+      default:
+        return property.example || 'sample_value'
+    }
+  }
+
+  // Send sample event
+  const sendSampleEvent = async () => {
+    if (!outputSchema || !workflowId) {
+      setSampleEventResult({ success: false, message: 'No schema available or workflow ID missing' })
+      return
+    }
+
+    setIsSendingSample(true)
+    setSampleEventResult(null)
+
+    try {
+      const sampleData = generateSampleData(outputSchema)
+
+      const response = await fetch(`/api/ingest-event?workflowId=${workflowId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sampleData),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setSampleEventResult({
+          success: true,
+          message: `Sample event sent successfully! Run ID: ${result.runId}`
+        })
+      } else {
+        setSampleEventResult({
+          success: false,
+          message: result.error || 'Failed to send sample event'
+        })
+      }
+    } catch (error) {
+      console.error('Error sending sample event:', error)
+      setSampleEventResult({
+        success: false,
+        message: 'Network error while sending sample event'
+      })
+    } finally {
+      setIsSendingSample(false)
+    }
+  }
 
   // Integration connection hook
-  const {
-    data: connection,
-    isLoading: isConnectionLoading,
-    isConnecting,
-    connect,
-  } = useIntegrationConnection({
+  const connectionResult = useIntegrationConnection({
     integrationKey: selectedIntegrationKey,
   })
 
-  const isConnected = !!connection
+  const connection: Connection | null = connectionResult.data
+  const isConnectionLoading = connectionResult.isLoading
+  const isConnecting = connectionResult.isConnecting
+  const connect = connectionResult.connect
+
+  const isConnected = Boolean(connection)
 
   // Fetch data collections when connected
   useEffect(() => {
@@ -92,12 +209,12 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
       setDataCollectionError(null)
 
       try {
-        const collections = await membrane.connection(selectedIntegrationKey).dataCollection("").get()
+        const collections = await membrane.connection(selectedIntegrationKey).dataCollection('').get()
         // Transform the collections to match our expected format
         const formattedCollections = Array.isArray(collections)
           ? collections.map((collection: { key?: string; name?: string }) => ({
             key: collection.key || collection.name || '',
-            name: collection.name || collection.key || ''
+            name: collection.name || collection.key || '',
           }))
           : []
         setDataCollections(formattedCollections)
@@ -167,7 +284,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
               </div>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant='default' size='sm'>
+                  <Button variant='default' size='sm' className="rounded-full">
                     Change
                   </Button>
                 </PopoverTrigger>
@@ -218,7 +335,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
             <Label>App *</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant='outline' className='w-full justify-start'>
+                <Button variant='outline' className='w-full justify-start rounded-full'>
                   Select an app
                 </Button>
               </PopoverTrigger>
@@ -296,7 +413,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                     <span className='text-sm font-medium text-green-900'>Connected to {selectedIntegration.name}</span>
                   </div>
                 </div>
-                <Button onClick={connect} disabled={isConnecting} variant='default' size='sm'>
+                <Button onClick={connect} disabled={isConnecting} variant='default' size='sm' className="rounded-full">
                   {isConnecting ? 'Reconnecting...' : 'Reconnect'}
                 </Button>
               </div>
@@ -323,7 +440,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                 <Button
                   onClick={connect}
                   disabled={isConnecting}
-                  className='bg-primary text-primary-foreground'
+                  className='bg-primary text-primary-foreground rounded-full'
                   size='sm'
                 >
                   {isConnecting ? 'Connecting...' : 'Connect'}
@@ -334,7 +451,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
         )}
 
         {/* Event Configuration - Only show if connected */}
-        {isConnected && (
+        {isConnected ? (
           <Minimizer
             title='Event Configuration'
             defaultOpen={true}
@@ -349,9 +466,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                     <Skeleton className='h-10 w-full' />
                   </div>
                 ) : dataCollectionError ? (
-                  <div className='p-4 border rounded-lg text-sm text-red-600 text-center'>
-                    {dataCollectionError}
-                  </div>
+                  <div className='p-4 border rounded-lg text-sm text-red-600 text-center'>{dataCollectionError}</div>
                 ) : dataCollections.length === 0 ? (
                   <div className='p-4 border rounded-lg text-sm text-muted-foreground text-center'>
                     No data collections available for this integration
@@ -408,8 +523,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                     >
                       <SelectTrigger aria-label='Select event type'>
                         <span>
-                          {eventTypes.find((et) => et.value === selectedEventType)?.label ||
-                            'Select an event type'}
+                          {eventTypes.find((et) => et.value === selectedEventType)?.label || 'Select an event type'}
                         </span>
                       </SelectTrigger>
                       <SelectContent>
@@ -425,7 +539,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
               )}
             </div>
           </Minimizer>
-        )}
+        ) : null}
 
         {/* Output Schema - Show when data collection is selected */}
         {selectedDataCollection && (
@@ -442,13 +556,11 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                   <Skeleton className='h-4 w-1/2' />
                 </div>
               ) : schemaError ? (
-                <div className='p-4 border rounded-lg text-sm text-red-600 text-center'>
-                  {schemaError}
-                </div>
+                <div className='p-4 border rounded-lg text-sm text-red-600 text-center'>{schemaError}</div>
               ) : outputSchema ? (
                 <div className='p-3 bg-gray-50 rounded-md border'>
                   <pre className='text-xs text-gray-700 overflow-auto max-h-60'>
-                    {JSON.stringify(outputSchema, null, 2)}
+                    {JSON.stringify(outputSchema, null, 2) as string}
                   </pre>
                 </div>
               ) : (
@@ -464,21 +576,45 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
         <div className='space-y-2'>
           <Label>Event Ingest URL</Label>
           <div className='p-3 bg-gray-50 text-gray-500 rounded-md border min-h-[40px] flex items-center justify-between'>
-            <div className='flex-1 truncate pr-2'>
-              {eventIngestUrl || 'Event ingest URL will appear here...'}
-            </div>
+            <div className='flex-1 truncate pr-2'>{eventIngestUrl || 'Event ingest URL will appear here...'}</div>
             <Button
               variant='ghost'
               size='sm'
               onClick={() => copyToClipboard(eventIngestUrl)}
               disabled={!eventIngestUrl}
-              className='p-1 h-8 w-8 flex-shrink-0'
+              className='p-1 h-8 w-8 flex-shrink-0 rounded-full'
             >
               <Copy className='h-4 w-4' />
             </Button>
           </div>
         </div>
 
+        {/* Sample Event Testing - Show when schema is available */}
+        {outputSchema && (
+          <div className='space-y-2'>
+            <Label>Test Event</Label>
+            <div className='space-y-2'>
+              <Button
+                onClick={sendSampleEvent}
+                disabled={isSendingSample || !workflowId}
+                className='w-full rounded-full'
+                variant='outline'
+              >
+                <Send className='h-4 w-4 mr-2' />
+                {isSendingSample ? 'Sending Sample Event...' : 'Send Sample Event'}
+              </Button>
+
+              {sampleEventResult && (
+                <div className={`p-3 rounded-md border text-sm ${sampleEventResult.success
+                  ? 'bg-green-50 border-green-200 text-green-800'
+                  : 'bg-red-50 border-red-200 text-red-800'
+                  }`}>
+                  {sampleEventResult.message}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

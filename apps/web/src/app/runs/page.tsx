@@ -235,8 +235,8 @@ function RunsPageContent() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="rounded-full h-6 w-6 p-0"
                   onClick={clearAllFilters}
-                  className="h-6 w-6 p-0"
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -294,7 +294,7 @@ function RunsPageContent() {
                 variant="ghost"
                 size="sm"
                 onClick={() => removeFilter(filter.id)}
-                className="h-8 w-8 p-0 border-0 bg-transparent rounded-none hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 hover:text-red-500"
+                className="h-8 w-8 p-0 border-0 bg-transparent rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 hover:text-red-500"
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -304,7 +304,7 @@ function RunsPageContent() {
           <Button
             variant="outline"
             onClick={addFilter}
-            className={`border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-md flex items-center justify-center ${filters.length === 0 ? 'h-8 px-3' : 'h-8 w-8 p-0'
+            className={`border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 rounded-full flex items-center justify-center ${filters.length === 0 ? 'h-8 px-3' : 'h-8 w-8 p-0'
               }`}
           >
             <span className="text-sm">

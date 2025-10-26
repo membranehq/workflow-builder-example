@@ -71,7 +71,7 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
             </div>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant='default' size='sm'>
+                <Button variant='default' size='sm' className="rounded-full">
                   Change
                 </Button>
               </PopoverTrigger>
@@ -157,6 +157,7 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
                 disabled={isConnecting}
                 variant='default'
                 size='sm'
+                className="rounded-full"
               >
                 {isConnecting ? 'Reconnecting...' : 'Reconnect'}
               </Button>
@@ -186,7 +187,7 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
               <Button
                 onClick={connect}
                 disabled={isConnecting}
-                className= "bg-primary text-primary-foreground"
+                className="bg-primary text-primary-foreground rounded-full"
                 size='sm'
               >
                 {isConnecting ? 'Connecting...' : 'Connect'}

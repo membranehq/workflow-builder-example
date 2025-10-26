@@ -112,7 +112,7 @@ export function BaseNode({
         <div className='flex flex-col gap-1.5 w-full relative'>
           {/* Integration label section */}
           {logoTitle && (
-            <Badge variant="secondary" className="px-1.5 py-0.5 h-auto flex items-center gap-1 w-fit">
+            <Badge variant="secondary" className="px-1.5 py-0.5 h-auto flex items-center gap-1 w-fit border">
               {icon && <div className='flex-shrink-0'>{icon}</div>}
               <span className='text-[9px] font-bold'>{logoTitle}</span>
             </Badge>

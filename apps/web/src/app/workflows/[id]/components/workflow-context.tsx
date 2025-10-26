@@ -15,6 +15,8 @@ type WorkflowContextValue = {
   setWorkflow: (next: WorkflowState | ((prev: WorkflowState | null) => WorkflowState)) => void
   saveNodes: (nodes: WorkflowNode[]) => Promise<void>
   saveWorkflowName: (name: string) => Promise<void>
+  activateWorkflow: () => Promise<void>
+  deactivateWorkflow: () => Promise<void>
   nodeTypes: typeof NODE_TYPES
   triggerTypes: typeof TRIGGER_TYPES
   refresh: () => void
@@ -162,6 +164,34 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
     [key, mutate]
   )
 
+  const activateWorkflow = React.useCallback(
+    async () => {
+      if (!key) return
+      // Optimistic update
+      mutate((prev) => (prev ? { ...prev, status: 'active' as const } : prev), { revalidate: false })
+      // Persist
+      await fetch(`${key}/activate`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      })
+    },
+    [key, mutate]
+  )
+
+  const deactivateWorkflow = React.useCallback(
+    async () => {
+      if (!key) return
+      // Optimistic update
+      mutate((prev) => (prev ? { ...prev, status: 'inactive' as const } : prev), { revalidate: false })
+      // Persist
+      await fetch(`${key}/deactivate`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      })
+    },
+    [key, mutate]
+  )
+
   const value = React.useMemo<WorkflowContextValue>(() => ({
     workflow: data ?? null,
     isLoading,
@@ -169,13 +199,15 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
     setWorkflow,
     saveNodes,
     saveWorkflowName,
+    activateWorkflow,
+    deactivateWorkflow,
     nodeTypes: NODE_TYPES,
     triggerTypes: TRIGGER_TYPES,
     refresh: () => mutate(),
     deleteNode,
     selectedNodeId,
     setSelectedNodeId,
-  }), [data, isLoading, error, setWorkflow, saveNodes, saveWorkflowName, mutate, deleteNode, selectedNodeId, setSelectedNodeId])
+  }), [data, isLoading, error, setWorkflow, saveNodes, saveWorkflowName, activateWorkflow, deactivateWorkflow, mutate, deleteNode, selectedNodeId, setSelectedNodeId])
 
   return <WorkflowContext.Provider value={value}>{children}</WorkflowContext.Provider>
 }

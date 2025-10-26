@@ -99,7 +99,7 @@ export default function WorkflowRunDetailPage() {
                 The workflow run you are looking for does not exist or has been deleted.
               </p>
               <Link href="/runs">
-                <Button variant="outline">
+                <Button variant="outline" className="rounded-full">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Runs
                 </Button>
@@ -137,7 +137,7 @@ export default function WorkflowRunDetailPage() {
                 The workflow run you are looking for does not exist or has been deleted.
               </p>
               <Link href="/runs">
-                <Button variant="outline">
+                <Button variant="outline" className="rounded-full">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Runs
                 </Button>

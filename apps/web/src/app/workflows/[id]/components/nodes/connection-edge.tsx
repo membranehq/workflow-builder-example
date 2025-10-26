@@ -36,6 +36,8 @@ export function ConnectionEdge({ source, sourceX, sourceY, targetX, targetY, dat
         requiredExtensions='http://www.w3.org/1999/xhtml'
       >
         <button
+          type='button'
+          title='Add Block'
           className='absolute w-5 h-5 rounded-full bg-blue-500 hover:bg-blue-600 flex items-center justify-center text-white shadow-lg cursor-pointer'
           style={{ width: EDGE_PLUS_SIZE, height: EDGE_PLUS_SIZE }}
           onClick={(event) => {

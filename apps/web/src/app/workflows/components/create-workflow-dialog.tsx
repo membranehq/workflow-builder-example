@@ -55,10 +55,10 @@ export function CreateWorkflowDialog({ open, onOpenChange }: CreateWorkflowDialo
           </div>
         </div>
         <div className='flex justify-end space-x-2'>
-          <Button variant='ghost' onClick={() => onOpenChange(false)}>
+          <Button variant='ghost' onClick={() => onOpenChange(false)} className="rounded-full">
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={!name || isLoading}>
+          <Button onClick={handleCreate} disabled={!name || isLoading} className="rounded-full">
             {isLoading ? 'Creating...' : 'Create'}
           </Button>
         </div>
