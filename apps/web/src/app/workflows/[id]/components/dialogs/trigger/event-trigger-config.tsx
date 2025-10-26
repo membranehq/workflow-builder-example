@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { DataSchema, useIntegration, useIntegrations, useIntegrationApp } from '@membranehq/react'
-import { Connection } from '@membranehq/sdk'
+import { DataSchema, useIntegrationApp } from '@membranehq/react'
 import { WorkflowNode } from '../../types/workflow'
 import { TriggerType } from '@/lib/node-types'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { Minimizer } from '@/components/ui/minimizer'
-import Image from 'next/image'
-import { useIntegrationConnection } from '@/hooks/use-integration-connection'
+import { SelectAppAndConnect } from '@/components/ui/select-app-and-connect'
 import { useWorkflow } from '../../workflow-context'
 import { Copy, Send } from 'lucide-react'
 import { useParams } from 'next/navigation'
@@ -42,10 +39,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
   const selectedEventType = value.config?.eventType as string
   const params = useParams()
 
-  const { integration: selectedIntegration } = useIntegration(selectedIntegrationKey as string)
-  const { integrations } = useIntegrations()
   const { workflow } = useWorkflow()
-
   const membrane = useIntegrationApp()
 
   // Event type options
@@ -185,17 +179,8 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
     }
   }
 
-  // Integration connection hook
-  const connectionResult = useIntegrationConnection({
-    integrationKey: selectedIntegrationKey,
-  })
-
-  const connection: Connection | null = connectionResult.data
-  const isConnectionLoading = connectionResult.isLoading
-  const isConnecting = connectionResult.isConnecting
-  const connect = connectionResult.connect
-
-  const isConnected = Boolean(connection)
+  // State for connection status from AppConnectionSelector
+  const [isConnected, setIsConnected] = useState(false)
 
   // Fetch data collections when connected
   useEffect(() => {
@@ -259,196 +244,22 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
   return (
     <div className='space-y-2 pt-4'>
       <div className='space-y-4'>
-        {/* App Selection Section */}
-        {selectedIntegrationKey && selectedIntegration ? (
-          <div className='space-y-2'>
-            <Label>App *</Label>
-            <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border'>
-              <div className='flex items-center gap-3'>
-                <div className='flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-md'>
-                  {selectedIntegration.logoUri ? (
-                    <Image
-                      width={20}
-                      height={20}
-                      src={selectedIntegration.logoUri}
-                      alt={`${selectedIntegration.name} logo`}
-                      className='w-5 h-5 rounded'
-                    />
-                  ) : (
-                    <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
-                      {selectedIntegration.name[0]}
-                    </div>
-                  )}
-                  <span className='text-sm font-medium text-gray-900'>{selectedIntegration.name}</span>
-                </div>
-              </div>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant='default' size='sm' className="rounded-full">
-                    Change
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className='w-80' align='end'>
-                  <div className='space-y-2'>
-                    <div className='text-sm font-medium'>Select an app</div>
-                    <div className='grid grid-cols-2 gap-2 max-h-60 overflow-y-auto'>
-                      {integrations.slice(0, 20).map((integration) => (
-                        <button
-                          key={integration.key}
-                          onClick={() => {
-                            onChange({
-                              ...value,
-                              config: {
-                                ...value.config,
-                                integrationKey: integration.key,
-                                dataCollection: undefined, // Clear data collection when changing integration
-                                eventType: undefined, // Clear event type when changing integration
-                              },
-                            })
-                          }}
-                          className='flex items-center gap-2 p-2 rounded-md hover:bg-gray-50 text-left'
-                        >
-                          {integration.logoUri ? (
-                            <Image
-                              width={20}
-                              height={20}
-                              src={integration.logoUri}
-                              alt={`${integration.name} logo`}
-                              className='w-5 h-5 rounded'
-                            />
-                          ) : (
-                            <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
-                              {integration.name[0]}
-                            </div>
-                          )}
-                          <span className='text-sm text-gray-900 truncate'>{integration.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-        ) : (
-          <div className='space-y-2'>
-            <Label>App *</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant='outline' className='w-full justify-start rounded-full'>
-                  Select an app
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-80' align='start'>
-                <div className='space-y-2'>
-                  <div className='text-sm font-medium'>Select an app</div>
-                  <div className='grid grid-cols-2 gap-2 max-h-60 overflow-y-auto'>
-                    {integrations.slice(0, 20).map((integration) => (
-                      <button
-                        key={integration.key}
-                        onClick={() => {
-                          onChange({
-                            ...value,
-                            config: {
-                              ...value.config,
-                              integrationKey: integration.key,
-                              dataCollection: undefined, // Clear data collection when changing integration
-                              eventType: undefined, // Clear event type when changing integration
-                            },
-                          })
-                        }}
-                        className='flex items-center gap-2 p-2 rounded-md hover:bg-gray-50 text-left'
-                      >
-                        {integration.logoUri ? (
-                          <Image
-                            width={20}
-                            height={20}
-                            src={integration.logoUri}
-                            alt={`${integration.name} logo`}
-                            className='w-5 h-5 rounded'
-                          />
-                        ) : (
-                          <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
-                            {integration.name[0]}
-                          </div>
-                        )}
-                        <span className='text-sm text-gray-900 truncate'>{integration.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        )}
-
-        {/* Connection Status Section */}
-        {selectedIntegrationKey && selectedIntegration && (
-          <div className='space-y-2'>
-            <Label>Account *</Label>
-            {isConnectionLoading ? (
-              <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border'>
-                <div className='flex items-center gap-3'>
-                  <Skeleton className='h-5 w-5 rounded' />
-                  <Skeleton className='h-4 w-32' />
-                </div>
-              </div>
-            ) : isConnected ? (
-              <div className='flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200'>
-                <div className='flex items-center gap-3'>
-                  <div className='flex items-center gap-2 px-3 py-1 bg-green-100 rounded-md'>
-                    {selectedIntegration.logoUri ? (
-                      <Image
-                        width={20}
-                        height={20}
-                        src={selectedIntegration.logoUri}
-                        alt={`${selectedIntegration.name} logo`}
-                        className='w-5 h-5 rounded'
-                      />
-                    ) : (
-                      <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
-                        {selectedIntegration.name[0]}
-                      </div>
-                    )}
-                    <span className='text-sm font-medium text-green-900'>Connected to {selectedIntegration.name}</span>
-                  </div>
-                </div>
-                <Button onClick={connect} disabled={isConnecting} variant='default' size='sm' className="rounded-full">
-                  {isConnecting ? 'Reconnecting...' : 'Reconnect'}
-                </Button>
-              </div>
-            ) : (
-              <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border'>
-                <div className='flex items-center gap-3'>
-                  <div className='flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-md'>
-                    {selectedIntegration.logoUri ? (
-                      <Image
-                        width={20}
-                        height={20}
-                        src={selectedIntegration.logoUri}
-                        alt={`${selectedIntegration.name} logo`}
-                        className='w-5 h-5 rounded'
-                      />
-                    ) : (
-                      <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
-                        {selectedIntegration.name[0]}
-                      </div>
-                    )}
-                    <span className='text-sm font-medium text-gray-900'>Connect {selectedIntegration.name}</span>
-                  </div>
-                </div>
-                <Button
-                  onClick={connect}
-                  disabled={isConnecting}
-                  className='bg-primary text-primary-foreground rounded-full'
-                  size='sm'
-                >
-                  {isConnecting ? 'Connecting...' : 'Connect'}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+        {/* App Selection and Connection Section */}
+        <SelectAppAndConnect
+          selectedIntegrationKey={selectedIntegrationKey}
+          onIntegrationChange={(integrationKey) => {
+            onChange({
+              ...value,
+              config: {
+                ...value.config,
+                integrationKey,
+                dataCollection: undefined, // Clear data collection when changing integration
+                eventType: undefined, // Clear event type when changing integration
+              },
+            })
+          }}
+          onConnectionStateChange={setIsConnected}
+        />
 
         {/* Event Configuration - Only show if connected */}
         {isConnected ? (
@@ -560,7 +371,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
               ) : outputSchema ? (
                 <div className='p-3 bg-gray-50 rounded-md border'>
                   <pre className='text-xs text-gray-700 overflow-auto max-h-60'>
-                    {JSON.stringify(outputSchema, null, 2) as string}
+                    {JSON.stringify(outputSchema, null, 2)}
                   </pre>
                 </div>
               ) : (
