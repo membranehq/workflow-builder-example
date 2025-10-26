@@ -1,0 +1,8 @@
+1.Create Flow Instance directly
+
+customerId
+connectionId
+
+
+
+2. 

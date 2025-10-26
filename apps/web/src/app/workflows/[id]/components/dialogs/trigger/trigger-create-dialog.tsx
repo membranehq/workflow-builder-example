@@ -1,5 +1,5 @@
 import React from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { TriggerType } from '@/lib/node-types'
 
@@ -15,9 +15,6 @@ export function TriggerCreateDialog({ isOpen, onClose, triggerTypes, onCreate }:
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Start typing to search or create a trigger</DialogTitle>
-        </DialogHeader>
         <div className="pt-2">
           <ScrollArea className="h-[420px] pr-2">
             <div className="space-y-2">

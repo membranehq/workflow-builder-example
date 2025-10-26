@@ -186,10 +186,10 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
               <Button
                 onClick={connect}
                 disabled={isConnecting}
-                className='bg-purple-600 hover:bg-purple-700 text-white'
+                className= "bg-primary text-primary-foreground"
                 size='sm'
               >
-                {isConnecting ? 'Connecting...' : 'Sign in'}
+                {isConnecting ? 'Connecting...' : 'Connect'}
               </Button>
             </div>
           )}

@@ -44,17 +44,6 @@ export const TRIGGER_TYPES: Record<string, TriggerType> = {
     description: 'Trigger the workflow based on events',
     icon: BoltIcon,
     color: 'red',
-    configurationSchema: {
-      type: 'object',
-      properties: {
-        event: {
-          type: 'string',
-          description: 'Name of the event that triggers this workflow',
-          enum: ['workflow.deleted', 'workflow.failed', 'workflow.created'],
-        },
-      },
-      required: ['event'],
-    },
   },
 }
 
