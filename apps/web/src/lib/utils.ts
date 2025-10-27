@@ -42,3 +42,8 @@ export function formatTimeAgo(dateString: string): string {
   const diffInYears = Math.floor(diffInDays / 365)
   return `${diffInYears}y ago`
 }
+
+export function getEventIngestUrl(workflowId: string) {
+  const hostname = process.env.NEXT_PUBLIC_APP_HOST_NAME || ''
+  return `${hostname}/api/ingest-event?workflowId=${workflowId}`
+}

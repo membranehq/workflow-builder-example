@@ -10,6 +10,7 @@ export interface IWorkflowNode {
   parametersSchema?: DataSchema
   outputSchema?: DataSchema
   config?: Record<string, unknown>
+  ready?: boolean
 }
 
 // Main Workflow Interface
@@ -77,6 +78,10 @@ const workflowNodeSchema = new mongoose.Schema<IWorkflowNode>(
     config: {
       type: Map,
       of: mongoose.Schema.Types.Mixed,
+    },
+    ready: {
+      type: Boolean,
+      default: false,
     },
   },
   { _id: false },

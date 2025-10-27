@@ -12,6 +12,7 @@ export interface WorkflowNode {
   parametersSchema?: DataSchema
   outputSchema?: DataSchema
   config?: Record<string, unknown>
+  ready?: boolean // Set by backend when node has all required configuration
 }
 
 export interface WorkflowState {

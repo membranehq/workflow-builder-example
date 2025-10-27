@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/u
 import { Minimizer } from '@/components/ui/minimizer'
 import { SelectAppAndConnect } from '@/components/ui/select-app-and-connect'
 import { useWorkflow } from '../../workflow-context'
-import { Copy, Send } from 'lucide-react'
+import { Copy, Send, CheckCircle2 } from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { Badge } from '@/components/ui/badge'
+import { getEventIngestUrl } from '@/lib/utils'
 
 interface EventTriggerConfigProps {
   value: Omit<WorkflowNode, 'id'>
@@ -74,7 +76,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
 
   // Generate event ingest URL
   const workflowId = workflow?.id || (params.id as string)
-  const eventIngestUrl = `${process.env.NEXT_PUBLIC_APP_HOST_NAME}/api/ingest-event?workflowId=${workflowId}`
+  const eventIngestUrl = getEventIngestUrl(workflowId)
 
   // Generate sample data from JSON schema
   const generateSampleData = (schema: unknown): unknown => {
@@ -147,7 +149,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
     try {
       const sampleData = generateSampleData(outputSchema)
 
-      const response = await fetch(`/api/ingest-event?workflowId=${workflowId}`, {
+      const response = await fetch(getEventIngestUrl(workflowId), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -243,6 +245,20 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
 
   return (
     <div className='space-y-2 pt-4'>
+      {/* Ready Status Indicator - Show if node is ready (set by backend) */}
+      {(value as WorkflowNode & { ready?: boolean }).ready && (
+        <div className='p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2'>
+          <CheckCircle2 className='h-5 w-5 text-green-600' />
+          <div className='flex-1'>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm font-medium text-green-900'>Trigger Configuration Complete</span>
+              <Badge className='bg-green-500 hover:bg-green-600 text-white'>Ready</Badge>
+            </div>
+            <p className='text-xs text-green-700 mt-0.5'>This trigger is ready to activate your workflow.</p>
+          </div>
+        </div>
+      )}
+
       <div className='space-y-4'>
         {/* App Selection and Connection Section */}
         <SelectAppAndConnect
@@ -386,7 +402,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
         {/* Event Ingest URL - Always show at the end */}
         <div className='space-y-2'>
           <Label>Event Ingest URL</Label>
-          <div className='p-3 bg-gray-50 text-gray-500 rounded-md border min-h-[40px] flex items-center justify-between'>
+          <div className='p-2 bg-gray-50 text-gray-500 rounded-md border min-h-[40px] flex items-center justify-between'>
             <div className='flex-1 truncate pr-2'>{eventIngestUrl || 'Event ingest URL will appear here...'}</div>
             <Button
               variant='ghost'
@@ -398,17 +414,13 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
               <Copy className='h-4 w-4' />
             </Button>
           </div>
-        </div>
 
-        {/* Sample Event Testing - Show when schema is available */}
-        {outputSchema && (
-          <div className='space-y-2'>
-            <Label>Test Event</Label>
+          {outputSchema !== null && (
             <div className='space-y-2'>
               <Button
                 onClick={sendSampleEvent}
                 disabled={isSendingSample || !workflowId}
-                className='w-full rounded-full'
+                className='rounded-full'
                 variant='outline'
               >
                 <Send className='h-4 w-4 mr-2' />
@@ -424,8 +436,8 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )
