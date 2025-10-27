@@ -105,7 +105,7 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
       const firstNode = data.nodes[0]
       setSelectedNodeId(firstNode.id)
     }
-  }, [data?.nodes, selectedNodeId])
+  }, [data?.nodes, selectedNodeId, setSelectedNodeId])
 
   const { trigger: triggerSave } = useSWRMutation(
     key ? `${key}/nodes` : null,

@@ -1,74 +1,74 @@
-import { useState, useEffect } from "react";
-import { useIntegrationApp } from "@membranehq/react";
-import { Connection } from "@membranehq/sdk";
+import { useState, useEffect, useCallback } from 'react'
+import { useIntegrationApp } from '@membranehq/react'
+import { Connection } from '@membranehq/sdk'
 
 interface UseIntegrationConnectionProps {
-  integrationKey: string | null;
+  integrationKey: string | null
 }
 
 interface UseIntegrationConnectionReturn {
-  data: Connection | null;
-  isLoading: boolean;
-  isConnecting: boolean;
-  connect: () => Promise<void>;
+  data: Connection | null
+  isLoading: boolean
+  isConnecting: boolean
+  connect: () => Promise<void>
 }
 
 export function useIntegrationConnection({
   integrationKey,
 }: UseIntegrationConnectionProps): UseIntegrationConnectionReturn {
-  const [data, setData] = useState<Connection | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const integrationApp = useIntegrationApp();
+  const [data, setData] = useState<Connection | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
+  const integrationApp = useIntegrationApp()
 
-  const fetchConnection = async () => {
+  const fetchConnection = useCallback(async () => {
     if (!integrationKey) {
-      setData(null);
-      return;
+      setData(null)
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const connection = await integrationApp.connections.find({
         integrationKey,
-      });
+      })
       if (connection.items.length > 0) {
-        setData(connection.items[0]);
+        setData(connection.items[0])
       } else {
-        setData(null);
+        setData(null)
       }
     } catch (err) {
-      console.error("Failed to fetch connection:", err);
-      setData(null);
+      console.error('Failed to fetch connection:', err)
+      setData(null)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }, [integrationKey, integrationApp])
 
   useEffect(() => {
-    fetchConnection();
-  }, [integrationKey, integrationApp]);
+    fetchConnection()
+  }, [fetchConnection])
 
   const connect = async () => {
-    if (!integrationKey) return;
+    if (!integrationKey) return
 
-    setIsConnecting(true);
+    setIsConnecting(true)
     try {
-      await integrationApp.integration(integrationKey).openNewConnection();
-      setIsLoading(true);
-      await fetchConnection();
+      await integrationApp.integration(integrationKey).openNewConnection()
+      setIsLoading(true)
+      await fetchConnection()
     } catch (err) {
-      console.error("Failed to connect:", err);
-      throw err;
+      console.error('Failed to connect:', err)
+      throw err
     } finally {
-      setIsConnecting(false);
+      setIsConnecting(false)
     }
-  };
+  }
 
   return {
     data,
     isLoading,
     isConnecting,
     connect,
-  };
+  }
 }

@@ -13,7 +13,7 @@ import { getEventIngestUrl } from '@/lib/utils'
  * Handle external service calls when a node becomes ready
  * This is where you would register webhooks, create subscriptions, etc.
  */
-export async function handleNodeReady(node: IWorkflowNode, workflowId: string, auth: AuthCustomer): Promise<void> {
+async function handleNodeReady(node: IWorkflowNode, workflowId: string, auth: AuthCustomer): Promise<void> {
   if (node.type === 'trigger' && node.triggerType === 'event') {
     const config = node.config || {}
     const integrationKey = config.integrationKey as string
@@ -53,6 +53,8 @@ export async function handleNodeReady(node: IWorkflowNode, workflowId: string, a
             type: 'find-data-record-by-id',
             name: 'Find Data Record By Id',
             links: [{ key: 'create-data-record-in-my-app' }],
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore - state and dependencies are custom properties for this flow instance
             state: 'READY',
             dependencies: [],
             config: {
