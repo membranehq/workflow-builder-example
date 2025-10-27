@@ -1,5 +1,5 @@
 import type { ElementType } from 'react'
-import { GlobeIcon, Package, MousePointerClickIcon, BoltIcon } from 'lucide-react'
+import { GlobeIcon, Package, MousePointerClickIcon, BoltIcon, Sparkles } from 'lucide-react'
 
 // Define trigger types
 export interface TriggerType {
@@ -17,7 +17,7 @@ export interface TriggerType {
 
 // Define node type metadata
 export interface NodeTypeMetadata {
-  type: 'http' | 'action'
+  type: 'http' | 'action' | 'ai'
   name: string
   description: string
   category: string
@@ -99,5 +99,25 @@ export const NODE_TYPES: Record<string, NodeTypeMetadata> = {
     category: 'action',
     icon: Package,
     color: 'purple',
+  },
+
+  ai: {
+    type: 'ai',
+    name: 'AI',
+    description: 'Use AI to process data with custom instructions',
+    category: 'ai',
+    icon: Sparkles,
+    color: 'purple',
+    configurationSchema: {
+      type: 'object',
+      properties: {
+        prompt: {
+          type: 'string',
+          format: 'textarea',
+          description: 'Instructions for the AI on what to do with the input data',
+        },
+      },
+      required: ['prompt'],
+    },
   },
 }

@@ -12,7 +12,6 @@ export default function HomePage() {
         <div className='flex justify-between items-center'>
           <div>
             <h1 className='text-3xl font-bold tracking-tight'>Overview</h1>
-            <p className='text-muted-foreground'>Welcome to Use Case Template</p>
           </div>
         </div>
       </div>

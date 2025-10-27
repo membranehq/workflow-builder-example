@@ -33,18 +33,16 @@ export async function GET(req: Request) {
     let workflows
 
     if (userId) {
-      // Use the custom static method
-      workflows = await Workflow.findByUser(userId)
+      // Use the custom static method with lean to get plain objects
+      workflows = await Workflow.find({ userId }).sort({ createdAt: -1 }).lean()
     } else if (status) {
-      // Use the custom static method
-      workflows = await Workflow.findByStatus(status)
+      // Use the custom static method with lean to get plain objects
+      workflows = await Workflow.find({ status }).sort({ createdAt: -1 }).lean()
     } else {
-      workflows = await Workflow.find({}).sort({ createdAt: -1 })
+      workflows = await Workflow.find({}).sort({ createdAt: -1 }).lean()
     }
 
-    const workflowsData = workflows.map((w) => (w.toObject ? w.toObject() : w))
-
-    return NextResponse.json(workflowsData)
+    return NextResponse.json(workflows)
   } catch (error) {
     console.error('Failed to fetch workflows:', error)
     return NextResponse.json({ error: 'Failed to fetch workflows' }, { status: 500 })

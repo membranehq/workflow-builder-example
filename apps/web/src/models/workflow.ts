@@ -72,6 +72,9 @@ const workflowNodeSchema = new mongoose.Schema<IWorkflowNode>(
       type: String,
       trim: true,
     },
+    parametersSchema: {
+      type: mongoose.Schema.Types.Mixed,
+    },
     outputSchema: {
       type: mongoose.Schema.Types.Mixed,
     },
@@ -111,6 +114,11 @@ const workflowSchema = new mongoose.Schema<IWorkflow>(
       default: [],
     },
     userId: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    customerId: {
       type: String,
       trim: true,
       index: true,

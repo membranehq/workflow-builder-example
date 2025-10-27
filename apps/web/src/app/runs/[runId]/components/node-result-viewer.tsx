@@ -4,15 +4,27 @@ import React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import type { IWorkflowRunResult } from '@repo/shared/models/workflow-run'
+import { cn } from '@/lib/utils'
+
+interface WorkflowNode {
+  id: string
+  name: string
+  type?: string
+}
 
 interface NodeResultViewerProps {
   selectedNodeId: string | null
   runResults: IWorkflowRunResult[]
+  nodesSnapshot?: WorkflowNode[]
 }
 
-export function NodeResultViewer({ selectedNodeId, runResults }: NodeResultViewerProps) {
+export function NodeResultViewer({ selectedNodeId, runResults, nodesSnapshot }: NodeResultViewerProps) {
   const selectedResult = selectedNodeId
     ? runResults.find(result => result.nodeId === selectedNodeId)
+    : null
+
+  const selectedNode = selectedNodeId && nodesSnapshot
+    ? nodesSnapshot.find(node => node.id === selectedNodeId)
     : null
 
   if (!selectedNodeId) {
@@ -48,7 +60,7 @@ export function NodeResultViewer({ selectedNodeId, runResults }: NodeResultViewe
   }
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800">
+    <div className="h-full">
       <div className="p-6 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-3 mb-2">
           {selectedResult.success ? (
@@ -57,9 +69,14 @@ export function NodeResultViewer({ selectedNodeId, runResults }: NodeResultViewe
             <XCircle className="h-6 w-6 text-red-600" />
           )}
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Node {selectedResult.nodeId}
+            {selectedNode?.name || selectedResult.nodeId}
           </h3>
-          <Badge variant={selectedResult.success ? 'default' : 'destructive'}>
+          <Badge
+            variant={selectedResult.success ? 'default' : 'secondary'}
+            className={cn(
+              !selectedResult.success && "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
+            )}
+          >
             {selectedResult.success ? 'Success' : 'Failed'}
           </Badge>
         </div>
@@ -76,7 +93,7 @@ export function NodeResultViewer({ selectedNodeId, runResults }: NodeResultViewe
               Output
             </h4>
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-              <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
+              <pre className="font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
                 {JSON.stringify(selectedResult.output, null, 2)}
               </pre>
             </div>
@@ -115,7 +132,7 @@ export function NodeResultViewer({ selectedNodeId, runResults }: NodeResultViewe
                   <div className="text-sm font-medium text-red-900 dark:text-red-100 mb-2">
                     Details:
                   </div>
-                  <pre className="text-sm text-red-800 dark:text-red-200 whitespace-pre-wrap overflow-auto bg-red-100 dark:bg-red-900/30 rounded p-2">
+                  <pre className="font-mono text-sm text-red-800 dark:text-red-200 whitespace-pre-wrap overflow-auto bg-red-100 dark:bg-red-900/30 rounded p-2">
                     {JSON.stringify(selectedResult.error.details, null, 2)}
                   </pre>
                 </div>

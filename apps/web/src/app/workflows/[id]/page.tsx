@@ -2,12 +2,10 @@
 
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { useParams, useRouter } from 'next/navigation'
-import { useState, useRef, useMemo, Suspense } from 'react'
-import { Play, History, Workflow } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { DataInput, DataSchema } from '@membranehq/react'
-import { getAuthHeaders } from '@/lib/fetch-utils'
+import { RunWorkflowButton } from '@/components/run-workflow-button'
+import { useParams } from 'next/navigation'
+import { useRef, Suspense } from 'react'
+import { History, Workflow } from 'lucide-react'
 import { WorkflowEditor } from './components/workflow-editor'
 import { WorkflowProvider, useWorkflow } from './components/workflow-context'
 import Link from 'next/link'
@@ -15,59 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 function WorkflowDetailInner({ id }: { id: string }) {
   const { workflow, isLoading, saveWorkflowName, activateWorkflow, deactivateWorkflow } = useWorkflow()
-  const router = useRouter()
   const nameRef = useRef<HTMLHeadingElement>(null)
   const originalNameRef = useRef<string>('')
-
-  const [workflowResult, setWorkflowResult] = useState<unknown>(null)
-  const [isRunning, setIsRunning] = useState(false)
-  const [triggerInput, setTriggerInput] = useState<Record<string, unknown>>({})
-
-  const isFirstNodeManualTrigger = useMemo(() => {
-    if (!workflow?.nodes || workflow.nodes.length === 0) return false
-    const firstNode = workflow.nodes[0]
-    return firstNode.type === 'trigger' && firstNode.triggerType === 'manual'
-  }, [workflow?.nodes])
-
-  // Get the first node (trigger) and its input schema
-  const firstNode = useMemo(() => {
-    if (!workflow?.nodes || workflow.nodes.length === 0) return null
-    return workflow.nodes[0]
-  }, [workflow?.nodes])
-
-  const triggerInputSchema = useMemo((): DataSchema | null => {
-    if (!firstNode || firstNode.type !== 'trigger') return null
-    return firstNode.config?.inputSchema || { type: 'object', properties: {} }
-  }, [firstNode])
-
-  const handleRunWorkflow = async () => {
-    try {
-      setIsRunning(true)
-      setWorkflowResult(null)
-
-      const authHeaders = getAuthHeaders()
-
-      const response = await fetch(`/api/workflows/${id}/run`, {
-        method: 'POST',
-        headers: {
-          ...authHeaders,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ input: triggerInput }),
-      })
-
-      if (!response.ok) throw new Error('Failed to run workflow')
-
-      const result = await response.json()
-
-      // Navigate to the specific run page immediately after starting the workflow
-      router.push(`/runs/${result.runId}`)
-    } catch (error) {
-      console.error('Failed to run workflow:', error)
-      setWorkflowResult('Error: Failed to run workflow')
-      setIsRunning(false)
-    }
-  }
 
   if (isLoading) {
     return (
@@ -88,9 +35,9 @@ function WorkflowDetailInner({ id }: { id: string }) {
   }
 
   return (
-    <div className='h-screen flex flex-col w-full'>
-      <div className='border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-8 py-3'>
-        <div className='flex items-center justify-between'>
+    <WorkflowEditor
+      header={
+        <div className='flex items-center justify-between w-full px-8'>
           {/* Name editor on the left */}
           <div className='flex items-center gap-2'>
             <Link href='/workflows' className='flex items-center gap-1.5 text-base text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors'>
@@ -163,99 +110,17 @@ function WorkflowDetailInner({ id }: { id: string }) {
                 <History className='h-4 w-4' />
               </Button>
             </Link>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  size='sm'
-                  variant='default'
-                  disabled={isRunning || !isFirstNodeManualTrigger}
-                  className='rounded-full'
-                >
-                  <Play className='h-4 w-4 mr-1' />
-                  Run Workflow
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-96' align='end' side='bottom'>
-                <div className='space-y-6'>
-                  {/* Header */}
-                  <div className='border-b border-gray-100 pb-3'>
-                    <div className='flex items-center gap-2'>
-                      <Play className='h-4 w-4 text-green-600' />
-                      <h3 className='font-semibold text-sm text-gray-900'>Run Workflow</h3>
-                    </div>
-                    <p className='text-xs text-gray-500 mt-1'>Configure input parameters for the trigger</p>
-                  </div>
-
-                  {/* Content */}
-                  {triggerInputSchema &&
-                    triggerInputSchema.properties &&
-                    Object.keys(triggerInputSchema.properties).length > 0 ? (
-                    <div className='space-y-4'>
-                      <div>
-                        <h4 className='text-sm font-medium text-gray-900 mb-2'>Parameters</h4>
-
-                        <DataInput
-                          schema={triggerInputSchema}
-                          value={triggerInput}
-                          variablesSchema={{ type: 'object', properties: {} }}
-                          onChange={setTriggerInput}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className='bg-gray-50 rounded-lg p-4 border'>
-                      <div className='flex items-center gap-2'>
-                        <div className='h-2 w-2 rounded-full bg-gray-400'></div>
-                        <span className='text-sm text-gray-600'>No input parameters required</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className='flex justify-end pt-2 border-t border-gray-100'>
-                    <Button
-                      size='sm'
-                      onClick={handleRunWorkflow}
-                      disabled={isRunning}
-                      className='text-white px-4 rounded-full'
-                    >
-                      {isRunning ? (
-                        <div className='flex items-center gap-2'>
-                          <div className='h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent'></div>
-                          Running...
-                        </div>
-                      ) : (
-                        <div className='flex items-center gap-2'>
-                          <Play className='h-3 w-3' />
-                          Run Workflow
-                        </div>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <RunWorkflowButton
+              workflowId={id}
+              workflowStatus={workflow.status}
+              size='sm'
+              variant='default'
+              showLabel={true}
+            />
           </div>
         </div>
-      </div>
-
-      {!!workflowResult && (
-        <div className='border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 py-3'>
-          <div className='max-w-7xl mx-auto'>
-            <h3 className='text-sm font-medium text-gray-900 dark:text-white mb-2'>Workflow Result:</h3>
-            <div className='bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-3'>
-              <pre className='text-green-800 dark:text-green-200 font-mono text-sm overflow-auto'>
-                {JSON.stringify(workflowResult, null, 2)}
-              </pre>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className='flex-1 relative bg-gray-50 dark:bg-gray-900'>
-        <WorkflowEditor />
-      </div>
-    </div>
+      }
+    />
   )
 }
 

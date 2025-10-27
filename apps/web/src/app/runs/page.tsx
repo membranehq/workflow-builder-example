@@ -2,7 +2,7 @@
 
 import useSWR from 'swr'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Play, X, Filter } from 'lucide-react'
+import { Play, X, Filter, History, Clock, Zap, Activity, Calendar } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { authenticatedFetcher } from '@/lib/fetch-utils'
 import { formatTimeAgo } from '@/lib/utils'
@@ -218,35 +218,38 @@ function RunsPageContent() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-800 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Workflow Runs
-            </h1>
-            {filters.length > 0 && (
-              <div className="flex items-center gap-2 ml-4">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {filters.length} filter{filters.length > 1 ? 's' : ''} applied
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full h-6 w-6 p-0"
-                  onClick={clearAllFilters}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            )}
-          </div>
+    <>
+      {/* Header Section */}
+      <div className='flex items-center justify-between mb-8'>
+        <div>
+          <h1 className='text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2'>
+            <History className='h-7 w-7' />
+            Runs
+          </h1>
+          <p className='text-gray-600 dark:text-gray-400'>
+            Monitor and track all your workflow executions
+          </p>
         </div>
+        {filters.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {filters.length} filter{filters.length > 1 ? 's' : ''} applied
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full h-8 px-3"
+              onClick={clearAllFilters}
+            >
+              Clear all
+            </Button>
+          </div>
+        )}
+      </div>
 
-        {/* Multi-Filter Controls */}
-        <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg space-y-2 gap-1 flex flex-wrap">
+      {/* Filter Controls */}
+      <div className="mb-6">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl space-y-2 gap-1 flex flex-wrap">
           {filters.map((filter) => (
             <div key={filter.id} className="inline-flex items-center bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600">
               {/* Field Selector */}
@@ -315,113 +318,145 @@ function RunsPageContent() {
       </div>
 
       {/* Runs List */}
-      <div className="flex-1 overflow-auto pt-4 pr-4 pb-4">
-        {isLoading ? (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="py-4 px-4">
-                <Skeleton className="h-6 w-full" />
+      {isLoading ? (
+        <div className='bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 divide-y divide-gray-200 dark:divide-gray-700'>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="py-6 px-4">
+              <div className='flex items-center justify-between'>
+                <div className='flex-1'>
+                  <Skeleton className='h-6 w-1/3 mb-2' />
+                  <Skeleton className='h-4 w-1/2 mb-3' />
+                  <div className='flex items-center gap-3'>
+                    <Skeleton className='h-5 w-16' />
+                    <Skeleton className='h-4 w-20' />
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
+          ))}
+        </div>
+      ) : !filteredRuns || filteredRuns.length === 0 ? (
+        <div className='bg-white dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-12'>
+          <div className='text-center'>
+            <div className='mx-auto w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4'>
+              <Play className='h-8 w-8 text-gray-400' />
+            </div>
+            <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-2'>
+              {filters.length > 0 ? 'No runs match your filters' : 'No runs yet'}
+            </h3>
+            <p className='text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto'>
+              {filters.length > 0
+                ? 'Try adjusting your filters to see more results.'
+                : 'Run your workflows to see execution history here.'
+              }
+            </p>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {!filteredRuns || filteredRuns.length === 0 ? (
-              <div className="text-center py-8">
-                <Play className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  {filters.length > 0 ? 'No runs match your filters' : 'No runs yet'}
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  {filters.length > 0
-                    ? 'Try adjusting your filters to see more results.'
-                    : 'Run your workflows to see execution history here.'
-                  }
-                </p>
-              </div>
-            ) : (
-              <div className="bg-white dark:bg-gray-950 rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Workflow
-                      </th>
-                      <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Started
-                      </th>
-                      <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Duration
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {filteredRuns.map((run) => (
-                      <tr
-                        key={run._id}
-                        onClick={() => router.push(`/runs/${run._id}`)}
-                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
-                      >
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-2">
-                            {getStatusIconLarge(run.status)}
-                            <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
-                              {run.status}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {run.workflow?.name || 'Unknown Workflow'}
-                          </div>
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {formatDate(run.startedAt)}
-                          </div>
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            {formatDuration(run.executionTime)}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+        </div>
+      ) : (
+        <div className='bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4'>
+          <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-3.5 w-3.5" />
+                      Status
+                    </div>
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-3.5 w-3.5" />
+                      Workflow
+                    </div>
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-3.5 w-3.5" />
+                      Started
+                    </div>
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3.5 w-3.5" />
+                      Duration
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredRuns.map((run) => (
+                  <tr
+                    key={run._id}
+                    onClick={() => router.push(`/runs/${run._id}`)}
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
+                  >
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2">
+                        {getStatusIconLarge(run.status)}
+                        <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                          {run.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {run.workflow?.name || 'Unknown Workflow'}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {formatDate(run.startedAt)}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {formatDuration(run.executionTime)}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   )
 }
 
 export default function RunsPage() {
   return (
     <Suspense fallback={
-      <div className="flex flex-col h-full">
-        <div className="border-b border-gray-200 dark:border-gray-800 py-3">
-          <div className="flex items-center justify-between">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Workflow Runs
+      <>
+        <div className='flex items-center justify-between mb-8'>
+          <div>
+            <h1 className='text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2'>
+              <History className='h-7 w-7' />
+              Runs
             </h1>
+            <p className='text-gray-600 dark:text-gray-400'>
+              Monitor and track all your workflow executions
+            </p>
           </div>
         </div>
-        <div className="flex-1 overflow-auto pt-4 pr-4 pb-4">
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="py-4 px-4">
-                <Skeleton className="h-6 w-full" />
+        <div className='bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 divide-y divide-gray-200 dark:divide-gray-700'>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="py-6 px-4">
+              <div className='flex items-center justify-between'>
+                <div className='flex-1'>
+                  <Skeleton className='h-6 w-1/3 mb-2' />
+                  <Skeleton className='h-4 w-1/2 mb-3' />
+                  <div className='flex items-center gap-3'>
+                    <Skeleton className='h-5 w-16' />
+                    <Skeleton className='h-4 w-20' />
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      </div>
+      </>
     }>
       <RunsPageContent />
     </Suspense>

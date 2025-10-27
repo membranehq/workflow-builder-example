@@ -110,9 +110,12 @@ export function SelectAppAndConnect({
       ) : (
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant='outline' className='w-full justify-start rounded-full'>
-              Select an app
-            </Button>
+            <div className='flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors'>
+              <span className='text-sm font-medium text-gray-600'>Select an app</span>
+              <Button variant='outline' size='sm' className="rounded-full">
+                Select
+              </Button>
+            </div>
           </PopoverTrigger>
           <PopoverContent className='w-80' align='start'>
             <div className='space-y-2'>

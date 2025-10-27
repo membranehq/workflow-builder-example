@@ -9,6 +9,10 @@ import { generateIntegrationToken } from '@/lib/integration-token'
 import { IntegrationAppClient } from '@membranehq/sdk'
 import { getEventIngestUrl } from '@/lib/utils'
 
+const capitalize = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
 /**
  * Handle external service calls when a node becomes ready
  * This is where you would register webhooks, create subscriptions, etc.
@@ -33,7 +37,7 @@ async function handleNodeReady(node: IWorkflowNode, workflowId: string, auth: Au
 
     if (integration.id && integration.connection?.id) {
       const instance = await membrane.flowInstances.create({
-        name: `Receive ${dataCollection} Event`,
+        name: `Receive ${capitalize(dataCollection)} ${capitalize(eventType)} Event`,
         connectionId: integration.connection?.id,
         integrationId: integration.id,
         instanceKey: `${workflowId}-${dataCollection}-${eventType}`,
@@ -52,7 +56,7 @@ async function handleNodeReady(node: IWorkflowNode, workflowId: string, auth: Au
           'find-data-record-by-id': {
             type: 'find-data-record-by-id',
             name: 'Find Data Record By Id',
-            links: [{ key: 'create-data-record-in-my-app' }],
+            links: [{ key: 'send-update-to-my-app' }],
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore - state and dependencies are custom properties for this flow instance
             state: 'READY',
@@ -68,7 +72,7 @@ async function handleNodeReady(node: IWorkflowNode, workflowId: string, auth: Au
             isCustomized: true,
           },
 
-          'create-data-record-in-my-app': {
+          'send-update-to-my-app': {
             type: 'api-request-to-your-app',
             name: 'Create Data Record in my App',
             config: {
@@ -87,15 +91,7 @@ async function handleNodeReady(node: IWorkflowNode, workflowId: string, auth: Au
           },
         },
       })
-
-      console.log('Flow instance created:', instance)
-
-      //
     }
-
-    /**
-     * Populate nodes
-     */
   }
 }
 

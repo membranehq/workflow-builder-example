@@ -6,12 +6,14 @@ import { Node } from '@xyflow/react'
 import { WorkflowNode } from './types/workflow'
 import { useWorkflow } from './workflow-context'
 import { NodeCreateDialog } from './dialogs/node-create-dialog'
-import { TriggerCreateDialog } from './dialogs/trigger/trigger-create-dialog'
+import { TriggerCreateDialog } from './dialogs/trigger-create-dialog'
 import { v4 as uuidv4 } from 'uuid'
 import { ConfigPanel } from './config-panel'
 import { WorkflowNodeRenderer } from './workflow-node-renderer'
+import { ResizableSplitLayout } from '@/components/ui/resizable-split-layout'
 
 interface WorkflowEditorProps {
+  header?: React.ReactNode
   viewOnly?: boolean
   onNodeClick?: (nodeId: string) => void
   runResults?: Array<{
@@ -27,7 +29,7 @@ interface WorkflowEditorProps {
   }>
 }
 
-export function WorkflowEditor({ viewOnly = false, onNodeClick, runResults }: WorkflowEditorProps = {}) {
+export function WorkflowEditor({ header, viewOnly = false, onNodeClick, runResults }: WorkflowEditorProps = {}) {
   const { workflow, setWorkflow, saveNodes, nodeTypes: nodeTypeDefinitions, triggerTypes, deleteNode, selectedNodeId, setSelectedNodeId } = useWorkflow()
 
   const selectedNode = selectedNodeId ? (workflow?.nodes ?? []).find((n) => n.id === selectedNodeId) ?? null : null
@@ -151,30 +153,34 @@ export function WorkflowEditor({ viewOnly = false, onNodeClick, runResults }: Wo
   }, [viewOnly])
 
   return (
-    <div className="flex h-full">
-      <div className="flex-1">
-        <WorkflowNodeRenderer
-          nodes={workflow?.nodes ?? []}
-          nodeTypes={nodeTypeDefinitions}
-          triggerTypes={triggerTypes}
-          selectedNodeId={selectedNodeId}
-          onNodeClick={handleNodeClick}
-          onDeleteNode={handleDeleteNode}
-          onPlusNodeClick={handlePlusNodeClick}
-          onTriggerPlaceholderClick={handleTriggerPlaceholderClick}
-          viewOnly={viewOnly}
-          runResults={runResults}
-        />
-      </div>
-
-      {!viewOnly && (
-        <ConfigPanel
-          selectedNode={selectedNode}
-          onUpdateNode={handleNodeUpdate}
-          nodeTypes={nodeTypeDefinitions}
-          triggerTypes={triggerTypes}
-        />
-      )}
+    <>
+      <ResizableSplitLayout
+        header={header}
+        leftPane={
+          <WorkflowNodeRenderer
+            nodes={workflow?.nodes ?? []}
+            nodeTypes={nodeTypeDefinitions}
+            triggerTypes={triggerTypes}
+            selectedNodeId={selectedNodeId}
+            onNodeClick={handleNodeClick}
+            onDeleteNode={handleDeleteNode}
+            onPlusNodeClick={handlePlusNodeClick}
+            onTriggerPlaceholderClick={handleTriggerPlaceholderClick}
+            viewOnly={viewOnly}
+            runResults={runResults}
+          />
+        }
+        rightPane={
+          !viewOnly && selectedNode ? (
+            <ConfigPanel
+              selectedNode={selectedNode}
+              onUpdateNode={handleNodeUpdate}
+              nodeTypes={nodeTypeDefinitions}
+              triggerTypes={triggerTypes}
+            />
+          ) : undefined
+        }
+      />
 
       {!viewOnly && (
         <>
@@ -195,6 +201,6 @@ export function WorkflowEditor({ viewOnly = false, onNodeClick, runResults }: Wo
           />
         </>
       )}
-    </div>
+    </>
   )
 }

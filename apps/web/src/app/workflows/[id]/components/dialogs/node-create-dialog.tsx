@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
-import { GlobeIcon } from 'lucide-react'
+import { GlobeIcon, Sparkles } from 'lucide-react'
 import { useIntegrations } from '@membranehq/react'
 import type { Integration } from '@membranehq/sdk'
 
@@ -26,6 +26,11 @@ export function NodeCreateDialog({ isOpen, onClose, onCreate }: NodeCreateDialog
 
   const handleHttpRequestSelect = () => {
     onCreate('http', {})
+    onClose()
+  }
+
+  const handleAISelect = () => {
+    onCreate('ai', {})
     onClose()
   }
 
@@ -133,6 +138,25 @@ export function NodeCreateDialog({ isOpen, onClose, onCreate }: NodeCreateDialog
                         <div className='text-sm font-medium'>HTTP Request</div>
                         <div className='text-xs text-muted-foreground'>
                           Make HTTP requests to external APIs or webhooks
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* AI option */}
+                  <div>
+                    <button
+                      type='button'
+                      onClick={handleAISelect}
+                      className='flex items-center gap-4 p-4 rounded-lg border hover:bg-gray-50 text-left w-full'
+                    >
+                      <div className='w-12 h-12 flex items-center justify-center bg-purple-100 rounded'>
+                        <Sparkles className='h-6 w-6 text-purple-600' />
+                      </div>
+                      <div>
+                        <div className='text-sm font-medium'>AI</div>
+                        <div className='text-xs text-muted-foreground'>
+                          Use AI to process data with custom instructions
                         </div>
                       </div>
                     </button>

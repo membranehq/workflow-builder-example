@@ -1,5 +1,9 @@
 import { IntegrationAppClient } from '@membranehq/sdk'
 import { WorkflowNode, NodeExecutionResult } from './types.js'
+import { generateObject } from 'ai'
+import { anthropic } from '@ai-sdk/anthropic'
+import { z } from 'zod'
+import { experimental_createMCPClient } from '@ai-sdk/mcp'
 
 /**
  * Resolves variables from previous node outputs using inputMapping
@@ -282,6 +286,162 @@ export async function executeActionNode(
 }
 
 /**
+ * Converts JSON Schema to Zod schema for AI SDK structured output
+ */
+function jsonSchemaToZod(schema: Record<string, unknown>): z.ZodTypeAny {
+  const type = schema.type as string
+
+  switch (type) {
+    case 'string':
+      return z.string()
+    case 'number':
+      return z.number()
+    case 'boolean':
+      return z.boolean()
+    case 'object':
+      const properties = schema.properties as Record<string, Record<string, unknown>> | undefined
+      if (!properties) {
+        return z.record(z.string(), z.unknown())
+      }
+      const zodShape: Record<string, z.ZodTypeAny> = {}
+      for (const [key, propSchema] of Object.entries(properties)) {
+        zodShape[key] = jsonSchemaToZod(propSchema)
+      }
+      return z.object(zodShape)
+    case 'array':
+      const items = schema.items as Record<string, unknown> | undefined
+      if (!items) {
+        return z.array(z.unknown())
+      }
+      return z.array(jsonSchemaToZod(items))
+    default:
+      return z.unknown()
+  }
+}
+
+/**
+ * Executes an AI action node using AI SDK
+ */
+export async function executeAIActionNode(
+  node: WorkflowNode,
+  resolvedInputs: Record<string, unknown>,
+  previousResults: EnhancedNodeExecutionResult[],
+): Promise<NodeExecutionResult> {
+  let mcpClient: Awaited<ReturnType<typeof experimental_createMCPClient>> | null = null
+
+  try {
+    const { prompt } = resolvedInputs
+
+    if (!prompt || typeof prompt !== 'string') {
+      throw new Error('AI node requires prompt in inputMapping')
+    }
+
+    // Get the output schema from node config
+    const outputSchema = node.config?.outputSchema as Record<string, unknown> | undefined
+
+    if (!outputSchema) {
+      throw new Error('AI node requires outputSchema in config')
+    }
+
+    const apiKey = process.env.ANTHROPIC_API_KEY
+
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY environment variable is not set')
+    }
+
+    // Convert JSON schema to Zod schema
+    const zodSchema = jsonSchemaToZod(outputSchema)
+
+    // Prepare context from previous results
+    const context = previousResults.map((result) => ({
+      node: result.nodeName || result.nodeId,
+      output: result.output,
+    }))
+
+    // Build the full prompt with context
+    const fullPrompt = `${prompt}
+        Available data from previous steps:
+        ${JSON.stringify(context, null, 2)} 
+        Please provide the response according to the specified schema.
+    `
+
+    // Check if MCP server is configured
+    const mcpConfig = node.config?.mcp as
+      | {
+          url?: string
+          type?: 'sse' | 'http'
+          headers?: Record<string, string>
+        }
+      | undefined
+
+    let tools: Record<string, unknown> | undefined = undefined
+
+    // Initialize MCP client if configured
+    if (mcpConfig?.url && mcpConfig?.type) {
+      try {
+        // Create MCP client based on type
+        mcpClient = await experimental_createMCPClient({
+          transport: {
+            type: mcpConfig.type,
+            url: mcpConfig.url,
+            headers: mcpConfig.headers,
+          },
+        })
+
+        // Get tools from MCP server
+        tools = await mcpClient.tools()
+        console.log('MCP tools loaded successfully')
+      } catch (mcpError) {
+        console.error('Failed to initialize MCP client:', mcpError)
+        // Continue without MCP tools rather than failing the entire execution
+      }
+    }
+
+    // Call AI SDK with structured output
+    const result = await generateObject({
+      model: anthropic('claude-3-5-haiku-latest'),
+      schema: zodSchema,
+      prompt: fullPrompt,
+      ...(tools && { tools }),
+    })
+
+    // Close MCP client if it was initialized
+    if (mcpClient) {
+      await mcpClient.close()
+    }
+
+    return {
+      id: `${node.id}-${Date.now()}`,
+      nodeId: node.id,
+      success: true,
+      input: resolvedInputs,
+      output: result.object,
+    }
+  } catch (error) {
+    // Close MCP client on error if it was initialized
+    if (mcpClient) {
+      try {
+        await mcpClient.close()
+      } catch (closeError) {
+        console.error('Failed to close MCP client:', closeError)
+      }
+    }
+
+    return {
+      id: `${node.id}-${Date.now()}`,
+      nodeId: node.id,
+      success: false,
+      input: resolvedInputs,
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        code: 'AI_EXECUTION_ERROR',
+        details: error,
+      },
+    }
+  }
+}
+
+/**
  * Enhanced node result with name for better variable resolution
  */
 export interface EnhancedNodeExecutionResult extends NodeExecutionResult {
@@ -313,6 +473,9 @@ export async function executeWorkflowNode(
           break
         case 'action':
           result = await executeActionNode(node, resolvedInputs, membraneToken)
+          break
+        case 'ai':
+          result = await executeAIActionNode(node, resolvedInputs, previousResults)
           break
         default:
           throw new Error(`Unsupported action node type: ${node.nodeType}`)

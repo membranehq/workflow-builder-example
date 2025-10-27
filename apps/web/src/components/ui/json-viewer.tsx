@@ -14,20 +14,20 @@ export function JsonViewer({ data, level = 0, expanded = true }: JsonViewerProps
   const type = Array.isArray(data) ? 'array' : typeof data
   const isExpandable = type === 'object' || type === 'array'
 
-  if (data === null) return <span className='text-gray-500'>null</span>
-  if (type === 'undefined') return <span className='text-gray-500'>undefined</span>
-  if (type === 'string') return <span className='text-green-600 dark:text-green-400'>&quot;{String(data)}&quot;</span>
-  if (type === 'number') return <span className='text-blue-600 dark:text-blue-400'>{String(data)}</span>
-  if (type === 'boolean') return <span className='text-purple-600 dark:text-purple-400'>{String(data)}</span>
+  if (data === null) return <span className='font-mono text-gray-500'>null</span>
+  if (type === 'undefined') return <span className='font-mono text-gray-500'>undefined</span>
+  if (type === 'string') return <span className='font-mono text-green-600 dark:text-green-400'>&quot;{String(data)}&quot;</span>
+  if (type === 'number') return <span className='font-mono text-blue-600 dark:text-blue-400'>{String(data)}</span>
+  if (type === 'boolean') return <span className='font-mono text-purple-600 dark:text-purple-400'>{String(data)}</span>
 
   if (isExpandable && data && typeof data === 'object') {
     const isEmpty = Object.keys(data).length === 0
     if (isEmpty) {
-      return <span className='text-gray-500'>{type === 'array' ? '[]' : '{}'}</span>
+      return <span className='font-mono text-gray-500'>{type === 'array' ? '[]' : '{}'}</span>
     }
 
     return (
-      <div className='relative'>
+      <div className='relative font-mono'>
         <div className='inline-flex items-center cursor-pointer hover:text-blue-500'>
           <div onClick={() => setIsExpanded(!isExpanded)}>
             {isExpanded ? <ChevronDown className='h-3 w-3' /> : <ChevronRight className='h-3 w-3' />}
@@ -53,5 +53,5 @@ export function JsonViewer({ data, level = 0, expanded = true }: JsonViewerProps
     )
   }
 
-  return <span>{String(data)}</span>
+  return <span className='font-mono'>{String(data)}</span>
 }

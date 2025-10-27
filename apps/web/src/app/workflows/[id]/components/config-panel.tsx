@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { WorkflowNode } from './types/workflow'
 import { NodeTypeMetadata, TriggerType } from '@/lib/node-types'
 import { DataSchema } from '@membranehq/react'
-import { ManualTriggerConfig } from './dialogs/trigger/manual-trigger-config'
-import { EventTriggerConfig } from './dialogs/trigger/event-trigger-config'
-import { MembraneActionConfig } from './dialogs/membrane-action-config'
-import { HttpRequestConfig } from './dialogs/http-request-config'
+import { ManualTriggerConfig } from './configs/manual-trigger-config'
+import { EventTriggerConfig } from './configs/event-trigger-config'
+import { MembraneActionConfig } from './configs/membrane-action-config'
+import { HttpRequestConfig } from './configs/http-request-config'
+import { AIConfig } from './configs/ai-config'
 import { useWorkflow } from './workflow-context'
 import { useDebounce } from '@/hooks/use-debounce'
 
@@ -121,7 +122,7 @@ export function ConfigPanel({ selectedNode, onUpdateNode, nodeTypes, triggerType
 
   if (!selectedNode || !formData) {
     return (
-      <div className='w-[420px] bg-white border-l border-gray-200 p-6 flex items-center justify-center'>
+      <div className='p-6 flex items-center justify-center h-full'>
         <div className='text-center text-gray-500'>
           <p className='text-lg font-medium'>No node selected</p>
           <p className='text-sm'>Click on a node to configure it</p>
@@ -131,50 +132,59 @@ export function ConfigPanel({ selectedNode, onUpdateNode, nodeTypes, triggerType
   }
 
   return (
-    <div className='w-[420px] bg-white border-l border-gray-200 flex flex-col overflow-y-auto'>
-      <div className='flex-1 overflow-y-auto p-4'>
-        <div className='space-y-4'>
-          {selectedNode.type === 'trigger' && selectedTriggerTypeConfig && formData.triggerType === 'manual' && (
-            <ManualTriggerConfig
-              value={formData}
-              onChange={(updatedNode) => {
-                setFormData((prev) => prev ? { ...updatedNode, id: prev.id } : undefined)
-              }}
-            />
-          )}
+    <div className='p-4'>
+      <div className='space-y-4'>
+        {selectedNode.type === 'trigger' && selectedTriggerTypeConfig && formData.triggerType === 'manual' && (
+          <ManualTriggerConfig
+            value={formData}
+            onChange={(updatedNode) => {
+              setFormData((prev) => prev ? { ...updatedNode, id: prev.id } : undefined)
+            }}
+          />
+        )}
 
-          {selectedNode.type === 'trigger' && selectedTriggerTypeConfig && formData.triggerType === 'event' && (
-            <EventTriggerConfig
-              value={formData}
-              onChange={(updatedNode) => {
-                setFormData((prev) => prev ? { ...updatedNode, id: prev.id } : undefined)
-              }}
-              variableSchema={variableSchema}
-              triggerTypeConfig={selectedTriggerTypeConfig}
-            />
-          )}
+        {selectedNode.type === 'trigger' && selectedTriggerTypeConfig && formData.triggerType === 'event' && (
+          <EventTriggerConfig
+            value={formData}
+            onChange={(updatedNode) => {
+              setFormData((prev) => prev ? { ...updatedNode, id: prev.id } : undefined)
+            }}
+            variableSchema={variableSchema}
+            triggerTypeConfig={selectedTriggerTypeConfig}
+          />
+        )}
 
-          {selectedNode.type === 'action' && selectedNodeType === 'action' && (
-            <MembraneActionConfig
-              variableSchema={variableSchema}
-              value={formData}
-              onChange={(configuration) => {
-                setFormData((prev) => prev ? { ...configuration, id: prev.id } : undefined)
-              }}
-            />
-          )}
+        {selectedNode.type === 'action' && selectedNodeType === 'action' && (
+          <MembraneActionConfig
+            variableSchema={variableSchema}
+            value={formData}
+            onChange={(configuration) => {
+              setFormData((prev) => prev ? { ...configuration, id: prev.id } : undefined)
+            }}
+          />
+        )}
 
-          {selectedNode.type === 'action' && selectedNodeType === 'http' && selectedNodeTypeConfig && (
-            <HttpRequestConfig
-              variableSchema={variableSchema}
-              value={formData}
-              nodeTypeConfig={selectedNodeTypeConfig}
-              onChange={(configuration) => {
-                setFormData((prev) => prev ? { ...configuration, id: prev.id } : undefined)
-              }}
-            />
-          )}
-        </div>
+        {selectedNode.type === 'action' && selectedNodeType === 'http' && selectedNodeTypeConfig && (
+          <HttpRequestConfig
+            variableSchema={variableSchema}
+            value={formData}
+            nodeTypeConfig={selectedNodeTypeConfig}
+            onChange={(configuration) => {
+              setFormData((prev) => prev ? { ...configuration, id: prev.id } : undefined)
+            }}
+          />
+        )}
+
+        {selectedNode.type === 'action' && selectedNodeType === 'ai' && selectedNodeTypeConfig && (
+          <AIConfig
+            variableSchema={variableSchema}
+            value={formData}
+            nodeTypeConfig={selectedNodeTypeConfig}
+            onChange={(configuration) => {
+              setFormData((prev) => prev ? { ...configuration, id: prev.id } : undefined)
+            }}
+          />
+        )}
       </div>
     </div>
   )

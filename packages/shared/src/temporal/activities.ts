@@ -22,43 +22,44 @@ export async function executeWorkflowNodes(
 
   let failed = false
 
-  try {
-    for (const node of nodes) {
-      const result = await executeWorkflowNode(node, results, membraneToken, triggerInput)
+  for (const node of nodes) {
+    let result: EnhancedNodeExecutionResult
 
-      console.log('Result:', result)
-      results.push(result)
-
-      // Stop executing further nodes if the current node failed
-      if (!result.success) {
-        failed = true
-        console.log('Node failed, stopping execution', result)
-
-        return results
+    try {
+      result = await executeWorkflowNode(node, results, membraneToken, triggerInput)
+    } catch (error) {
+      // If executeWorkflowNode throws an error, create a failed result
+      console.error(`Error executing node ${node.id}:`, error)
+      result = {
+        id: `${node.id}-${Date.now()}`,
+        nodeId: node.id,
+        nodeName: node.name,
+        success: false,
+        input: {},
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          code: 'NODE_EXECUTION_ERROR',
+          details: error,
+        },
       }
     }
 
-    console.log('Results:', results)
+    console.log('Result:', result)
+    results.push(result)
 
-    await updateWorkflowRun(runId!, results, startTime, !failed ? 'completed' : 'failed')
+    // Stop executing further nodes if the current node failed
+    if (!result.success) {
+      failed = true
 
-    return results
-  } catch (error) {
-    console.error('Error executing workflow nodes:', error)
+      await updateWorkflowRun(runId!, results, startTime, 'failed')
 
-    // Update the workflow run as failed
-    if (runId) {
-      await updateWorkflowRun(
-        runId,
-        results,
-        startTime,
-        'failed',
-        error instanceof Error ? error.message : 'Unknown error',
-      )
+      return results
     }
-
-    throw error
   }
+
+  await updateWorkflowRun(runId!, results, startTime, !failed ? 'completed' : 'failed')
+
+  return results
 }
 
 async function updateWorkflowRun(

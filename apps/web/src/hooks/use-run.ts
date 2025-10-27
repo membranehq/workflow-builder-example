@@ -1,11 +1,22 @@
 import useSWR from 'swr'
 import { authenticatedFetcher } from '@/lib/fetch-utils'
 
+interface WorkflowNode {
+  id: string
+  name: string
+  type: 'trigger' | 'action'
+  nodeType?: string
+  triggerType?: string
+  config?: Record<string, unknown>
+  ready?: boolean
+}
+
 interface WorkflowRun {
   _id: string
   workflowId: string
   status: 'running' | 'completed' | 'failed'
   input?: unknown
+  nodesSnapshot?: WorkflowNode[]
   results: Array<{
     nodeId: string
     success: boolean

@@ -3,29 +3,110 @@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { RunWorkflowButton } from '@/components/run-workflow-button'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { authenticatedFetcher, getAuthHeaders } from '@/lib/fetch-utils'
 import {
-  Play,
   Calendar,
   Activity,
   FileText,
   Zap,
   Clock,
   History,
+  Workflow as WorkflowIcon,
 } from 'lucide-react'
+import { useIntegration } from '@membranehq/react'
+import Image from 'next/image'
+
+interface WorkflowNode {
+  id: string
+  name: string
+  type: 'trigger' | 'action'
+  nodeType?: string
+  triggerType?: string
+  parametersSchema?: Record<string, unknown>
+  outputSchema?: Record<string, unknown>
+  config?: Record<string, unknown>
+  ready?: boolean
+}
 
 interface Workflow {
   _id: string
   name: string
   description?: string
   status: 'active' | 'inactive'
-  nodes: Array<{ id: string; type: string }>
+  nodes: WorkflowNode[]
+  userId?: string
+  customerId?: string
+  version: number
+  lastRunAt?: string
   createdAt: string
   updatedAt: string
-  lastRunAt?: string
+}
+
+function IntegrationLogo({ integrationKey, zIndex }: { integrationKey: string; zIndex: number }) {
+  const { integration } = useIntegration(integrationKey)
+
+  if (!integration) {
+    return null
+  }
+
+  return (
+    <div
+      className='relative inline-block'
+      style={{
+        zIndex,
+        marginLeft: zIndex > 0 ? '-6px' : '0',
+      }}
+    >
+      <div className='w-6 h-6 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm'>
+        {integration.logoUri ? (
+          <Image
+            src={integration.logoUri}
+            alt={integration.name}
+            width={24}
+            height={24}
+            className='w-full h-full object-cover'
+          />
+        ) : (
+          <div className='w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-[10px] font-semibold text-gray-600 dark:text-gray-300'>
+            {integration.name.charAt(0).toUpperCase()}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function IntegrationLogos({ integrationKeys }: { integrationKeys: string[] }) {
+  const maxVisible = 3
+  const visibleKeys = integrationKeys.slice(0, maxVisible)
+  const remainingCount = Math.max(0, integrationKeys.length - maxVisible)
+
+  if (integrationKeys.length === 0) {
+    return null
+  }
+
+  return (
+    <div className='flex items-center'>
+      {visibleKeys.map((key, index) => (
+        <IntegrationLogo key={key} integrationKey={key} zIndex={visibleKeys.length - index} />
+      ))}
+      {remainingCount > 0 && (
+        <div
+          className='relative inline-block w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-[10px] font-semibold text-gray-600 dark:text-gray-300 shadow-sm'
+          style={{
+            zIndex: 0,
+            marginLeft: '-6px',
+          }}
+        >
+          +{remainingCount}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function WorkflowsPage() {
@@ -97,16 +178,32 @@ export default function WorkflowsPage() {
     return date.toLocaleDateString()
   }
 
+  const getIntegrationKeys = (workflow: Workflow): string[] => {
+    const integrationKeys: string[] = []
+    const seen = new Set<string>()
+
+    workflow.nodes.forEach((node) => {
+      const integrationKey = node.config?.integrationKey as string | undefined
+      if (integrationKey && !seen.has(integrationKey)) {
+        integrationKeys.push(integrationKey)
+        seen.add(integrationKey)
+      }
+    })
+
+    return integrationKeys
+  }
+
   return (
     <>
       {/* Header Section */}
       <div className='flex items-center justify-between mb-8'>
         <div>
-          <h1 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
+          <h1 className='text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2'>
+            <WorkflowIcon className='h-7 w-7' />
             Workflows
           </h1>
           <p className='text-gray-600 dark:text-gray-400'>
-            Create and manage automated workflows
+            Connect and automate workflows across all your favorite apps
           </p>
         </div>
         <Button
@@ -122,7 +219,7 @@ export default function WorkflowsPage() {
 
       {/* Workflows List */}
       {isLoading ? (
-        <div className='divide-y divide-gray-200 dark:divide-gray-700'>
+        <div className='bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 divide-y divide-gray-200 dark:divide-gray-700'>
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
@@ -166,7 +263,7 @@ export default function WorkflowsPage() {
           </div>
         </div>
       ) : (
-        <div className='divide-y divide-gray-200 dark:divide-gray-700'>
+        <div className='bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 divide-y divide-gray-200 dark:divide-gray-700'>
           {workflows.map((workflow) => (
             <div
               key={workflow._id}
@@ -176,9 +273,12 @@ export default function WorkflowsPage() {
               <div className='flex items-center justify-between gap-6'>
                 {/* Left Section - Info */}
                 <div className='flex-1 min-w-0'>
-                  <h3 className='text-base font-semibold text-gray-700 dark:text-gray-200 mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors'>
-                    {workflow.name}
-                  </h3>
+                  <div className='flex items-center gap-3 mb-1'>
+                    <h3 className='text-base font-semibold text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors'>
+                      {workflow.name}
+                    </h3>
+                    <IntegrationLogos integrationKeys={getIntegrationKeys(workflow)} />
+                  </div>
                   {workflow.description && (
                     <p className='text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-1'>
                       {workflow.description}
@@ -233,25 +333,14 @@ export default function WorkflowsPage() {
                     Runs
                   </Button>
                   {workflow.status === 'active' && (
-                    <Button
-                      variant='default'
+                    <RunWorkflowButton
+                      workflowId={workflow._id}
+                      workflowStatus={workflow.status}
                       size='sm'
-                      className='rounded-full'
-                      onClick={async (e) => {
-                        e.stopPropagation()
-                        try {
-                          await fetch(`/api/workflows/${workflow._id}/run`, {
-                            method: 'POST',
-                            headers: getAuthHeaders(),
-                          })
-                        } catch (error) {
-                          console.error('Failed to run workflow:', error)
-                        }
-                      }}
-                    >
-                      <Play className='h-4 w-4 mr-1.5' />
-                      Run
-                    </Button>
+                      variant='default'
+                      showLabel={true}
+                      navigateToRun={false}
+                    />
                   )}
                 </div>
               </div>

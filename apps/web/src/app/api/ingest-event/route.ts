@@ -11,6 +11,17 @@ import { Workflow } from '@/models/workflow'
 import { getAuthFromRequest } from '@/lib/server-auth'
 import { generateIntegrationToken } from '@/lib/integration-token'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, x-workflow-id, Authorization',
+}
+
+// Handle OPTIONS request for CORS preflight
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders })
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectToDatabase()
@@ -21,7 +32,7 @@ export async function POST(request: NextRequest) {
       eventData = await request.json()
     } catch (error) {
       console.error('Invalid JSON in request body:', error)
-      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400, headers: corsHeaders })
     }
 
     // Get workflow ID from query parameters or headers
@@ -29,18 +40,18 @@ export async function POST(request: NextRequest) {
     const workflowId = url.searchParams.get('workflowId') || request.headers.get('x-workflow-id')
 
     if (!workflowId) {
-      return NextResponse.json({ error: 'Workflow ID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Workflow ID is required' }, { status: 400, headers: corsHeaders })
     }
 
     // Find the workflow
     const workflow = await Workflow.findById(workflowId)
     if (!workflow) {
-      return NextResponse.json({ error: 'Workflow not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Workflow not found' }, { status: 404, headers: corsHeaders })
     }
 
     // Check if workflow is active
     if (workflow.status !== 'active') {
-      return NextResponse.json({ error: 'Workflow is not active' }, { status: 400 })
+      return NextResponse.json({ error: 'Workflow is not active' }, { status: 400, headers: corsHeaders })
     }
 
     console.log('Ingesting event for workflow:', workflowId, 'Event data:', eventData)
@@ -96,7 +107,7 @@ export async function POST(request: NextRequest) {
         temporalWorkflowId,
         timestamp: new Date().toISOString(),
       },
-      { status: 202 },
+      { status: 202, headers: corsHeaders },
     ) // 202 Accepted - request accepted but processing asynchronously
   } catch (error) {
     console.error('Error ingesting event:', error)
@@ -105,16 +116,19 @@ export async function POST(request: NextRequest) {
         error: 'Internal server error',
         message: 'Failed to ingest event and start workflow',
       },
-      { status: 500 },
+      { status: 500, headers: corsHeaders },
     )
   }
 }
 
 // Optional: Add a GET endpoint for health check
 export async function GET() {
-  return NextResponse.json({
-    status: 'healthy',
-    endpoint: 'ingest/events',
-    timestamp: new Date().toISOString(),
-  })
+  return NextResponse.json(
+    {
+      status: 'healthy',
+      endpoint: 'ingest/events',
+      timestamp: new Date().toISOString(),
+    },
+    { headers: corsHeaders },
+  )
 }

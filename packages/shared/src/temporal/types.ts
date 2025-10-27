@@ -1,6 +1,6 @@
 export type NodeType = 'trigger' | 'action'
 export type TriggerType = 'manual' | 'event'
-export type ActionNodeType = 'http' | 'action'
+export type ActionNodeType = 'http' | 'action' | 'ai'
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
 
 /**
@@ -114,6 +114,11 @@ export interface WorkflowNode {
     integrationKey?: string
     actionId?: string
     inputMapping?: Record<string, unknown>
+    mcp?: {
+      url?: string
+      type?: 'sse' | 'http'
+      headers?: Record<string, string>
+    }
   }
 }
 
@@ -150,5 +155,3 @@ export type NewFilterNodeData = NewNativeNodeData & {
 export type FilterNodeData = NewFilterNodeData & {
   id: string
 }
-
-

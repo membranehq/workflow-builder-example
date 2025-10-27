@@ -105,22 +105,17 @@ export function TriggerNode({ data, selected }: TriggerNodeProps) {
   if (data.isEmpty) {
     return (
       <div className='relative w-[240px]'>
-        <div className='border-2 border-dashed border-gray-300 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-2 h-[48px] flex items-center justify-center shadow-sm'>
-          <div className='flex items-center gap-3'>
-            <div className='w-5 h-5 bg-white border border-gray-200 rounded flex items-center justify-center shadow-sm'>
-              <ZapIcon className='w-3 h-3 text-gray-500' />
+        <div
+          onClick={data.onClick}
+          className='group border-2 border-dashed border-gray-300 rounded-lg bg-white p-2 cursor-pointer hover:border-gray-400 transition-all duration-200'
+        >
+          <div className='flex items-center justify-center gap-2'>
+            <div className='w-6 h-6 bg-gray-100 rounded flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-200'>
+              <ZapIcon className='w-4 h-4 text-gray-600' />
             </div>
-            <button
-              className='px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700 rounded-md font-medium transition-all duration-200 text-sm flex items-center gap-2 shadow-sm'
-              onClick={data.onClick}
-            >
-              {data.position && (
-                <span className='text-xs font-medium'>
-                  {data.position}.
-                </span>
-              )}
-              Trigger
-            </button>
+            <span className='text-sm text-gray-600 group-hover:text-gray-900 transition-colors'>
+              Add Trigger
+            </span>
           </div>
         </div>
       </div>

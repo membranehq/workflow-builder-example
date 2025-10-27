@@ -55,11 +55,12 @@ export async function calculateNodeOutputSchema(
 
     // For action nodes
     if (node.type === 'action') {
-      console.log('node.config', node.config)
+      if (node.nodeType === 'ai') {
+        return node.config?.outputSchema as DataSchema
+      }
+
       if (node.nodeType === 'action' && node.config?.actionId) {
         const action = await membrane.action(node.config.actionId as string).get()
-
-        console.log('action', action)
 
         return action.outputSchema as DataSchema
       }
