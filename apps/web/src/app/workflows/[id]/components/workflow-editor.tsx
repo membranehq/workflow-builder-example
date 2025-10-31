@@ -67,13 +67,10 @@ export function WorkflowEditor({ header, viewOnly = false, onNodeClick, runResul
       const updatedNodes = workflow.nodes.map((node) =>
         node.id === selectedNode.id ? { ...node, ...nodeData } : node,
       )
-      setWorkflow({
-        ...workflow,
-        nodes: updatedNodes,
-      })
+      // Don't do optimistic update - wait for API response with all updates (like ready field, output schemas, etc.)
       void saveNodes(updatedNodes)
     },
-    [selectedNode, workflow, setWorkflow, saveNodes],
+    [selectedNode, workflow, saveNodes],
   )
 
   const handleCreateNodeFromType = useCallback(
@@ -109,10 +106,10 @@ export function WorkflowEditor({ header, viewOnly = false, onNodeClick, runResul
       setPendingAfterId(undefined)
       setNodeCreateDialogOpen(false)
       setSelectedNodeId(newNode.id)
-      setWorkflow({ ...workflow, nodes: updatedNodes })
+      // Don't do optimistic update - wait for API response with all updates (output schemas, etc.)
       void saveNodes(updatedNodes)
     },
-    [workflow, nodeTypeDefinitions, pendingAfterId, setWorkflow, saveNodes, setSelectedNodeId, viewOnly],
+    [workflow, nodeTypeDefinitions, pendingAfterId, saveNodes, setSelectedNodeId, viewOnly],
   )
 
   const handleCreateTriggerFromType = useCallback(
@@ -130,10 +127,10 @@ export function WorkflowEditor({ header, viewOnly = false, onNodeClick, runResul
       if (existingIndex >= 0) updatedNodes[existingIndex] = newTrigger
       else updatedNodes.unshift(newTrigger)
       setTriggerCreateDialogOpen(false)
-      setWorkflow({ ...workflow, nodes: updatedNodes })
+      // Don't do optimistic update - wait for API response with all updates (output schemas, etc.)
       void saveNodes(updatedNodes)
     },
-    [workflow, triggerTypes, setWorkflow, saveNodes, viewOnly],
+    [workflow, triggerTypes, saveNodes, viewOnly],
   )
 
   // Handle plus node clicks for creating new nodes

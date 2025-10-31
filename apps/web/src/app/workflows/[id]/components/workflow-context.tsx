@@ -27,7 +27,7 @@ type WorkflowContextValue = {
 
 const WorkflowContext = React.createContext<WorkflowContextValue | undefined>(undefined)
 
-function putJson(url: string, body: unknown) {
+function putJson<T = unknown>(url: string, body: unknown): Promise<T> {
   return fetch(url, {
     method: 'PUT',
     headers: {
@@ -40,7 +40,7 @@ function putJson(url: string, body: unknown) {
       const text = await res.text().catch(() => '')
       throw new Error(text || `Failed request: ${res.status}`)
     }
-    return res
+    return res.json()
   })
 }
 
@@ -110,9 +110,9 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
   const { trigger: triggerSave } = useSWRMutation(
     key ? `${key}/nodes` : null,
     async (_url, { arg }: { arg: WorkflowState['nodes'] }) => {
-      if (!key) return
-      await putJson(`${key}/nodes`, { nodes: arg })
-      // do not rely on server response to revalidate; optimistic update instead
+      if (!key) return null
+      const updatedWorkflow = await putJson<WorkflowState>(`${key}/nodes`, { nodes: arg })
+      return updatedWorkflow
     }
   )
 
@@ -128,8 +128,11 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
 
   const saveNodes = React.useCallback(
     async (nodes: WorkflowState['nodes']) => {
-      await triggerSave(nodes)
-      mutate((prev) => (prev ? { ...prev, nodes } as WorkflowState : prev), { revalidate: false })
+      const updatedWorkflow = await triggerSave(nodes)
+      // Replace the entire workflow state with the API response
+      if (updatedWorkflow) {
+        mutate(updatedWorkflow, { revalidate: false })
+      }
     },
     [triggerSave, mutate]
   )
@@ -145,12 +148,10 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
         setSelectedNodeId(null)
       }
 
-      // Optimistic update
-      setWorkflow({ ...current, nodes: updatedNodes })
-      // Persist
+      // Don't do optimistic update - wait for API response with all updates
       void saveNodes(updatedNodes)
     },
-    [data, setWorkflow, saveNodes, selectedNodeId, setSelectedNodeId]
+    [data, saveNodes, selectedNodeId, setSelectedNodeId]
   )
 
   const saveWorkflowName = React.useCallback(

@@ -354,7 +354,7 @@ function RunsPageContent() {
         </div>
       ) : (
         <div className='bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4'>
-          <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+          <div className="rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">

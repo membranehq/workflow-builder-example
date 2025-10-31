@@ -78,7 +78,21 @@ export function ConfigPanel({ selectedNode, onUpdateNode, nodeTypes, triggerType
   // Update formData when selectedNode changes
   useEffect(() => {
     if (selectedNode) {
-      setFormData(selectedNode)
+      setFormData((prevFormData) => {
+        // If this is a different node, replace completely
+        if (!prevFormData || prevFormData.id !== selectedNode.id) {
+          return selectedNode
+        }
+
+        // Same node - merge backend-calculated fields without overwriting user changes
+        // Backend-calculated fields: ready, outputSchema
+        return {
+          ...prevFormData,
+          // Only update backend-calculated fields
+          ready: selectedNode.ready,
+          outputSchema: selectedNode.outputSchema,
+        }
+      })
     }
   }, [selectedNode])
 
