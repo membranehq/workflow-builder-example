@@ -109,11 +109,21 @@ export interface WorkflowNode {
   triggerType?: TriggerType
   nodeType?: ActionNodeType
   config?: {
+    // Common config
     inputSchema?: Record<string, unknown>
     outputSchema?: Record<string, unknown>
     integrationKey?: string
     actionId?: string
     inputMapping?: Record<string, unknown>
+
+    // Manual trigger config
+    hasInput?: boolean
+
+    // Event trigger config
+    dataCollection?: string
+
+    // AI node config
+    structuredOutput?: boolean
     mcp?: {
       url?: string
       type?: 'sse' | 'http'

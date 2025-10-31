@@ -56,7 +56,23 @@ export async function calculateNodeOutputSchema(
     // For action nodes
     if (node.type === 'action') {
       if (node.nodeType === 'ai') {
-        return node.config?.outputSchema as DataSchema
+        // Check if structured output is enabled (default to true for backward compatibility)
+        const structuredOutput = node.config?.structuredOutput !== false
+
+        if (structuredOutput) {
+          return node.config?.outputSchema as DataSchema
+        } else {
+          // For unstructured text output, return a simple text schema
+          return {
+            type: 'object',
+            properties: {
+              text: {
+                type: 'string',
+                description: 'Generated text from AI',
+              },
+            },
+          }
+        }
       }
 
       if (node.nodeType === 'action' && node.config?.actionId) {

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Minimizer } from '@/components/ui/minimizer'
+import { Switch } from '@/components/ui/switch'
 
 interface AIConfigProps {
   value: Omit<WorkflowNode, 'id'>
@@ -18,6 +19,7 @@ interface AIConfigProps {
 
 export function AIConfig({ value, onChange, variableSchema }: AIConfigProps) {
   const prompt = (value.config?.inputMapping as { prompt?: string })?.prompt || ''
+  const structuredOutput = value.config?.structuredOutput !== false // Default to true for backward compatibility
   const mcpConfig = (value.config?.mcp as {
     url?: string
     type?: 'sse' | 'http'
@@ -58,22 +60,48 @@ export function AIConfig({ value, onChange, variableSchema }: AIConfigProps) {
         </div>
       </Minimizer>
 
-      <Minimizer title='Configure Output Schema' defaultOpen={true}>
-        <div className='p-4'>
-          <SchemaBuilder
-            value={value.config?.outputSchema as JSONSchema}
-            onChange={(schema) => {
-              onChange({
-                ...value,
-                config: {
-                  ...value.config,
-                  outputSchema: schema,
-                },
-              })
-            }}
-          />
+      <div className='flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white'>
+        <div className='space-y-0.5'>
+          <Label htmlFor='structured-output' className='text-sm font-medium'>
+            Structure AI Output
+          </Label>
+          <p className='text-xs text-gray-500'>
+            Enable to define a schema for structured AI responses
+          </p>
         </div>
-      </Minimizer>
+        <Switch
+          id='structured-output'
+          checked={structuredOutput}
+          onCheckedChange={(checked) => {
+            onChange({
+              ...value,
+              config: {
+                ...value.config,
+                structuredOutput: checked,
+              },
+            })
+          }}
+        />
+      </div>
+
+      {structuredOutput && (
+        <Minimizer title='Configure Output Schema' defaultOpen={true}>
+          <div className='p-4'>
+            <SchemaBuilder
+              value={value.config?.outputSchema as JSONSchema}
+              onChange={(schema) => {
+                onChange({
+                  ...value,
+                  config: {
+                    ...value.config,
+                    outputSchema: schema,
+                  },
+                })
+              }}
+            />
+          </div>
+        </Minimizer>
+      )}
 
       <Minimizer title='MCP Server Configuration' defaultOpen={false}>
         <div className='space-y-4 p-4'>

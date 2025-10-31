@@ -1,6 +1,6 @@
 import { IntegrationAppClient } from '@membranehq/sdk'
 import { WorkflowNode, NodeExecutionResult } from './types.js'
-import { generateObject } from 'ai'
+import { generateObject, generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { z } from 'zod'
 import { experimental_createMCPClient } from '@ai-sdk/mcp'
@@ -336,12 +336,8 @@ export async function executeAIActionNode(
       throw new Error('AI node requires prompt in inputMapping')
     }
 
-    // Get the output schema from node config
-    const outputSchema = node.config?.outputSchema as Record<string, unknown> | undefined
-
-    if (!outputSchema) {
-      throw new Error('AI node requires outputSchema in config')
-    }
+    // Check if structured output is enabled (default to true for backward compatibility)
+    const structuredOutput = node.config?.structuredOutput !== false
 
     const apiKey = process.env.ANTHROPIC_API_KEY
 
@@ -349,21 +345,14 @@ export async function executeAIActionNode(
       throw new Error('ANTHROPIC_API_KEY environment variable is not set')
     }
 
-    // Convert JSON schema to Zod schema
-    const zodSchema = jsonSchemaToZod(outputSchema)
+    // Initialize the AI model
+    const model = anthropic('claude-3-5-haiku-latest')
 
     // Prepare context from previous results
     const context = previousResults.map((result) => ({
       node: result.nodeName || result.nodeId,
       output: result.output,
     }))
-
-    // Build the full prompt with context
-    const fullPrompt = `${prompt}
-        Available data from previous steps:
-        ${JSON.stringify(context, null, 2)} 
-        Please provide the response according to the specified schema.
-    `
 
     // Check if MCP server is configured
     const mcpConfig = node.config?.mcp as
@@ -397,13 +386,50 @@ export async function executeAIActionNode(
       }
     }
 
-    // Call AI SDK with structured output
-    const result = await generateObject({
-      model: anthropic('claude-3-5-haiku-latest'),
-      schema: zodSchema,
-      prompt: fullPrompt,
-      ...(tools && { tools }),
-    })
+    let output: unknown
+
+    if (structuredOutput) {
+      // Get the output schema from node config
+      const outputSchema = node.config?.outputSchema as Record<string, unknown> | undefined
+
+      if (!outputSchema) {
+        throw new Error('AI node with structured output requires outputSchema in config')
+      }
+
+      // Convert JSON schema to Zod schema
+      const zodSchema = jsonSchemaToZod(outputSchema)
+
+      // Build the full prompt with context for structured output
+      const fullPrompt = `${prompt}
+        Available data from previous steps:
+        ${JSON.stringify(context, null, 2)} 
+        Please provide the response according to the specified schema.
+    `
+
+      // Call AI SDK with structured output
+      const result = await generateObject({
+        model,
+        schema: zodSchema,
+        prompt: fullPrompt,
+        ...(tools && { tools }),
+      })
+
+      output = result.object
+    } else {
+      // Build the full prompt with context for text generation
+      const fullPrompt = `${prompt}
+        Available data from previous steps:
+        ${JSON.stringify(context, null, 2)}
+    `
+
+      // Call AI SDK for text generation (tools are not passed for unstructured text generation)
+      const result = await generateText({
+        model,
+        prompt: fullPrompt,
+      })
+
+      output = { text: result.text }
+    }
 
     // Close MCP client if it was initialized
     if (mcpClient) {
@@ -415,7 +441,7 @@ export async function executeAIActionNode(
       nodeId: node.id,
       success: true,
       input: resolvedInputs,
-      output: result.object,
+      output,
     }
   } catch (error) {
     // Close MCP client on error if it was initialized
