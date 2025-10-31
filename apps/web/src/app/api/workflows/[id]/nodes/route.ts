@@ -36,7 +36,7 @@ async function handleNodeReady(node: IWorkflowNode, workflowId: string, auth: Au
     const integration = await membrane.integration(integrationKey).get()
 
     if (integration.id && integration.connection?.id) {
-      const instance = await membrane.flowInstances.create({
+      await membrane.flowInstances.create({
         name: `Receive ${capitalize(dataCollection)} ${capitalize(eventType)} Event`,
         connectionId: integration.connection?.id,
         integrationId: integration.id,

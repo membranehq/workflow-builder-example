@@ -30,7 +30,7 @@ interface WorkflowEditorProps {
 }
 
 export function WorkflowEditor({ header, viewOnly = false, onNodeClick, runResults }: WorkflowEditorProps = {}) {
-  const { workflow, setWorkflow, saveNodes, nodeTypes: nodeTypeDefinitions, triggerTypes, deleteNode, selectedNodeId, setSelectedNodeId } = useWorkflow()
+  const { workflow, saveNodes, nodeTypes: nodeTypeDefinitions, triggerTypes, deleteNode, selectedNodeId, setSelectedNodeId } = useWorkflow()
 
   const selectedNode = selectedNodeId ? (workflow?.nodes ?? []).find((n) => n.id === selectedNodeId) ?? null : null
 

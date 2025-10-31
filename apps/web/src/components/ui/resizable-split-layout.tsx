@@ -94,7 +94,6 @@ export function ResizableSplitLayout({
             </div>
 
             {/* Right pane */}
-            {/* eslint-disable-next-line react/forbid-dom-props */}
             <div
               style={{ width: rightWidth }}
               className='bg-white dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 flex flex-col h-full overflow-hidden'

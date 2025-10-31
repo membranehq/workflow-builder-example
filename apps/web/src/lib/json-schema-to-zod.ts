@@ -5,7 +5,7 @@ import { parseSchema } from 'json-schema-to-zod'
 /**
  * Converts a JSON Schema to a Zod schema using json-schema-to-zod library
  */
-export function jsonSchemaToZod(schema: DataSchema): z.ZodType<any> {
+export function jsonSchemaToZod(schema: DataSchema): z.ZodType<unknown> {
   // Handle null or empty schema
   if (!schema) {
     return z.any()
@@ -13,10 +13,7 @@ export function jsonSchemaToZod(schema: DataSchema): z.ZodType<any> {
 
   try {
     // Convert the schema to a Zod schema string
-    const zodSchemaString = parseSchema(schema, {
-      module: 'esm',
-      type: false,
-    })
+    const zodSchemaString = parseSchema(schema)
 
     // Extract the schema definition from the generated string
     // The library returns something like "z.object({ ... })"

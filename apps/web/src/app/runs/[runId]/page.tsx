@@ -2,7 +2,6 @@
 
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, History } from 'lucide-react'
 import Link from 'next/link'
