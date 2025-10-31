@@ -20,32 +20,11 @@ interface WorkflowRun {
   _id: string
   workflowId: string
   status: 'running' | 'completed' | 'failed'
-  input?: unknown
-  results: Array<{
-    nodeId: string
-    success: boolean
-    message: string
-    output?: unknown
-    error?: {
-      message: string
-      code?: string
-      details?: unknown
-    }
-  }>
-  summary: {
-    totalNodes: number
-    successfulNodes: number
-    failedNodes: number
-    successRate: number
-  }
   startedAt: string
-  completedAt?: string
   executionTime?: number
-  error?: string
   workflow?: {
     _id: string
     name: string
-    description?: string
   }
 }
 

@@ -20,11 +20,12 @@ interface AIConfigProps {
 export function AIConfig({ value, onChange, variableSchema }: AIConfigProps) {
   const prompt = (value.config?.inputMapping as { prompt?: string })?.prompt || ''
   const structuredOutput = value.config?.structuredOutput !== false // Default to true for backward compatibility
-  const mcpConfig = (value.config?.mcp as {
-    url?: string
-    type?: 'sse' | 'http'
-    headers?: Record<string, string>
-  }) || {}
+  const mcpConfig =
+    (value.config?.mcp as {
+      url?: string
+      type?: 'sse' | 'http'
+      headers?: Record<string, string>
+    }) || {}
 
   // Schema for MCP headers using DataInput
   const headersSchema: DataSchema = {
@@ -35,39 +36,33 @@ export function AIConfig({ value, onChange, variableSchema }: AIConfigProps) {
 
   return (
     <div className='space-y-2 pt-4'>
-      <Minimizer title='Configure AI Prompt' defaultOpen={true}>
-        <div>
-          <Label htmlFor='ai-prompt' className='text-sm font-medium mb-3 block'>
-            Prompt
-          </Label>
-          <Textarea
-            id='ai-prompt'
-            placeholder='Enter instructions for the AI on what to do with the input data...'
-            value={prompt}
-            onChange={(e) => {
-              onChange({
-                ...value,
-                config: {
-                  ...value.config,
-                  inputMapping: {
-                    prompt: e.target.value,
-                  },
+      <div>
+        <Label htmlFor='ai-prompt' className='mb-3 block' required>
+          Prompt
+        </Label>
+        <Textarea
+          id='ai-prompt'
+          placeholder='Enter instructions for the AI on what to do with the input data...'
+          value={prompt}
+          onChange={(e) => {
+            onChange({
+              ...value,
+              config: {
+                ...value.config,
+                inputMapping: {
+                  prompt: e.target.value,
                 },
-              })
-            }}
-            className='min-h-[150px] resize-y'
-          />
-        </div>
-      </Minimizer>
+              },
+            })
+          }}
+          className='min-h-[150px] resize-y'
+        />
+      </div>
 
       <div className='flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white'>
         <div className='space-y-0.5'>
-          <Label htmlFor='structured-output' className='text-sm font-medium'>
-            Structure AI Output
-          </Label>
-          <p className='text-xs text-gray-500'>
-            Enable to define a schema for structured AI responses
-          </p>
+          <Label htmlFor='structured-output'>Structure AI Output</Label>
+          <p className='text-xs text-muted-foreground'>Enable to define a schema for structured AI responses</p>
         </div>
         <Switch
           id='structured-output'
@@ -106,7 +101,7 @@ export function AIConfig({ value, onChange, variableSchema }: AIConfigProps) {
       <Minimizer title='MCP Server Configuration' defaultOpen={false}>
         <div className='space-y-4 p-4'>
           <div>
-            <Label htmlFor='mcp-url' className='text-sm font-medium mb-2 block'>
+            <Label htmlFor='mcp-url' className='mb-2 block'>
               Server URL
             </Label>
             <Input
@@ -130,7 +125,7 @@ export function AIConfig({ value, onChange, variableSchema }: AIConfigProps) {
           </div>
 
           <div>
-            <Label htmlFor='mcp-type' className='text-sm font-medium mb-2 block'>
+            <Label htmlFor='mcp-type' className='mb-2 block'>
               Server Type
             </Label>
             <Select
@@ -159,9 +154,7 @@ export function AIConfig({ value, onChange, variableSchema }: AIConfigProps) {
           </div>
 
           <div>
-            <Label className='text-sm font-medium mb-2 block'>
-              Headers
-            </Label>
+            <Label className='mb-2 block'>Headers</Label>
             <div
               className='relative z-[1] isolate'
               onFocus={(e) => e.stopPropagation()}
@@ -185,9 +178,7 @@ export function AIConfig({ value, onChange, variableSchema }: AIConfigProps) {
                 }}
               />
             </div>
-            <p className='text-xs text-muted-foreground mt-1'>
-              Optional: Add HTTP headers for MCP server requests
-            </p>
+            <p className='text-xs text-muted-foreground mt-1'>Optional: Add HTTP headers for MCP server requests</p>
           </div>
         </div>
       </Minimizer>
@@ -196,4 +187,3 @@ export function AIConfig({ value, onChange, variableSchema }: AIConfigProps) {
 }
 
 export default AIConfig
-

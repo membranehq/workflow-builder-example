@@ -43,8 +43,8 @@ export function Minimizer({
         )}
       >
         <div className="flex items-center gap-2">
-          {icon || <Settings className="h-4 w-4 text-gray-500" />}
-          <span className="font-medium text-sm">{title}</span>
+          {icon || <Settings className="h-4 w-4 text-muted-foreground" />}
+          <span className="font-medium text-sm text-foreground">{title}</span>
           {tooltip && (
             <TooltipProvider delayDuration={100}>
               <Tooltip>
@@ -62,7 +62,7 @@ export function Minimizer({
                       }
                     }}
                   >
-                    <HelpCircle className="h-3.5 w-3.5 text-gray-400" />
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -73,9 +73,9 @@ export function Minimizer({
           )}
         </div>
         {isOpen ? (
-          <ChevronDown className="h-4 w-4 text-gray-500" />
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
         ) : (
-          <ChevronRight className="h-4 w-4 text-gray-500" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
         )}
       </button>
       {isOpen && (

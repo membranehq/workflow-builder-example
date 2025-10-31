@@ -6,20 +6,27 @@ export async function GET() {
   try {
     await connectToDatabase()
 
-    // Get all workflow runs sorted by most recent first
-    const runs = await WorkflowRun.find({}).sort({ startedAt: -1 }).lean()
+    // Get only the essential fields for the runs listing page
+    // Exclude large fields like results, input, error details
+    const runs = await WorkflowRun.find({})
+      .select('workflowId status startedAt executionTime')
+      .sort({ startedAt: -1 })
+      .lean()
 
     // Get workflow details for each run
     const runsWithWorkflowDetails = await Promise.all(
       runs.map(async (run) => {
-        const workflow = await Workflow.findById(run.workflowId).lean()
+        const workflow = await Workflow.findById(run.workflowId).select('name').lean()
         return {
-          ...run,
+          _id: run._id,
+          workflowId: run.workflowId,
+          status: run.status,
+          startedAt: run.startedAt,
+          executionTime: run.executionTime,
           workflow: workflow
             ? {
                 _id: workflow._id,
                 name: workflow.name,
-                description: workflow.description,
               }
             : null,
         }

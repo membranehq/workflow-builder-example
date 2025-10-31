@@ -55,7 +55,7 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
       {/* Only show actions if user is connected */}
       {isConnected && (
         <div className='space-y-2 pt-4'>
-          <Label>Select an action</Label>
+          <Label required>Select an action</Label>
           {actionsForSelectedIntegration.loading ? (
             <div className='space-y-2'>
               <Skeleton className='h-10 w-full' />
@@ -80,23 +80,23 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
                   })
                 }}
               >
-                <SelectTrigger aria-label='Select action'>
-                  <div className='flex items-center gap-2'>
+                <SelectTrigger aria-label='Select action' className='h-auto p-3'>
+                  <div className='flex items-center gap-3'>
                     {(() => {
                       const selectedActionData = actionsForSelectedIntegration.items.find(
                         (a: Action) => a.id === selectedActionId,
                       )
                       return selectedActionData?.integration?.logoUri ? (
                         <Image
-                          width={16}
-                          height={16}
+                          width={20}
+                          height={20}
                           src={selectedActionData.integration.logoUri}
                           alt='Integration logo'
-                          className='w-4 h-4 rounded'
+                          className='w-5 h-5 rounded'
                         />
                       ) : null
                     })()}
-                    <span>
+                    <span className='text-sm font-medium text-foreground'>
                       {actionsForSelectedIntegration.items.find((a: Action) => a.id === selectedActionId)?.name ||
                         'Select an action'}
                     </span>
@@ -105,17 +105,17 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
                 <SelectContent>
                   {actionsForSelectedIntegration.items.map((action) => (
                     <SelectItem key={action.id} value={action.id}>
-                      <div className='flex items-center gap-2'>
+                      <div className='flex items-center gap-3'>
                         {action.integration?.logoUri ? (
                           <Image
-                            width={16}
-                            height={16}
+                            width={20}
+                            height={20}
                             src={action.integration.logoUri}
                             alt='Integration logo'
-                            className='w-4 h-4 rounded'
+                            className='w-5 h-5 rounded'
                           />
                         ) : null}
-                        <span>{action.name}</span>
+                        <span className='text-sm'>{action.name}</span>
                       </div>
                     </SelectItem>
                   ))}

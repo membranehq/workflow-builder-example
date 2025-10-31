@@ -287,7 +287,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
             <div className='space-y-4'>
               {/* Data Collection Selection */}
               <div className='space-y-2'>
-                <Label>Data Collection *</Label>
+                <Label required>Data Collection</Label>
                 {isLoadingDataCollections ? (
                   <div className='space-y-2'>
                     <Skeleton className='h-10 w-full' />
@@ -341,7 +341,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
               {/* Event Type Selection - Only show if data collection selected */}
               {selectedDataCollection && (
                 <div className='space-y-2'>
-                  <Label>Event Type *</Label>
+                  <Label required>Event Type</Label>
                   <div className='space-y-2'>
                     <Select
                       value={selectedEventType || ''}
@@ -399,7 +399,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                 <div className='p-4 border rounded-lg text-sm text-red-600 text-center'>{schemaError}</div>
               ) : outputSchema ? (
                 <div className='p-3 bg-gray-50 rounded-md border'>
-                  <pre className='text-xs text-gray-700 overflow-auto max-h-60'>
+                  <pre className='text-xs text-foreground overflow-auto max-h-60'>
                     {JSON.stringify(outputSchema, null, 2)}
                   </pre>
                 </div>
@@ -415,7 +415,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
         {/* Event Ingest URL - Always show at the end */}
         <div className='space-y-2'>
           <Label>Event Ingest URL</Label>
-          <div className='p-2 bg-gray-50 text-gray-500 rounded-md border min-h-[40px] flex items-center justify-between'>
+          <div className='p-2 bg-gray-50 text-muted-foreground rounded-md border min-h-[40px] flex items-center justify-between'>
             <div className='flex-1 truncate pr-2'>{eventIngestUrl || 'Event ingest URL will appear here...'}</div>
             <Button
               variant='ghost'

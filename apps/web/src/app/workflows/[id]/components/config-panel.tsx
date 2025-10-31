@@ -137,7 +137,7 @@ export function ConfigPanel({ selectedNode, onUpdateNode, nodeTypes, triggerType
   if (!selectedNode || !formData) {
     return (
       <div className='p-6 flex items-center justify-center h-full'>
-        <div className='text-center text-gray-500'>
+        <div className='text-center text-muted-foreground'>
           <p className='text-lg font-medium'>No node selected</p>
           <p className='text-sm'>Click on a node to configure it</p>
         </div>

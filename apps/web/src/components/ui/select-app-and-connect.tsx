@@ -50,7 +50,7 @@ export function SelectAppAndConnect({
   return (
     <div className={`space-y-4 ${className}`}>
       {/* App Selection Section */}
-      {showLabel && <Label>{label} *</Label>}
+      {showLabel && <Label required>{label}</Label>}
 
       {selectedIntegrationKey && selectedIntegration ? (
         <div className='flex items-center justify-between p-3 border rounded-lg'>
@@ -64,11 +64,11 @@ export function SelectAppAndConnect({
                 className='w-5 h-5 rounded'
               />
             ) : (
-              <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
+              <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-muted-foreground'>
                 {selectedIntegration.name[0]}
               </div>
             )}
-            <span className='text-sm font-medium'>{selectedIntegration.name}</span>
+            <span className='text-sm font-medium text-foreground'>{selectedIntegration.name}</span>
           </div>
           <Popover>
             <PopoverTrigger asChild>
@@ -78,7 +78,7 @@ export function SelectAppAndConnect({
             </PopoverTrigger>
             <PopoverContent className='w-80' align='end'>
               <div className='space-y-2'>
-                <div className='text-sm font-medium'>Select an app</div>
+                <div className='text-sm font-medium text-foreground'>Select an app</div>
                 <div className='grid grid-cols-2 gap-2 max-h-60 overflow-y-auto'>
                   {integrations.slice(0, 20).map((integration) => (
                     <button
@@ -95,7 +95,7 @@ export function SelectAppAndConnect({
                           className='w-5 h-5 rounded'
                         />
                       ) : (
-                        <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
+                        <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-muted-foreground'>
                           {integration.name[0]}
                         </div>
                       )}
@@ -111,7 +111,7 @@ export function SelectAppAndConnect({
         <Popover>
           <PopoverTrigger asChild>
             <div className='flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors'>
-              <span className='text-sm font-medium text-gray-600'>Select an app</span>
+              <span className='text-sm font-medium text-muted-foreground'>Select an app</span>
               <Button variant='outline' size='sm' className="rounded-full">
                 Select
               </Button>
@@ -119,7 +119,7 @@ export function SelectAppAndConnect({
           </PopoverTrigger>
           <PopoverContent className='w-80' align='start'>
             <div className='space-y-2'>
-              <div className='text-sm font-medium'>Select an app</div>
+              <div className='text-sm font-medium text-foreground'>Select an app</div>
               <div className='grid grid-cols-2 gap-2 max-h-60 overflow-y-auto'>
                 {integrations.slice(0, 20).map((integration) => (
                   <button
@@ -136,7 +136,7 @@ export function SelectAppAndConnect({
                         className='w-5 h-5 rounded'
                       />
                     ) : (
-                      <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
+                      <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-muted-foreground'>
                         {integration.name[0]}
                       </div>
                     )}
@@ -152,7 +152,7 @@ export function SelectAppAndConnect({
       {/* Connection Status Section */}
       {selectedIntegrationKey && selectedIntegration && (
         <div className='space-y-2'>
-          <Label>Account *</Label>
+          <Label required>Account</Label>
           {isConnectionLoading ? (
             <div className='flex items-center justify-between p-3 border rounded-lg'>
               <div className='flex items-center gap-3'>
@@ -172,11 +172,11 @@ export function SelectAppAndConnect({
                     className='w-5 h-5 rounded'
                   />
                 ) : (
-                  <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
+                  <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-muted-foreground'>
                     {selectedIntegration.name[0]}
                   </div>
                 )}
-                <span className='text-sm font-medium'>Connected to {selectedIntegration.name}</span>
+                <span className='text-sm font-medium text-foreground'>Connected to {selectedIntegration.name}</span>
               </div>
               <Button onClick={handleConnect} disabled={isConnecting} variant='outline' size='sm' className="rounded-full">
                 {isConnecting ? 'Reconnecting...' : 'Reconnect'}
@@ -194,11 +194,11 @@ export function SelectAppAndConnect({
                     className='w-5 h-5 rounded'
                   />
                 ) : (
-                  <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600'>
+                  <div className='w-5 h-5 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-muted-foreground'>
                     {selectedIntegration.name[0]}
                   </div>
                 )}
-                <span className='text-sm font-medium'>Connect {selectedIntegration.name}</span>
+                <span className='text-sm font-medium text-foreground'>Connect {selectedIntegration.name}</span>
               </div>
               <Button
                 onClick={handleConnect}

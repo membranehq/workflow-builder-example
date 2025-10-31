@@ -2,6 +2,7 @@ import { Handle, Position } from '@xyflow/react'
 import { WorkflowNode } from '../types/workflow'
 import { NodeOptionsMenu } from './node-options-menu'
 import { Badge } from '@/components/ui/badge'
+import { quicksand } from '@/app/fonts'
 
 interface BaseNodeProps {
   selected?: boolean
@@ -113,8 +114,8 @@ export function BaseNode({
           {/* Integration label section */}
           {logoTitle && (
             <Badge variant="secondary" className="px-1.5 py-0.5 h-auto flex items-center gap-1 w-fit border">
-              {icon && <div className='flex-shrink-0'>{icon}</div>}
-              <span className='text-[9px] font-bold'>{logoTitle}</span>
+              {icon && <div className='flex-shrink-0 w-3 h-3 [&>svg]:w-full [&>svg]:h-full [&>img]:w-full [&>img]:h-full [&>img]:object-cover'>{icon}</div>}
+              <span className={`text-[9px] font-bold ${quicksand.className}`}>{logoTitle}</span>
             </Badge>
           )}
 

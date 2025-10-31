@@ -17,10 +17,10 @@ export function ManualTriggerConfig({ value, onChange }: ManualTriggerConfigProp
     <div className='space-y-4 pt-4'>
       <div className='flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white'>
         <div className='space-y-0.5'>
-          <Label htmlFor='has-input' className='text-sm font-medium'>
+          <Label htmlFor='has-input'>
             Has Input
           </Label>
-          <p className='text-xs text-gray-500'>
+          <p className='text-xs text-muted-foreground'>
             Enable to allow input parameters when running this workflow
           </p>
         </div>

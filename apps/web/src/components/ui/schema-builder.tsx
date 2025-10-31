@@ -114,8 +114,8 @@ export const SchemaBuilder: React.FC<SchemaBuilderProps> = ({ value, onChange, t
     <div className='relative'>
       {(title || description) && (
         <div className='mb-2'>
-          {title && <h3 className='text-sm font-medium text-gray-900'>{title}</h3>}
-          {description && <p className='text-xs text-gray-500'>{description}</p>}
+          {title && <h3 className='text-sm font-medium text-foreground'>{title}</h3>}
+          {description && <p className='text-xs text-muted-foreground'>{description}</p>}
         </div>
       )}
 
