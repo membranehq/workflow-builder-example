@@ -303,8 +303,15 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                     <Select
                       value={selectedDataCollection || ''}
                       onValueChange={(dataCollection) => {
+                        // Update node name if event type is already selected
+                        const dataCollectionName = dataCollections.find((dc) => dc.key === dataCollection)?.name || dataCollection
+                        const nodeName = selectedEventType
+                          ? `${dataCollectionName}: ${eventTypes.find((et) => et.value === selectedEventType)?.label || selectedEventType}`
+                          : value.name
+
                         onChange({
                           ...value,
+                          name: nodeName,
                           config: {
                             ...value.config,
                             dataCollection,
@@ -339,8 +346,14 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                     <Select
                       value={selectedEventType || ''}
                       onValueChange={(eventType) => {
+                        // Calculate the node name based on data collection and event type
+                        const dataCollectionName = dataCollections.find((dc) => dc.key === selectedDataCollection)?.name || selectedDataCollection
+                        const eventTypeLabel = eventTypes.find((et) => et.value === eventType)?.label || eventType
+                        const nodeName = `${dataCollectionName}: ${eventTypeLabel}`
+
                         onChange({
                           ...value,
+                          name: nodeName,
                           config: {
                             ...value.config,
                             eventType,

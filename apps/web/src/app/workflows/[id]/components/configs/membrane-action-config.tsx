@@ -69,7 +69,15 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
               <Select
                 value={selectedActionId as string}
                 onValueChange={(actionId) => {
-                  onChange({ ...value, config: { ...value.config, actionId } })
+                  // Get the action name to set as the node name
+                  const selectedAction = actionsForSelectedIntegration.items.find((a: Action) => a.id === actionId)
+                  const actionName = selectedAction?.name || 'Action'
+
+                  onChange({
+                    ...value,
+                    name: actionName,
+                    config: { ...value.config, actionId }
+                  })
                 }}
               >
                 <SelectTrigger aria-label='Select action'>
