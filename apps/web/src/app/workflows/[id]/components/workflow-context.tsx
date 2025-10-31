@@ -13,7 +13,7 @@ type WorkflowContextValue = {
   isLoading: boolean
   error: Error | undefined
   setWorkflow: (next: WorkflowState | ((prev: WorkflowState | null) => WorkflowState)) => void
-  saveNodes: (nodes: WorkflowNode[]) => Promise<void>
+  saveNodes: (nodes: WorkflowNode[], opts?: { optimistic?: boolean }) => Promise<void>
   saveWorkflowName: (name: string) => Promise<void>
   activateWorkflow: () => Promise<void>
   deactivateWorkflow: () => Promise<void>
@@ -72,6 +72,9 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
     searchParams.get('nodeId') || null
   )
 
+  // Track if we've done initial node selection
+  const hasInitializedSelection = React.useRef(false)
+
   const { data, error, isLoading, mutate } = useSWR<WorkflowState>(key, authenticatedFetcher)
 
   // Wrapper function to update both state and URL
@@ -93,17 +96,26 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
     [router, pathname, searchParams]
   )
 
-  // Validate and sync selectedNodeId with workflow data
+  // Validate and sync selectedNodeId with workflow data - only on initial load or if selected node is deleted
   React.useEffect(() => {
-    if (!data?.nodes || data.nodes.length === 0) return
+    if (!data?.nodes || data.nodes.length === 0) {
+      hasInitializedSelection.current = false
+      return
+    }
 
     // Check if the currently selected node exists in the workflow
     const nodeExists = selectedNodeId && data.nodes.some(node => node.id === selectedNodeId)
 
-    if (!nodeExists) {
+    // Only auto-select if:
+    // 1. We haven't initialized yet, OR
+    // 2. The selected node no longer exists AND we have a valid selectedNodeId (i.e., not intentionally null)
+    if (!hasInitializedSelection.current || (!nodeExists && selectedNodeId !== null)) {
       // If no valid node is selected, select the first node
       const firstNode = data.nodes[0]
-      setSelectedNodeId(firstNode.id)
+      if (firstNode) {
+        setSelectedNodeId(firstNode.id)
+        hasInitializedSelection.current = true
+      }
     }
   }, [data?.nodes, selectedNodeId, setSelectedNodeId])
 
@@ -127,31 +139,103 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
   )
 
   const saveNodes = React.useCallback(
-    async (nodes: WorkflowState['nodes']) => {
-      const updatedWorkflow = await triggerSave(nodes)
-      // Replace the entire workflow state with the API response
-      if (updatedWorkflow) {
-        mutate(updatedWorkflow, { revalidate: false })
+    async (nodes: WorkflowState['nodes'], opts?: { optimistic?: boolean }) => {
+      if (!data) return
+
+      if (opts?.optimistic !== false) {
+        // Use SWR's built-in optimistic update pattern
+        await mutate(
+          async () => {
+            try {
+              const updatedWorkflow = await triggerSave(nodes)
+              return updatedWorkflow
+            } catch (error) {
+              console.error('Failed to save nodes:', error)
+              throw error
+            }
+          },
+          {
+            optimisticData: { ...data, nodes },
+            rollbackOnError: true,
+            revalidate: false,
+          }
+        )
+      } else {
+        // Non-optimistic update - just call the API and update with response
+        try {
+          const updatedWorkflow = await triggerSave(nodes)
+          if (updatedWorkflow) {
+            mutate(updatedWorkflow, { revalidate: false })
+          }
+        } catch (error) {
+          console.error('Failed to save nodes:', error)
+          mutate()
+          throw error
+        }
       }
     },
-    [triggerSave, mutate]
+    [triggerSave, mutate, data]
   )
 
   const deleteNode = React.useCallback(
-    (nodeId: string) => {
-      const current = data
-      if (!current) return
-      const updatedNodes = (current.nodes ?? []).filter((n) => n.id !== nodeId)
+    async (nodeId: string) => {
+      if (!data) return
 
-      // If the deleted node was selected, clear the selection
-      if (selectedNodeId === nodeId) {
-        setSelectedNodeId(null)
+      let deletedIndex = -1
+      let updatedNodes: WorkflowState['nodes'] = []
+      let nextNodeId: string | null = null
+
+      // Calculate updates from current data
+      const currentNodes = data.nodes ?? []
+      deletedIndex = currentNodes.findIndex((n) => n.id === nodeId)
+      updatedNodes = currentNodes.filter((n) => n.id !== nodeId)
+
+      // Calculate next node to select if needed
+      if (selectedNodeId === nodeId && updatedNodes.length > 0) {
+        const newIndex = Math.min(deletedIndex, updatedNodes.length - 1)
+        nextNodeId = updatedNodes[newIndex].id
       }
 
-      // Don't do optimistic update - wait for API response with all updates
-      void saveNodes(updatedNodes)
+      // Update selection and URL based on the deletion
+      if (selectedNodeId === nodeId) {
+        if (nextNodeId) {
+          setSelectedNodeIdState(nextNodeId)
+          // Update URL to reflect the new selection
+          const params = new URLSearchParams(searchParams.toString())
+          params.set('nodeId', nextNodeId)
+          const newUrl = `${pathname}?${params.toString()}`
+          router.replace(newUrl, { scroll: false })
+        } else {
+          // No nodes left, clear selection
+          setSelectedNodeIdState(null)
+          // Update URL to remove nodeId
+          const params = new URLSearchParams(searchParams.toString())
+          params.delete('nodeId')
+          const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+          router.replace(newUrl, { scroll: false })
+        }
+      }
+
+      // Use SWR's optimistic update pattern - update immediately, then sync with server
+      await mutate(
+        async () => {
+          // Make API call
+          try {
+            const result = await triggerSave(updatedNodes)
+            return result
+          } catch (error) {
+            console.error('Failed to delete node:', error)
+            throw error
+          }
+        },
+        {
+          optimisticData: { ...data, nodes: updatedNodes },
+          rollbackOnError: true,
+          revalidate: false,
+        }
+      )
     },
-    [data, saveNodes, selectedNodeId, setSelectedNodeId]
+    [data, mutate, triggerSave, selectedNodeId, searchParams, pathname, router]
   )
 
   const saveWorkflowName = React.useCallback(

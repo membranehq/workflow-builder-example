@@ -75,12 +75,19 @@ export function ConfigPanel({ selectedNode, onUpdateNode, nodeTypes, triggerType
     }
   }, [workflow?.nodes, selectedNode])
 
+  // Track the last saved state to prevent unnecessary saves
+  const lastSavedData = React.useRef<string>('')
+
   // Update formData when selectedNode changes
   useEffect(() => {
     if (selectedNode) {
       setFormData((prevFormData) => {
         // If this is a different node, replace completely
         if (!prevFormData || prevFormData.id !== selectedNode.id) {
+          // Reset last saved data when switching nodes (only user-editable fields)
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ready, outputSchema, ...editableFields } = selectedNode
+          lastSavedData.current = JSON.stringify(editableFields)
           return selectedNode
         }
 
@@ -98,31 +105,32 @@ export function ConfigPanel({ selectedNode, onUpdateNode, nodeTypes, triggerType
 
   // Auto-save when debounced formData changes
   useEffect(() => {
-    if (!debouncedFormData || !selectedNode) return
+    if (!debouncedFormData) return
 
     // Skip if the node name is empty
     if (!debouncedFormData.name.trim()) return
 
-    // Only save if the debounced data is for the currently selected node
-    // This prevents saving old data when switching between nodes quickly
-    if (debouncedFormData.id !== selectedNode.id) return
-
-    // Skip if this is the initial load (formData matches selectedNode exactly)
-    if (JSON.stringify(debouncedFormData) === JSON.stringify(selectedNode)) return
-
+    // Extract only the user-editable fields (exclude calculated fields)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id, ...updateData } = debouncedFormData
+    const { id, ready, outputSchema, ...updateData } = debouncedFormData
 
     // For triggers, ensure triggerType is preserved
-    if (selectedNode?.type === 'trigger') {
+    if (debouncedFormData.type === 'trigger') {
       updateData.triggerType = debouncedFormData.triggerType
     } else {
       // For actions, ensure nodeType is set
       updateData.nodeType = debouncedFormData.nodeType || DEFAULT_NODE_TYPE
     }
 
+    // Only compare user-editable fields to prevent saves when only calculated fields change
+    const currentDataString = JSON.stringify(updateData)
+    if (currentDataString === lastSavedData.current) return
+
+    // Update last saved data
+    lastSavedData.current = currentDataString
+
     onUpdateNode(updateData)
-  }, [debouncedFormData, selectedNode, onUpdateNode])
+  }, [debouncedFormData, onUpdateNode])
 
   const selectedNodeType = formData?.nodeType || selectedNode?.nodeType || DEFAULT_NODE_TYPE
   const selectedNodeTypeConfig = nodeTypes[selectedNodeType]

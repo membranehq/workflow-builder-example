@@ -64,11 +64,14 @@ export function WorkflowEditor({ header, viewOnly = false, onNodeClick, runResul
     (nodeData: Omit<WorkflowNode, 'id'>) => {
       if (!workflow || !selectedNode) return
 
+      // Use the latest workflow nodes when updating
       const updatedNodes = workflow.nodes.map((node) =>
         node.id === selectedNode.id ? { ...node, ...nodeData } : node,
       )
-      // Don't do optimistic update - wait for API response with all updates (like ready field, output schemas, etc.)
-      void saveNodes(updatedNodes)
+      // Use optimistic update for instant feedback, but API will return calculated fields
+      void saveNodes(updatedNodes, { optimistic: true }).catch((err) => {
+        console.error('Failed to update node:', err)
+      })
     },
     [selectedNode, workflow, saveNodes],
   )
@@ -106,8 +109,10 @@ export function WorkflowEditor({ header, viewOnly = false, onNodeClick, runResul
       setPendingAfterId(undefined)
       setNodeCreateDialogOpen(false)
       setSelectedNodeId(newNode.id)
-      // Don't do optimistic update - wait for API response with all updates (output schemas, etc.)
-      void saveNodes(updatedNodes)
+      // Optimistic update for instant feedback - API will return calculated fields
+      void saveNodes(updatedNodes, { optimistic: true }).catch((err) => {
+        console.error('Failed to create node:', err)
+      })
     },
     [workflow, nodeTypeDefinitions, pendingAfterId, saveNodes, setSelectedNodeId, viewOnly],
   )
@@ -127,8 +132,10 @@ export function WorkflowEditor({ header, viewOnly = false, onNodeClick, runResul
       if (existingIndex >= 0) updatedNodes[existingIndex] = newTrigger
       else updatedNodes.unshift(newTrigger)
       setTriggerCreateDialogOpen(false)
-      // Don't do optimistic update - wait for API response with all updates (output schemas, etc.)
-      void saveNodes(updatedNodes)
+      // Optimistic update for instant feedback - API will return calculated fields
+      void saveNodes(updatedNodes, { optimistic: true }).catch((err) => {
+        console.error('Failed to create trigger:', err)
+      })
     },
     [workflow, triggerTypes, saveNodes, viewOnly],
   )
