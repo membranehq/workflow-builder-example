@@ -7,7 +7,6 @@ import {
   Edge,
   Background,
   Controls,
-  MiniMap,
   NodeTypes,
   ReactFlowProvider,
 } from '@xyflow/react'
@@ -269,7 +268,6 @@ export function WorkflowNodeRenderer({
       >
         <Background />
         <Controls />
-        <MiniMap />
       </ReactFlow>
     </ReactFlowProvider>
   )
