@@ -46,31 +46,9 @@ export default function WorkflowRunDetailPage() {
 
   if (isLoading) {
     return (
-      <ResizableSplitLayout
-        header={
-          <div className="flex items-center justify-between w-full px-8">
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-4 w-4" />
-              <Skeleton className="h-4 w-12" />
-              <Skeleton className="h-4 w-1" />
-              <Skeleton className="h-4 w-24" />
-            </div>
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-6 w-16" />
-            </div>
-          </div>
-        }
-        leftPane={
-          <div className="p-8">
-            <div className="space-y-4">
-              {Array.from({ length: 5 }, (_, i) => (
-                <Skeleton key={i} className="h-24 w-full" />
-              ))}
-            </div>
-          </div>
-        }
-      />
+      <div className='h-full flex items-center justify-center'>
+        <div className='h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse' />
+      </div>
     )
   }
 
