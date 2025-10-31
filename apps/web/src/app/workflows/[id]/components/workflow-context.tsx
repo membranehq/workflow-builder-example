@@ -148,7 +148,7 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
           async () => {
             try {
               const updatedWorkflow = await triggerSave(nodes)
-              return updatedWorkflow
+              return updatedWorkflow ?? undefined
             } catch (error) {
               console.error('Failed to save nodes:', error)
               throw error
@@ -222,7 +222,7 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
           // Make API call
           try {
             const result = await triggerSave(updatedNodes)
-            return result
+            return result ?? undefined
           } catch (error) {
             console.error('Failed to delete node:', error)
             throw error
