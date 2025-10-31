@@ -14,10 +14,100 @@ const capitalize = (str: string) => {
 }
 
 /**
- * Handle external service calls when a node becomes ready
- * This is where you would register webhooks, create subscriptions, etc.
+ * Create flow instance for event trigger
+ * Returns the flow instance ID
  */
-async function handleNodeReady(node: IWorkflowNode, workflowId: string, auth: AuthCustomer): Promise<void> {
+async function createFlowInstance(
+  membrane: IntegrationAppClient,
+  integrationKey: string,
+  dataCollection: string,
+  eventType: string,
+  workflowId: string,
+): Promise<string | null> {
+  const integration = await membrane.integration(integrationKey).get()
+
+  if (integration.id && integration.connection?.id) {
+    const flowInstance = await membrane.flowInstances.create({
+      name: `Receive ${capitalize(dataCollection)} ${capitalize(eventType)} Event`,
+      connectionId: integration.connection?.id,
+      integrationId: integration.id,
+      instanceKey: `${workflowId}-${dataCollection}-${eventType}`,
+      nodes: {
+        [`${eventType}-${dataCollection}`]: {
+          name: `${capitalize(eventType)}: ${capitalize(dataCollection)}`,
+          type: `data-record-${eventType}-trigger`,
+          config: {
+            dataSource: {
+              collectionKey: dataCollection,
+            },
+          },
+          links: [{ key: 'find-data-record-by-id' }],
+        },
+
+        'find-data-record-by-id': {
+          type: 'find-data-record-by-id',
+          name: 'Find Data Record By Id',
+          links: [{ key: 'send-update-to-my-app' }],
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore - state and dependencies are custom properties for this flow instance
+          state: 'READY',
+          dependencies: [],
+          config: {
+            id: {
+              $var: `$.input.${eventType}-${dataCollection}.record.id`,
+            },
+            dataSource: {
+              collectionKey: dataCollection,
+            },
+          },
+          isCustomized: true,
+        },
+
+        'send-update-to-my-app': {
+          type: 'api-request-to-your-app',
+          name: 'Create Data Record in my App',
+          config: {
+            request: {
+              body: {
+                data: {
+                  $var: `$.input.${eventType}-${dataCollection}.record`,
+                },
+              },
+              method: 'POST',
+              uri: getEventIngestUrl(workflowId),
+            },
+          },
+          links: [],
+          isCustomized: true,
+        },
+      },
+    })
+    return flowInstance.id || null
+  }
+  return null
+}
+
+/**
+ * Delete flow instance by ID
+ */
+async function deleteFlowInstance(membrane: IntegrationAppClient, flowInstanceId: string): Promise<void> {
+  try {
+    await membrane.flowInstance(flowInstanceId).delete()
+  } catch (error) {
+    console.error(`Failed to delete flow instance ${flowInstanceId}:`, error)
+    // Continue even if deletion fails
+  }
+}
+
+/**
+ * Create flow instance for event trigger node
+ * Returns the updated node with flowInstanceId
+ */
+async function createEventTriggerFlowInstance(
+  node: IWorkflowNode,
+  workflowId: string,
+  auth: AuthCustomer,
+): Promise<IWorkflowNode> {
   if (node.type === 'trigger' && node.triggerType === 'event') {
     const config = node.config || {}
     const integrationKey = config.integrationKey as string
@@ -26,73 +116,100 @@ async function handleNodeReady(node: IWorkflowNode, workflowId: string, auth: Au
 
     const membrane = new IntegrationAppClient({ token: await generateIntegrationToken(auth) })
 
-    /**
-     * Create flow instance
-     *
-     * - Get integration id from key
-     * - Create flow instance
-     * - Populate nodes
-     */
-    const integration = await membrane.integration(integrationKey).get()
+    const flowInstanceId = await createFlowInstance(membrane, integrationKey, dataCollection, eventType, workflowId)
 
-    if (integration.id && integration.connection?.id) {
-      await membrane.flowInstances.create({
-        name: `Receive ${capitalize(dataCollection)} ${capitalize(eventType)} Event`,
-        connectionId: integration.connection?.id,
-        integrationId: integration.id,
-        instanceKey: `${workflowId}-${dataCollection}-${eventType}`,
+    return {
+      ...node,
+      config: {
+        ...config,
+        flowInstanceId,
+      },
+    }
+  }
+  return node
+}
+
+/**
+ * Update flow instance when event trigger configuration changes
+ * Returns the updated node with flowInstanceId
+ */
+async function updateEventTriggerFlowInstance(
+  oldNode: IWorkflowNode,
+  newNode: IWorkflowNode,
+  workflowId: string,
+  auth: AuthCustomer,
+): Promise<IWorkflowNode> {
+  if (newNode.type === 'trigger' && newNode.triggerType === 'event') {
+    const oldConfig = oldNode.config || {}
+    const newConfig = newNode.config || {}
+
+    const oldIntegrationKey = oldConfig.integrationKey as string
+    const oldDataCollection = oldConfig.dataCollection as string
+    const oldEventType = oldConfig.eventType as string
+    const flowInstanceId = oldConfig.flowInstanceId as string | undefined
+
+    const newIntegrationKey = newConfig.integrationKey as string
+    const newDataCollection = newConfig.dataCollection as string
+    const newEventType = newConfig.eventType as string
+
+    const membrane = new IntegrationAppClient({ token: await generateIntegrationToken(auth) })
+
+    // Ensure we have a flowInstanceId for update operations
+    if (!flowInstanceId) {
+      throw new Error('Flow instance ID not found in node config. Cannot update flow instance.')
+    }
+
+    // If integrationKey changed, delete old instance and create new one
+    if (oldIntegrationKey !== newIntegrationKey) {
+      // Delete old flow instance
+      await deleteFlowInstance(membrane, flowInstanceId)
+
+      // Create new flow instance
+      const newFlowInstanceId = await createFlowInstance(
+        membrane,
+        newIntegrationKey,
+        newDataCollection,
+        newEventType,
+        workflowId,
+      )
+
+      return {
+        ...newNode,
+        config: {
+          ...newConfig,
+          flowInstanceId: newFlowInstanceId,
+        },
+      }
+    }
+
+    // If only dataCollection or eventType changed, patch the existing instance
+    if (oldDataCollection !== newDataCollection || oldEventType !== newEventType) {
+      await membrane.flowInstance(flowInstanceId).patch({
+        name: `Receive ${capitalize(newDataCollection)} ${capitalize(newEventType)} Event`,
         nodes: {
-          [`${eventType}-${dataCollection}`]: {
-            name: `${eventType}: ${dataCollection}`,
-            type: `data-record-${eventType}-trigger`,
+          [`${newEventType}-${newDataCollection}`]: {
+            name: `${capitalize(newEventType)}: ${capitalize(newDataCollection)}`,
+            type: `data-record-${newEventType}-trigger`,
             config: {
               dataSource: {
-                collectionKey: dataCollection,
+                collectionKey: newDataCollection,
               },
             },
-            links: [{ key: 'find-data-record-by-id' }],
-          },
-
-          'find-data-record-by-id': {
-            type: 'find-data-record-by-id',
-            name: 'Find Data Record By Id',
-            links: [{ key: 'send-update-to-my-app' }],
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore - state and dependencies are custom properties for this flow instance
-            state: 'READY',
-            dependencies: [],
-            config: {
-              id: {
-                $var: `$.input.${eventType}-${dataCollection}.record.id`,
-              },
-              dataSource: {
-                collectionKey: dataCollection,
-              },
-            },
-            isCustomized: true,
-          },
-
-          'send-update-to-my-app': {
-            type: 'api-request-to-your-app',
-            name: 'Create Data Record in my App',
-            config: {
-              request: {
-                body: {
-                  data: {
-                    $var: `$.input.${eventType}-${dataCollection}.record`,
-                  },
-                },
-                method: 'POST',
-                uri: getEventIngestUrl(workflowId),
-              },
-            },
-            links: [],
-            isCustomized: true,
           },
         },
       })
     }
+
+    // Return node with existing flowInstanceId
+    return {
+      ...newNode,
+      config: {
+        ...newConfig,
+        flowInstanceId,
+      },
+    }
   }
+  return newNode
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -119,35 +236,54 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       // Continue without output schemas if calculation fails
     }
 
-    // Check if first node is an event trigger with all required fields and update ready status
+    // Check if first node is an event trigger and handle flow instance creation/updates
     let nodesToSave = updatedNodes
     if (updatedNodes.length > 0) {
       const firstNode = updatedNodes[0]
-      const wasReady = existingWorkflow.nodes[0]?.ready || false
+      const existingFirstNode = existingWorkflow.nodes[0]
 
       if (firstNode.type === 'trigger' && firstNode.triggerType === 'event') {
         const config = firstNode.config || {}
+        const existingConfig = existingFirstNode?.config || {}
+
         const integrationKey = config.integrationKey
         const dataCollection = config.dataCollection
         const eventType = config.eventType
 
-        // Set ready to true if all required fields are present
-        const isReady = !!(integrationKey && dataCollection && eventType)
+        const existingIntegrationKey = existingConfig.integrationKey
+        const existingDataCollection = existingConfig.dataCollection
+        const existingEventType = existingConfig.eventType
 
-        // Create updated first node with ready field
-        const updatedFirstNode = {
-          ...firstNode,
-          ready: isReady,
-        }
+        // Check if all required fields are present
+        const hasAllFields = !!(integrationKey && dataCollection && eventType)
+        const hadAllFields = !!(existingIntegrationKey && existingDataCollection && existingEventType)
 
-        // Create new nodes array with updated first node
-        nodesToSave = [updatedFirstNode, ...updatedNodes.slice(1)]
+        if (hasAllFields) {
+          let updatedFirstNode = firstNode
 
-        // If node just became ready, trigger external service call
-        if (isReady && !wasReady) {
-          handleNodeReady(updatedFirstNode, id, auth).catch((error) => {
-            console.error(`Failed to handle ready state for node ${updatedFirstNode.id}:`, error)
-          })
+          // Determine action based on field comparison
+          if (!hadAllFields) {
+            // No existing configuration - create new flow instance
+            updatedFirstNode = await createEventTriggerFlowInstance(firstNode, id, auth).catch((error) => {
+              console.error(`Failed to create flow instance for node ${firstNode.id}:`, error)
+              return firstNode
+            })
+          } else if (
+            integrationKey !== existingIntegrationKey ||
+            dataCollection !== existingDataCollection ||
+            eventType !== existingEventType
+          ) {
+            // Configuration changed - update flow instance
+            updatedFirstNode = await updateEventTriggerFlowInstance(existingFirstNode, firstNode, id, auth).catch(
+              (error) => {
+                console.error(`Failed to update flow instance for node ${firstNode.id}:`, error)
+                return firstNode
+              },
+            )
+          }
+
+          // Create new nodes array with updated first node
+          nodesToSave = [updatedFirstNode, ...updatedNodes.slice(1)]
         }
       }
     }

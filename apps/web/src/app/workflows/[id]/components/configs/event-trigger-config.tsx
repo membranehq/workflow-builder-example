@@ -9,9 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/u
 import { Minimizer } from '@/components/ui/minimizer'
 import { SelectAppAndConnect } from '@/components/ui/select-app-and-connect'
 import { useWorkflow } from '../workflow-context'
-import { Copy, Send, CheckCircle2 } from 'lucide-react'
+import { Copy, Send } from 'lucide-react'
 import { useParams } from 'next/navigation'
-import { Badge } from '@/components/ui/badge'
 import { getEventIngestUrl } from '@/lib/utils'
 
 interface EventTriggerConfigProps {
@@ -245,20 +244,6 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
 
   return (
     <div className='space-y-2 pt-4'>
-      {/* Ready Status Indicator - Show if node is ready (set by backend) */}
-      {(value as WorkflowNode & { ready?: boolean }).ready && (
-        <div className='p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2'>
-          <CheckCircle2 className='h-5 w-5 text-green-600' />
-          <div className='flex-1'>
-            <div className='flex items-center gap-2'>
-              <span className='text-sm font-medium text-green-900'>Trigger Configuration Complete</span>
-              <Badge className='bg-green-500 hover:bg-green-600 text-white'>Ready</Badge>
-            </div>
-            <p className='text-xs text-green-700 mt-0.5'>This trigger is ready to activate your workflow.</p>
-          </div>
-        </div>
-      )}
-
       <div className='space-y-4'>
         {/* App Selection and Connection Section */}
         <SelectAppAndConnect
