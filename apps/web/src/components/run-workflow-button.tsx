@@ -5,10 +5,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { DataInput, DataSchema } from '@membranehq/react'
 import { getAuthHeaders } from '@/lib/fetch-utils'
 import { Play } from 'lucide-react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { authenticatedFetcher } from '@/lib/fetch-utils'
+import { jsonSchemaToZod } from '@/lib/json-schema-to-zod'
+import { z } from 'zod'
 
 interface RunWorkflowButtonProps {
   workflowId: string
@@ -55,6 +57,8 @@ export function RunWorkflowButton({
   const [isRunning, setIsRunning] = useState(false)
   const [triggerInput, setTriggerInput] = useState<Record<string, unknown>>({})
   const [popoverOpen, setPopoverOpen] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const [isValid, setIsValid] = useState(true)
 
   // Fetch workflow data to get the input schema
   const { data: workflow } = useSWR<WorkflowData>(`/api/workflows/${workflowId}`, authenticatedFetcher, {
@@ -83,6 +87,45 @@ export function RunWorkflowButton({
     if (!firstNode || firstNode.type !== 'trigger') return null
     return firstNode.config?.inputSchema || { type: 'object', properties: {} }
   }, [firstNode])
+
+  // Create Zod schema from JSON schema
+  const zodSchema = useMemo(() => {
+    if (!triggerInputSchema) return null
+    try {
+      return jsonSchemaToZod(triggerInputSchema)
+    } catch (error) {
+      console.error('Failed to create Zod schema:', error)
+      return null
+    }
+  }, [triggerInputSchema])
+
+  // Validate input whenever it changes
+  useEffect(() => {
+    if (!zodSchema) {
+      setIsValid(true)
+      setValidationErrors({})
+      return
+    }
+
+    try {
+      zodSchema.parse(triggerInput)
+      setIsValid(true)
+      setValidationErrors({})
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setIsValid(false)
+        const errors: Record<string, string> = {}
+        error.issues.forEach((err) => {
+          const path = err.path.join('.')
+          errors[path] = err.message
+        })
+        setValidationErrors(errors)
+      } else {
+        setIsValid(false)
+        setValidationErrors({})
+      }
+    }
+  }, [triggerInput, zodSchema])
 
   const handleRunWorkflow = async () => {
     try {
@@ -123,6 +166,7 @@ export function RunWorkflowButton({
   // Use workflowStatus from props or from fetched workflow data
   const status = workflowStatus || workflow?.status
   const isDisabled = isRunning || !isFirstNodeManualTrigger || status !== 'active'
+  const isRunButtonDisabled = isDisabled || (hasInput && !isValid)
 
   // If we need to show inputs, use a Popover
   if (hasInput) {
@@ -167,6 +211,18 @@ export function RunWorkflowButton({
                     variablesSchema={{ type: 'object', properties: {} }}
                     onChange={setTriggerInput}
                   />
+
+                  {/* Validation Errors */}
+                  {Object.keys(validationErrors).length > 0 && (
+                    <div className='mt-3 space-y-2'>
+                      {Object.entries(validationErrors).map(([field, error]) => (
+                        <div key={field} className='text-xs text-red-600 flex items-start gap-1.5'>
+                          <span className='font-medium'>{field}:</span>
+                          <span>{error}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -186,7 +242,7 @@ export function RunWorkflowButton({
                   e.stopPropagation()
                   handleRunWorkflow()
                 }}
-                disabled={isRunning}
+                disabled={isRunButtonDisabled}
                 className='text-white px-4 rounded-full'
               >
                 <div className='flex items-center gap-2'>
