@@ -55,7 +55,7 @@ export function MembraneActionConfig({ value, onChange, variableSchema }: Membra
       {/* Only show actions if user is connected */}
       {isConnected && (
         <div className='space-y-2 pt-4'>
-          <Label required>Select an action</Label>
+          <Label required>Action</Label>
           {actionsForSelectedIntegration.loading ? (
             <div className='space-y-2'>
               <Skeleton className='h-10 w-full' />

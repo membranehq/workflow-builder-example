@@ -3,6 +3,9 @@ import { WorkflowNode } from '../types/workflow'
 import { NodeOptionsMenu } from './node-options-menu'
 import { Badge } from '@/components/ui/badge'
 import { quicksand } from '@/app/fonts'
+import { Check, AlertCircle } from 'lucide-react'
+import { isNodeConfigured } from '../utils/node-validation'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface BaseNodeProps {
   selected?: boolean
@@ -111,12 +114,64 @@ export function BaseNode({
       )}
       <div className={baseClasses} onClick={isDisabled ? undefined : onClick}>
         <div className='flex flex-col gap-1.5 w-full relative'>
-          {/* Integration label section */}
+          {/* Integration label section with indicator */}
           {logoTitle && (
-            <Badge variant="secondary" className="px-1.5 py-0.5 h-auto flex items-center gap-1 w-fit border">
-              {icon && <div className='flex-shrink-0 w-3 h-3 [&>svg]:w-full [&>svg]:h-full [&>img]:w-full [&>img]:h-full [&>img]:object-cover'>{icon}</div>}
-              <span className={`text-[9px] font-bold ${quicksand.className}`}>{logoTitle}</span>
-            </Badge>
+            <div className='flex items-center gap-1.5'>
+              {/* Configuration status indicator */}
+              {!viewOnly && node && (
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className='flex-shrink-0'>
+                        {isNodeConfigured(node) ? (
+                          <Check className='w-3.5 h-3.5 text-green-600' />
+                        ) : (
+                          <AlertCircle className='w-3.5 h-3.5 text-amber-500' />
+                        )}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p className="text-xs">
+                        {isNodeConfigured(node)
+                          ? 'All required fields configured'
+                          : 'Missing required fields'}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
+              <Badge variant="secondary" className="px-1.5 py-0.5 h-auto flex items-center gap-1 w-fit border">
+                {icon && <div className='flex-shrink-0 w-3 h-3 [&>svg]:w-full [&>svg]:h-full [&>img]:w-full [&>img]:h-full [&>img]:object-cover'>{icon}</div>}
+                <span className={`text-[9px] font-bold ${quicksand.className}`}>{logoTitle}</span>
+              </Badge>
+            </div>
+          )}
+
+          {/* For nodes without logoTitle, show indicator with title */}
+          {!logoTitle && !viewOnly && node && (
+            <div className='flex items-center gap-1.5 mb-[-6px]'>
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className='flex-shrink-0'>
+                      {isNodeConfigured(node) ? (
+                        <Check className='w-3.5 h-3.5 text-green-600' />
+                      ) : (
+                        <AlertCircle className='w-3.5 h-3.5 text-amber-500' />
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    <p className="text-xs">
+                      {isNodeConfigured(node)
+                        ? 'All required fields configured'
+                        : 'Missing required fields'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           )}
 
           {/* Title content */}
