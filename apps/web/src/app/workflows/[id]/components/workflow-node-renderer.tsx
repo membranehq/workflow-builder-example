@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo, useEffect } from 'react'
 import {
   ReactFlow,
   Node,
@@ -9,6 +9,7 @@ import {
   Controls,
   NodeTypes,
   ReactFlowProvider,
+  useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -47,7 +48,8 @@ interface WorkflowNodeRendererProps {
   }>
 }
 
-export function WorkflowNodeRenderer({
+// Inner component that uses useReactFlow hook
+function WorkflowNodeRendererInner({
   nodes,
   nodeTypes: nodeTypeDefinitions,
   triggerTypes,
@@ -59,6 +61,8 @@ export function WorkflowNodeRenderer({
   viewOnly = false,
   runResults = [],
 }: WorkflowNodeRendererProps) {
+  const { fitView } = useReactFlow()
+
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
       if (onDeleteNode) {
@@ -67,6 +71,17 @@ export function WorkflowNodeRenderer({
     },
     [onDeleteNode],
   )
+
+  // Trigger fitView after nodes are loaded and layout is ready
+  useEffect(() => {
+    // Use setTimeout to ensure the DOM has been updated and dimensions are calculated
+    const timeoutId = setTimeout(() => {
+      // Use duration: 0 for instant positioning (no slide animation)
+      fitView({ padding: 0.1, minZoom: 0.1, maxZoom: 1.5, duration: 0 })
+    }, 100)
+
+    return () => clearTimeout(timeoutId)
+  }, [nodes, fitView])
 
   const reactFlowNodesData = useMemo(() => {
     const flowNodes: Node[] = []
@@ -253,22 +268,27 @@ export function WorkflowNodeRenderer({
   }, [nodes, viewOnly])
 
   return (
+    <ReactFlow
+      nodes={reactFlowNodesData}
+      edges={reactFlowEdges}
+      onNodeClick={onNodeClick}
+      nodeTypes={nodeTypes}
+      nodesDraggable={false}
+      defaultEdgeOptions={{ style: { stroke: '#cbd5e1', strokeLinecap: 'round', strokeWidth: 2.1 } }}
+      defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+      className='bg-gray-50 animate-in fade-in duration-300'
+    >
+      <Background />
+      <Controls />
+    </ReactFlow>
+  )
+}
+
+// Wrapper component with ReactFlowProvider
+export function WorkflowNodeRenderer(props: WorkflowNodeRendererProps) {
+  return (
     <ReactFlowProvider>
-      <ReactFlow
-        nodes={reactFlowNodesData}
-        edges={reactFlowEdges}
-        onNodeClick={onNodeClick}
-        nodeTypes={nodeTypes}
-        nodesDraggable={false}
-        defaultEdgeOptions={{ style: { stroke: '#cbd5e1', strokeLinecap: 'round', strokeWidth: 2.1 } }}
-        fitView
-        fitViewOptions={{ padding: 0.1, minZoom: 0.1, maxZoom: 1.5 }}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.1 }}
-        className='bg-gray-50'
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
+      <WorkflowNodeRendererInner {...props} />
     </ReactFlowProvider>
   )
 }
