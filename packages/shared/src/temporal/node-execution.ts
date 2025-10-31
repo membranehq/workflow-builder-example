@@ -230,7 +230,7 @@ export async function executeHttpActionNode(
 /**
  * Executes an action node by calling the integration.app API
  */
-export async function executeActionNode(
+export async function executeMembraneActionNode(
   node: WorkflowNode,
   resolvedInputs: Record<string, unknown>,
   membraneToken: string,
@@ -498,7 +498,7 @@ export async function executeWorkflowNode(
           result = await executeHttpActionNode(node, resolvedInputs)
           break
         case 'action':
-          result = await executeActionNode(node, resolvedInputs, membraneToken)
+          result = await executeMembraneActionNode(node, resolvedInputs, membraneToken)
           break
         case 'ai':
           result = await executeAIActionNode(node, resolvedInputs, previousResults)
