@@ -1,5 +1,6 @@
 'use client'
 
+import axios from 'axios'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -7,7 +8,7 @@ import { RunWorkflowButton } from '@/components/run-workflow-button'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { authenticatedFetcher, getAuthHeaders } from '@/lib/fetch-utils'
+import { fetcher } from '@/lib/fetch-utils'
 import {
   Calendar,
   Activity,
@@ -115,7 +116,7 @@ export default function WorkflowsPage() {
 
   const { data: workflows, isLoading } = useSWR<Workflow[]>(
     '/api/workflows',
-    authenticatedFetcher,
+    fetcher,
     {
       revalidateOnFocus: false,
     }
@@ -125,24 +126,15 @@ export default function WorkflowsPage() {
   const handleCreateWorkflow = async () => {
     try {
       setIsCreating(true)
-      const response = await fetch('/api/workflows', {
-        method: 'POST',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await axios.post<{ id: string }>(
+        '/api/workflows',
+        {
           name: 'Untitled Workflow',
           description: ''
-        }),
-      })
+        }
+      )
 
-      if (!response.ok) {
-        throw new Error('Failed to create workflow')
-      }
-
-      const data = await response.json()
-      router.push(`/workflows/${data.id}`)
+      router.push(`/workflows/${response.data.id}`)
     } catch (error) {
       console.error('Failed to create workflow:', error)
       setIsCreating(false)

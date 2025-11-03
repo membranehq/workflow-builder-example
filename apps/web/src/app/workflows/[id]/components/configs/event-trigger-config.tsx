@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import axios from 'axios'
 import { DataSchema, useIntegrationApp } from '@membranehq/react'
 import { WorkflowNode } from '../types/workflow'
 import { TriggerType } from '@/lib/node-types'
@@ -94,7 +95,7 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
       return sampleData
     } else if (Array.isArray(schema)) {
       // Handle array schemas
-      return schema.map(item => generateSampleData(item))
+      return schema.map((item) => generateSampleData(item))
     } else if (jsonSchema.type) {
       return generateSampleValue(jsonSchema)
     }
@@ -148,33 +149,33 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
     try {
       const sampleData = generateSampleData(outputSchema)
 
-      const response = await fetch(getEventIngestUrl(workflowId), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(sampleData),
+      const response = await axios.post<{ runId: string }>(
+        getEventIngestUrl(workflowId),
+        sampleData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      setSampleEventResult({
+        success: true,
+        message: `Sample event sent successfully! Run ID: ${response.data.runId}`,
       })
-
-      const result = await response.json()
-
-      if (response.ok) {
+    } catch (error) {
+      console.error('Error sending sample event:', error)
+      if (axios.isAxiosError(error)) {
         setSampleEventResult({
-          success: true,
-          message: `Sample event sent successfully! Run ID: ${result.runId}`
+          success: false,
+          message: error.response?.data?.error || 'Failed to send sample event',
         })
       } else {
         setSampleEventResult({
           success: false,
-          message: result.error || 'Failed to send sample event'
+          message: 'Network error while sending sample event',
         })
       }
-    } catch (error) {
-      console.error('Error sending sample event:', error)
-      setSampleEventResult({
-        success: false,
-        message: 'Network error while sending sample event'
-      })
     } finally {
       setIsSendingSample(false)
     }
@@ -289,7 +290,8 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                       value={selectedDataCollection || ''}
                       onValueChange={(dataCollection) => {
                         // Update node name if event type is already selected
-                        const dataCollectionName = dataCollections.find((dc) => dc.key === dataCollection)?.name || dataCollection
+                        const dataCollectionName =
+                          dataCollections.find((dc) => dc.key === dataCollection)?.name || dataCollection
                         const nodeName = selectedEventType
                           ? `${dataCollectionName}: ${eventTypes.find((et) => et.value === selectedEventType)?.label || selectedEventType}`
                           : value.name
@@ -332,7 +334,9 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
                       value={selectedEventType || ''}
                       onValueChange={(eventType) => {
                         // Calculate the node name based on data collection and event type
-                        const dataCollectionName = dataCollections.find((dc) => dc.key === selectedDataCollection)?.name || selectedDataCollection
+                        const dataCollectionName =
+                          dataCollections.find((dc) => dc.key === selectedDataCollection)?.name ||
+                          selectedDataCollection
                         const eventTypeLabel = eventTypes.find((et) => et.value === eventType)?.label || eventType
                         const nodeName = `${dataCollectionName}: ${eventTypeLabel}`
 
@@ -366,8 +370,8 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
           </Minimizer>
         ) : null}
 
-        {/* Output Schema - Show when data collection is selected */}
-        {selectedDataCollection && (
+        {/* Output Schema - Show when connected and data collection is selected */}
+        {isConnected && selectedDataCollection && (
           <Minimizer
             title='Output Schema'
             defaultOpen={false}
@@ -399,20 +403,6 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
 
         {/* Event Ingest URL - Always show at the end */}
         <div className='space-y-2'>
-          <Label>Event Ingest URL</Label>
-          <div className='p-2 bg-gray-50 text-muted-foreground rounded-md border min-h-[40px] flex items-center justify-between'>
-            <div className='flex-1 truncate pr-2'>{eventIngestUrl || 'Event ingest URL will appear here...'}</div>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => copyToClipboard(eventIngestUrl)}
-              disabled={!eventIngestUrl}
-              className='p-1 h-8 w-8 flex-shrink-0 rounded-full'
-            >
-              <Copy className='h-4 w-4' />
-            </Button>
-          </div>
-
           {outputSchema !== null && (
             <div className='space-y-2'>
               <Button
@@ -426,10 +416,12 @@ export function EventTriggerConfig({ value, onChange }: EventTriggerConfigProps)
               </Button>
 
               {sampleEventResult && (
-                <div className={`p-3 rounded-md border text-sm ${sampleEventResult.success
-                  ? 'bg-green-50 border-green-200 text-green-800'
-                  : 'bg-red-50 border-red-200 text-red-800'
-                  }`}>
+                <div
+                  className={`p-3 rounded-md border text-sm ${sampleEventResult.success
+                    ? 'bg-green-50 border-green-200 text-green-800'
+                    : 'bg-red-50 border-red-200 text-red-800'
+                    }`}
+                >
                   {sampleEventResult.message}
                 </div>
               )}

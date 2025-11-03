@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@repo/shared/lib/mongodb'
 import { Workflow } from '@/models/workflow'
 import { updateNodesWithOutputSchemas } from '@/lib/output-schema-calculator'
-import { getAuthFromRequest } from '@/lib/server-auth'
+import { ensureAuth, getUserData } from '@/lib/ensureAuth'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  ensureAuth(req)
+
   try {
     const { id } = await params
     await connectToDatabase()
@@ -23,19 +25,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  console.log('PATCH request received')
+  ensureAuth(req)
+
   try {
     const { id } = await params
     const updateData = await req.json()
     await connectToDatabase()
 
-    // Get auth for schema calculation
-    const auth = getAuthFromRequest(req)
+    // Get membrane access token for schema calculation
+    const { membraneAccessToken } = getUserData(req)
 
     // If nodes are being updated, calculate output schemas
     if (updateData.nodes && Array.isArray(updateData.nodes)) {
       try {
-        updateData.nodes = await updateNodesWithOutputSchemas(updateData.nodes, auth)
+        updateData.nodes = await updateNodesWithOutputSchemas(updateData.nodes, membraneAccessToken)
       } catch (error) {
         console.error('Error calculating output schemas:', error)
         // Continue without output schemas if calculation fails
@@ -55,7 +58,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  ensureAuth(req)
+
   try {
     const { id } = await params
     await connectToDatabase()

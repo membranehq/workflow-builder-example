@@ -86,9 +86,23 @@ export function NodeResultViewer({ selectedNodeId, runResults, nodesSnapshot }: 
       </div>
 
       <div className="p-6 space-y-6 overflow-auto h-full">
+        {/* Input */}
+        {selectedResult.input != null && (
+          <div className='border border-gray-200 dark:border-gray-800 rounded-lg p-4'>
+            <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+              Input
+            </h4>
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+              <pre className="font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
+                {JSON.stringify(selectedResult.input, null, 2)}
+              </pre>
+            </div>
+          </div>
+        )}
+
         {/* Output */}
         {selectedResult.output != null && (
-          <div>
+          <div className='border border-gray-200 dark:border-gray-800 rounded-lg p-4'>
             <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
               Output
             </h4>
@@ -141,8 +155,8 @@ export function NodeResultViewer({ selectedNodeId, runResults, nodesSnapshot }: 
           </div>
         )}
 
-        {/* No output or error */}
-        {selectedResult.output == null && !selectedResult.error && (
+        {/* No input, output or error */}
+        {selectedResult.input == null && selectedResult.output == null && !selectedResult.error && (
           <div className="text-center py-8">
             <div className="text-gray-500 dark:text-gray-400">
               No additional data available for this node execution.

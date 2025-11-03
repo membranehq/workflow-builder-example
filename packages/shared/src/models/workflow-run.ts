@@ -5,6 +5,7 @@ export interface IWorkflowRunResult {
   nodeId: string
   success: boolean
   message: string
+  input?: unknown
   output?: unknown
   error?: {
     message: string
@@ -16,6 +17,7 @@ export interface IWorkflowRunResult {
 // Workflow Run Interface
 export interface IWorkflowRun {
   workflowId: string
+  userId: string
   status: 'running' | 'completed' | 'failed'
   input?: unknown
   nodesSnapshot?: unknown[] // Snapshot of workflow nodes at the time of execution
@@ -53,6 +55,9 @@ const workflowRunResultSchema = new mongoose.Schema<IWorkflowRunResult>(
       type: String,
       required: true,
     },
+    input: {
+      type: mongoose.Schema.Types.Mixed,
+    },
     output: {
       type: mongoose.Schema.Types.Mixed,
     },
@@ -69,6 +74,11 @@ const workflowRunResultSchema = new mongoose.Schema<IWorkflowRunResult>(
 const workflowRunSchema = new mongoose.Schema<IWorkflowRun>(
   {
     workflowId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    userId: {
       type: String,
       required: true,
       index: true,
@@ -136,6 +146,7 @@ const workflowRunSchema = new mongoose.Schema<IWorkflowRun>(
 // Indexes for efficient querying
 workflowRunSchema.index({ workflowId: 1, startedAt: -1 })
 workflowRunSchema.index({ status: 1, startedAt: -1 })
+workflowRunSchema.index({ userId: 1, startedAt: -1 })
 
 export const WorkflowRun =
   (mongoose.models.WorkflowRun as Model<IWorkflowRun>) || mongoose.model<IWorkflowRun>('WorkflowRun', workflowRunSchema)

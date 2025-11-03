@@ -1,14 +1,14 @@
 'use client'
 
+import axios from 'axios'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DataInput, DataSchema } from '@membranehq/react'
-import { getAuthHeaders } from '@/lib/fetch-utils'
 import { Play } from 'lucide-react'
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { authenticatedFetcher } from '@/lib/fetch-utils'
+import { fetcher } from '@/lib/fetch-utils'
 import { jsonSchemaToZod } from '@/lib/json-schema-to-zod'
 import { z } from 'zod'
 
@@ -61,7 +61,7 @@ export function RunWorkflowButton({
   const [isValid, setIsValid] = useState(true)
 
   // Fetch workflow data to get the input schema
-  const { data: workflow } = useSWR<WorkflowData>(`/api/workflows/${workflowId}`, authenticatedFetcher, {
+  const { data: workflow } = useSWR<WorkflowData>(`/api/workflows/${workflowId}`, fetcher, {
     revalidateOnFocus: false,
   })
 
@@ -134,26 +134,16 @@ export function RunWorkflowButton({
       setIsRunning(true)
       onRunStart?.()
 
-      const authHeaders = getAuthHeaders()
+      const response = await axios.post<{ runId: string }>(
+        `/api/workflows/${workflowId}/run`,
+        { input: triggerInput }
+      )
 
-      const response = await fetch(`/api/workflows/${workflowId}/run`, {
-        method: 'POST',
-        headers: {
-          ...authHeaders,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ input: triggerInput }),
-      })
-
-      if (!response.ok) throw new Error('Failed to run workflow')
-
-      const result = await response.json()
-
-      onRunComplete?.(result.runId)
+      onRunComplete?.(response.data.runId)
 
       // Navigate to the specific run page only if navigateToRun is true
       if (navigateToRun) {
-        router.push(`/runs/${result.runId}`)
+        router.push(`/runs/${response.data.runId}`)
       }
     } catch (error) {
       console.error('Failed to run workflow:', error)

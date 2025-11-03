@@ -15,7 +15,7 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
       <button
         type="button"
         role="switch"
-        aria-checked={checked}
+        aria-checked={checked ? 'true' : 'false'}
         data-state={checked ? 'checked' : 'unchecked'}
         disabled={disabled}
         className={cn(

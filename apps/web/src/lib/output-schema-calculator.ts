@@ -1,8 +1,6 @@
 import { DataSchema } from '@membranehq/sdk'
 import { WorkflowNode } from '@/app/workflows/[id]/components/types/workflow'
 import { IntegrationAppClient } from '@membranehq/sdk'
-import { generateIntegrationToken } from './integration-token'
-import type { AuthCustomer } from './auth'
 
 export interface NodeOutputSchema {
   nodeId: string
@@ -15,9 +13,9 @@ export interface NodeOutputSchema {
 export async function calculateNodeOutputSchema(
   node: WorkflowNode,
   previousNodeSchemas: Map<string, DataSchema>,
-  auth: AuthCustomer,
+  membraneAccessToken: string,
 ): Promise<DataSchema> {
-  const membrane = new IntegrationAppClient({ token: await generateIntegrationToken(auth) })
+  const membrane = new IntegrationAppClient({ token: membraneAccessToken })
 
   try {
     // For trigger nodes
@@ -47,10 +45,24 @@ export async function calculateNodeOutputSchema(
 
     // For http nodes
     if (node.nodeType === 'http') {
-      if (node.config?.outputSchema) {
-        return node.config.outputSchema as DataSchema
+      const bodySchema = node.config?.outputSchema || { type: 'object', properties: {} }
+
+      // Wrap the body schema in a full HTTP response structure
+      return {
+        type: 'object',
+        properties: {
+          statusCode: {
+            type: 'number',
+            description: 'HTTP status code',
+          },
+          headers: {
+            type: 'object',
+            description: 'HTTP response headers',
+            properties: {},
+          },
+          body: bodySchema,
+        },
       }
-      return { type: 'object', properties: {} }
     }
 
     // For action nodes
@@ -98,14 +110,14 @@ export async function calculateNodeOutputSchema(
  */
 export async function calculateWorkflowOutputSchemas(
   nodes: WorkflowNode[],
-  auth: AuthCustomer,
+  membraneAccessToken: string,
 ): Promise<NodeOutputSchema[]> {
   const nodeSchemas = new Map<string, DataSchema>()
   const results: NodeOutputSchema[] = []
 
   // Process nodes in order
   for (const node of nodes) {
-    const outputSchema = await calculateNodeOutputSchema(node, nodeSchemas, auth)
+    const outputSchema = await calculateNodeOutputSchema(node, nodeSchemas, membraneAccessToken)
 
     // Store the schema for this node
     nodeSchemas.set(node.id, outputSchema)
@@ -123,8 +135,11 @@ export async function calculateWorkflowOutputSchemas(
 /**
  * Updates workflow nodes with their calculated output schemas
  */
-export async function updateNodesWithOutputSchemas(nodes: WorkflowNode[], auth: AuthCustomer): Promise<WorkflowNode[]> {
-  const outputSchemas = await calculateWorkflowOutputSchemas(nodes, auth)
+export async function updateNodesWithOutputSchemas(
+  nodes: WorkflowNode[],
+  membraneAccessToken: string,
+): Promise<WorkflowNode[]> {
+  const outputSchemas = await calculateWorkflowOutputSchemas(nodes, membraneAccessToken)
 
   // Create a map for quick lookup
   const schemaMap = new Map(outputSchemas.map((s) => [s.nodeId, s.outputSchema]))

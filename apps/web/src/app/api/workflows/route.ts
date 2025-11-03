@@ -1,16 +1,22 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@repo/shared/lib/mongodb'
 import { Workflow } from '@/models/workflow'
+import { ensureAuth, getUserData } from '@/lib/ensureAuth'
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  ensureAuth(req)
+
   try {
-    const { name, description, userId } = await req.json()
+    const { name, description } = await req.json()
+
+    const { user } = getUserData(req)
+
     await connectToDatabase()
 
     const workflow = await Workflow.create({
       name,
       description,
-      userId,
+      userId: user.id,
       status: 'inactive',
       nodes: [],
     })
@@ -22,25 +28,28 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
+  ensureAuth(req)
+
   try {
+    const { user } = getUserData(req)
+
     await connectToDatabase()
 
     const { searchParams } = new URL(req.url)
-    const userId = searchParams.get('userId')
     const status = searchParams.get('status') as 'active' | 'inactive' | null
 
-    let workflows
-
-    if (userId) {
-      // Use the custom static method with lean to get plain objects
-      workflows = await Workflow.find({ userId }).sort({ createdAt: -1 }).lean()
-    } else if (status) {
-      // Use the custom static method with lean to get plain objects
-      workflows = await Workflow.find({ status }).sort({ createdAt: -1 }).lean()
-    } else {
-      workflows = await Workflow.find({}).sort({ createdAt: -1 }).lean()
+    // Build query - always filter by authenticated user's ID
+    const query: { userId: string; status?: 'active' | 'inactive' } = {
+      userId: user.id,
     }
+
+    // Optionally filter by status
+    if (status) {
+      query.status = status
+    }
+
+    const workflows = await Workflow.find(query).sort({ createdAt: -1 }).lean()
 
     return NextResponse.json(workflows)
   } catch (error) {

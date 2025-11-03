@@ -97,6 +97,7 @@ async function updateWorkflowRun(
             ? `${r.nodeName} completed successfully`
             : 'Success'
           : r.error?.message || 'Failed',
+        input: r.input,
         output: r.output,
         error: r.error,
       })),

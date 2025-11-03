@@ -1,17 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getAuthFromRequest } from '@/lib/server-auth'
-import { generateIntegrationToken, IntegrationTokenError } from '@/lib/integration-token'
+import { NextResponse, NextRequest } from 'next/server'
+import { ensureAuth, getUserData } from '@/lib/ensureAuth'
+import { connectToDatabase } from '@repo/shared'
 
 export async function GET(request: NextRequest) {
+  ensureAuth(request)
+
   try {
-    const auth = getAuthFromRequest(request)
-    const token = await generateIntegrationToken(auth)
-    return NextResponse.json({ token })
+    await connectToDatabase()
+
+    const { membraneAccessToken } = getUserData(request)
+
+    return NextResponse.json({ token: membraneAccessToken })
   } catch (error) {
-    console.error('Error generating token:', error)
-    if (error instanceof IntegrationTokenError) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-    return NextResponse.json({ error: 'Failed to generate token' }, { status: 500 })
+    console.error('Error getting integration token:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

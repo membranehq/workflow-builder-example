@@ -11,6 +11,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'static.integration.app',
       },
+      {
+        protocol: 'https',
+        hostname: 'integration-app-assets.s3.eu-central-1.amazonaws.com',
+      },
     ],
   },
 

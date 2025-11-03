@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Play, X, Filter, History, Clock, Zap, Activity, Calendar } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { authenticatedFetcher } from '@/lib/fetch-utils'
+import { fetcher } from '@/lib/fetch-utils'
 import { formatTimeAgo } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -79,7 +79,7 @@ function RunsPageContent() {
   // Fetch all runs with SWR
   const { data: runs, isLoading } = useSWR<WorkflowRun[]>(
     '/api/runs',
-    authenticatedFetcher,
+    fetcher,
     {
       revalidateOnFocus: false,
       // Auto-refresh every 3 seconds if there are running workflows
@@ -93,7 +93,7 @@ function RunsPageContent() {
   // Fetch workflows for the filter dropdown
   const { data: workflows } = useSWR<Workflow[]>(
     '/api/workflows',
-    authenticatedFetcher,
+    fetcher,
     {
       revalidateOnFocus: false,
     }

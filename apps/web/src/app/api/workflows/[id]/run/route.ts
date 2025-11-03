@@ -8,10 +8,11 @@ import {
   type WorkflowNode,
 } from '@repo/shared'
 import { Workflow } from '@/models/workflow'
-import { getAuthFromRequest } from '@/lib/server-auth'
-import { generateIntegrationToken } from '@/lib/integration-token'
+import { ensureAuth, getUserData } from '@/lib/ensureAuth'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  ensureAuth(request)
+
   try {
     const { id: workflowId } = await params
     await connectToDatabase()
@@ -32,9 +33,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       console.log('No trigger input provided, using empty object')
     }
 
+    const { user } = getUserData(request)
+
     // Create a workflow run record before starting execution
     const workflowRun = await WorkflowRun.create({
       workflowId: workflowId,
+      userId: user.id,
       status: 'running',
       input: triggerInput,
       nodesSnapshot: workflow.nodes, // Capture snapshot of nodes at execution time
@@ -50,14 +54,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Create Temporal client and start the workflow
     const client = await createTemporalClient()
-    const auth = getAuthFromRequest(request)
-
-    const membraneToken = await generateIntegrationToken(auth)
+    const { membraneAccessToken } = getUserData(request)
 
     const temporalWorkflowId = `workflow-${workflowId}-${Date.now()}`
 
     await client.workflow.start(executeWorkflow, {
-      args: [workflow.nodes as WorkflowNode[], membraneToken, triggerInput, workflowRun._id.toString()],
+      args: [workflow.nodes as WorkflowNode[], membraneAccessToken, triggerInput, workflowRun._id.toString()],
       taskQueue: TEMPORAL_CONFIG.TASK_QUEUE_NAME,
       workflowId: temporalWorkflowId,
     })

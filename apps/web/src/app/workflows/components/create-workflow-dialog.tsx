@@ -1,5 +1,6 @@
 'use client'
 
+import axios from 'axios'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,20 +20,9 @@ export function CreateWorkflowDialog({ open, onOpenChange }: CreateWorkflowDialo
   const handleCreate = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch('/api/workflows', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name }),
-      })
+      const response = await axios.post('/api/workflows', { name })
 
-      if (!response.ok) {
-        throw new Error('Failed to create workflow')
-      }
-
-      const data = await response.json()
-      router.push(`/workflows/${data.id}`)
+      router.push(`/workflows/${response.data.id}`)
     } catch (error) {
       console.error('Failed to create workflow:', error)
     } finally {

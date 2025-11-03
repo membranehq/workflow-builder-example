@@ -1,27 +1,17 @@
+import axios from 'axios'
 import useSWR from 'swr'
 import { UsersResponse } from '@/types/user'
-import { authenticatedFetcher, getAuthHeaders } from '@/lib/fetch-utils'
+import { fetcher } from '@/lib/fetch-utils'
 
 export function useUsers() {
-  const { data, error, isLoading, mutate } = useSWR<UsersResponse>(
-    '/api/users',
-    (url) => authenticatedFetcher<UsersResponse>(url),
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-    },
-  )
+  const { data, error, isLoading, mutate } = useSWR<UsersResponse>('/api/users', fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+  })
 
   const importUsers = async () => {
     try {
-      const response = await fetch('/api/users/import', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to import users')
-      }
+      await axios.post('/api/users/import')
 
       // Refresh the users list
       await mutate()

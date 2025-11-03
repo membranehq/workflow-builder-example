@@ -1,20 +1,19 @@
 'use client'
 
+import axios from 'axios'
 import { IntegrationAppProvider } from '@membranehq/react'
-import { getAuthHeaders } from './auth-provider'
 
 export function IntegrationProvider({ children }: { children: React.ReactNode }) {
   const fetchToken = async () => {
-    const response = await fetch('/api/integration-token', {
-      headers: getAuthHeaders(),
-    })
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch integration token')
+    try {
+      const response = await axios.get<{ token: string }>('/api/integration-token')
+      return response.data.token
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.error || 'Failed to fetch integration token')
+      }
+      throw error
     }
-
-    return data.token
   }
 
   return <IntegrationAppProvider fetchToken={fetchToken}>{children}</IntegrationAppProvider>

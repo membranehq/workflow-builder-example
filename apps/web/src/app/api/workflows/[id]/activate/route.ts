@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@repo/shared/lib/mongodb'
 import { Workflow } from '@/models/workflow'
+import { ensureAuth } from '@/lib/ensureAuth'
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  ensureAuth(req)
+
   try {
     const { id } = await params
     await connectToDatabase()

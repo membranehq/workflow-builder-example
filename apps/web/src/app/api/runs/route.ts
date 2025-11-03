@@ -1,14 +1,17 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase, WorkflowRun } from '@repo/shared'
 import { Workflow } from '@/models/workflow'
+import { ensureAuth } from '@/lib/ensureAuth'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const user = ensureAuth(request)
+
   try {
     await connectToDatabase()
 
     // Get only the essential fields for the runs listing page
     // Exclude large fields like results, input, error details
-    const runs = await WorkflowRun.find({})
+    const runs = await WorkflowRun.find({ userId: user.id })
       .select('workflowId status startedAt executionTime')
       .sort({ startedAt: -1 })
       .lean()

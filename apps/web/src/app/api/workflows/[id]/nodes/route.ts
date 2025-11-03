@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@repo/shared/lib/mongodb'
 import { Workflow } from '@/models/workflow'
 import { updateNodesWithOutputSchemas } from '@/lib/output-schema-calculator'
-import { getAuthFromRequest } from '@/lib/server-auth'
 import { IWorkflowNode } from '@/models/workflow'
-import { AuthCustomer } from '@/lib/auth'
-import { generateIntegrationToken } from '@/lib/integration-token'
 import { IntegrationAppClient } from '@membranehq/sdk'
 import { getEventIngestUrl } from '@/lib/utils'
+import { ensureAuth, getUserData } from '@/lib/ensureAuth'
 
 const capitalize = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1)
@@ -106,7 +104,7 @@ async function deleteFlowInstance(membrane: IntegrationAppClient, flowInstanceId
 async function createEventTriggerFlowInstance(
   node: IWorkflowNode,
   workflowId: string,
-  auth: AuthCustomer,
+  membraneAccessToken: string,
 ): Promise<IWorkflowNode> {
   if (node.type === 'trigger' && node.triggerType === 'event') {
     const config = node.config || {}
@@ -114,7 +112,7 @@ async function createEventTriggerFlowInstance(
     const dataCollection = config.dataCollection as string
     const eventType = config.eventType as string
 
-    const membrane = new IntegrationAppClient({ token: await generateIntegrationToken(auth) })
+    const membrane = new IntegrationAppClient({ token: membraneAccessToken })
 
     const flowInstanceId = await createFlowInstance(membrane, integrationKey, dataCollection, eventType, workflowId)
 
@@ -137,7 +135,7 @@ async function updateEventTriggerFlowInstance(
   oldNode: IWorkflowNode,
   newNode: IWorkflowNode,
   workflowId: string,
-  auth: AuthCustomer,
+  membraneAccessToken: string,
 ): Promise<IWorkflowNode> {
   if (newNode.type === 'trigger' && newNode.triggerType === 'event') {
     const oldConfig = oldNode.config || {}
@@ -152,7 +150,7 @@ async function updateEventTriggerFlowInstance(
     const newDataCollection = newConfig.dataCollection as string
     const newEventType = newConfig.eventType as string
 
-    const membrane = new IntegrationAppClient({ token: await generateIntegrationToken(auth) })
+    const membrane = new IntegrationAppClient({ token: membraneAccessToken })
 
     // Ensure we have a flowInstanceId for update operations
     if (!flowInstanceId) {
@@ -213,13 +211,14 @@ async function updateEventTriggerFlowInstance(
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  ensureAuth(req)
+
   try {
     const { id } = await params
     const { nodes } = await req.json()
     await connectToDatabase()
 
-    // Get auth for schema calculation
-    const auth = getAuthFromRequest(req)
+    const { membraneAccessToken } = getUserData(req)
 
     // Get existing workflow to check if first node became ready
     const existingWorkflow = await Workflow.findById(id).lean()
@@ -230,7 +229,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     // Calculate output schemas for the nodes
     let updatedNodes = nodes
     try {
-      updatedNodes = await updateNodesWithOutputSchemas(nodes, auth)
+      updatedNodes = await updateNodesWithOutputSchemas(nodes, membraneAccessToken)
     } catch (error) {
       console.error('Error calculating output schemas:', error)
       // Continue without output schemas if calculation fails
@@ -264,22 +263,27 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           // Determine action based on field comparison
           if (!hadAllFields) {
             // No existing configuration - create new flow instance
-            updatedFirstNode = await createEventTriggerFlowInstance(firstNode, id, auth).catch((error) => {
-              console.error(`Failed to create flow instance for node ${firstNode.id}:`, error)
-              return firstNode
-            })
+            updatedFirstNode = await createEventTriggerFlowInstance(firstNode, id, membraneAccessToken).catch(
+              (error) => {
+                console.error(`Failed to create flow instance for node ${firstNode.id}:`, error)
+                return firstNode
+              },
+            )
           } else if (
             integrationKey !== existingIntegrationKey ||
             dataCollection !== existingDataCollection ||
             eventType !== existingEventType
           ) {
             // Configuration changed - update flow instance
-            updatedFirstNode = await updateEventTriggerFlowInstance(existingFirstNode, firstNode, id, auth).catch(
-              (error) => {
-                console.error(`Failed to update flow instance for node ${firstNode.id}:`, error)
-                return firstNode
-              },
-            )
+            updatedFirstNode = await updateEventTriggerFlowInstance(
+              existingFirstNode,
+              firstNode,
+              id,
+              membraneAccessToken,
+            ).catch((error) => {
+              console.error(`Failed to update flow instance for node ${firstNode.id}:`, error)
+              return firstNode
+            })
           }
 
           // Create new nodes array with updated first node

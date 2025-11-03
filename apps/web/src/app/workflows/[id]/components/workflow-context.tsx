@@ -1,10 +1,11 @@
 'use client'
 
 import React from 'react'
+import axios from 'axios'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { authenticatedFetcher, getAuthHeaders } from '@/lib/fetch-utils'
+import { fetcher } from '@/lib/fetch-utils'
 import type { WorkflowNode, WorkflowState } from './types/workflow'
 import { NODE_TYPES, TRIGGER_TYPES } from '@/lib/node-types'
 
@@ -27,38 +28,30 @@ type WorkflowContextValue = {
 
 const WorkflowContext = React.createContext<WorkflowContextValue | undefined>(undefined)
 
-function putJson<T = unknown>(url: string, body: unknown): Promise<T> {
-  return fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(body),
-  }).then(async (res) => {
-    if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text || `Failed request: ${res.status}`)
+async function putJson<T = unknown>(url: string, body: unknown): Promise<T> {
+  try {
+    const response = await axios.put<T>(url, body)
+    return response.data
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data || error.message || `Failed request: ${error.response?.status}`
+      throw new Error(typeof message === 'string' ? message : JSON.stringify(message))
     }
-    return res.json()
-  })
+    throw error
+  }
 }
 
-function patchJson(url: string, body: unknown) {
-  return fetch(url, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(body),
-  }).then(async (res) => {
-    if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text || `Failed request: ${res.status}`)
+async function patchJson(url: string, body: unknown) {
+  try {
+    const response = await axios.patch(url, body)
+    return response
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data || error.message || `Failed request: ${error.response?.status}`
+      throw new Error(typeof message === 'string' ? message : JSON.stringify(message))
     }
-    return res
-  })
+    throw error
+  }
 }
 
 export function WorkflowProvider({ id, children }: { id: string; children: React.ReactNode }) {
@@ -75,7 +68,7 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
   // Track if we've done initial node selection
   const hasInitializedSelection = React.useRef(false)
 
-  const { data, error, isLoading, mutate } = useSWR<WorkflowState>(key, authenticatedFetcher)
+  const { data, error, isLoading, mutate } = useSWR<WorkflowState>(key, fetcher)
 
   // Wrapper function to update both state and URL
   const setSelectedNodeId = React.useCallback(
@@ -255,10 +248,7 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
       // Optimistic update
       mutate((prev) => (prev ? { ...prev, status: 'active' as const } : prev), { revalidate: false })
       // Persist
-      await fetch(`${key}/activate`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-      })
+      await axios.post(`${key}/activate`)
     },
     [key, mutate]
   )
@@ -269,10 +259,7 @@ export function WorkflowProvider({ id, children }: { id: string; children: React
       // Optimistic update
       mutate((prev) => (prev ? { ...prev, status: 'inactive' as const } : prev), { revalidate: false })
       // Persist
-      await fetch(`${key}/deactivate`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-      })
+      await axios.post(`${key}/deactivate`)
     },
     [key, mutate]
   )

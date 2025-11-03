@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase, WorkflowRun } from '@repo/shared'
 import { Workflow } from '@/models/workflow'
+import { ensureAuth } from '@/lib/ensureAuth'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ runId: string }> }) {
+  const user = ensureAuth(request)
+
   try {
     const { runId } = await params
 
@@ -10,6 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const run = await WorkflowRun.findOne({
       _id: runId,
+      userId: user.id,
     }).lean()
 
     if (!run) {

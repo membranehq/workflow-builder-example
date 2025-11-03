@@ -19,7 +19,7 @@ export interface IWorkflow {
   description?: string
   status: 'active' | 'inactive'
   nodes: IWorkflowNode[]
-  userId?: string
+  userId: string
   customerId?: string
   version: number
   lastRunAt?: Date

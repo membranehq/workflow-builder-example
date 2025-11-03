@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { IntegrationAppClient } from '@membranehq/sdk'
 import { WorkflowNode, NodeExecutionResult } from './types.js'
 import { generateObject, generateText } from 'ai'
@@ -158,7 +159,7 @@ export async function executeHttpActionNode(
   resolvedInputs: Record<string, unknown>,
 ): Promise<NodeExecutionResult> {
   try {
-    const { uri, method, headers = {}, body } = resolvedInputs
+    const { uri, method, headers = {}, body, queryParameters } = resolvedInputs
 
     if (!uri || typeof uri !== 'string') {
       throw new Error('HTTP node requires uri in inputMapping')
@@ -168,49 +169,97 @@ export async function executeHttpActionNode(
       throw new Error('HTTP node requires method in inputMapping')
     }
 
-    const requestOptions: RequestInit = {
-      method: method.toUpperCase(),
-      headers: {
-        'Content-Type': 'application/json',
-        ...(typeof headers === 'object' ? headers : {}),
-      },
-    }
-
-    // Add body for methods that support it
-    if (['POST', 'PUT', 'PATCH'].includes(method.toUpperCase()) && body) {
-      requestOptions.body = typeof body === 'string' ? body : JSON.stringify(body)
-    }
-
-    const response = await fetch(uri, requestOptions)
-    const responseText = await response.text()
-
-    let responseData: unknown
-    try {
-      responseData = JSON.parse(responseText)
-    } catch {
-      responseData = responseText
-    }
-
-    const output = {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries()),
-      data: responseData,
-    }
-
-    return {
-      id: `${node.id}-${Date.now()}`,
-      nodeId: node.id,
-      success: response.ok,
-      input: resolvedInputs,
-      output,
-      error: !response.ok
-        ? {
-            message: `HTTP ${method} request failed with status ${response.status}`,
-            code: 'HTTP_ERROR',
-            details: { status: response.status, statusText: response.statusText },
+    // Build URL with query parameters
+    let finalUrl = uri
+    if (queryParameters && Array.isArray(queryParameters)) {
+      const params = new URLSearchParams()
+      for (const param of queryParameters) {
+        if (param && typeof param === 'object' && 'key' in param && 'value' in param) {
+          const key = String(param.key)
+          const value = String(param.value)
+          if (key && value !== undefined) {
+            params.append(key, value)
           }
-        : undefined,
+        }
+      }
+      const queryString = params.toString()
+      if (queryString) {
+        finalUrl = `${uri}${uri.includes('?') ? '&' : '?'}${queryString}`
+      }
+    }
+
+    try {
+      const response = await axios({
+        method: method.toUpperCase(),
+        url: finalUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(typeof headers === 'object' ? (headers as Record<string, string>) : {}),
+        },
+        data:
+          ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase()) && body
+            ? typeof body === 'string'
+              ? JSON.parse(body)
+              : body
+            : undefined,
+        validateStatus: () => true, // Don't throw on any status code
+      })
+
+      const output = {
+        statusCode: response.status,
+        headers: response.headers,
+        body: response.data,
+      }
+
+      return {
+        id: `${node.id}-${Date.now()}`,
+        nodeId: node.id,
+        success: response.status >= 200 && response.status < 300,
+        input: resolvedInputs,
+        output,
+        error: !(response.status >= 200 && response.status < 300)
+          ? {
+              message: `HTTP ${method} request failed with status ${response.status}`,
+              code: 'HTTP_ERROR',
+              details: { status: response.status, statusText: response.statusText },
+            }
+          : undefined,
+      }
+    } catch (error) {
+      // Handle network errors or other axios errors
+      if (axios.isAxiosError(error) && error.response) {
+        const output = {
+          statusCode: error.response.status,
+          headers: error.response.headers,
+          body: error.response.data,
+        }
+
+        return {
+          id: `${node.id}-${Date.now()}`,
+          nodeId: node.id,
+          success: false,
+          input: resolvedInputs,
+          output,
+          error: {
+            message: `HTTP ${method} request failed with status ${error.response.status}`,
+            code: 'HTTP_ERROR',
+            details: { status: error.response.status, statusText: error.response.statusText },
+          },
+        }
+      }
+
+      // Network error or other error
+      return {
+        id: `${node.id}-${Date.now()}`,
+        nodeId: node.id,
+        success: false,
+        input: resolvedInputs,
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          code: 'HTTP_EXECUTION_ERROR',
+          details: error,
+        },
+      }
     }
   } catch (error) {
     return {

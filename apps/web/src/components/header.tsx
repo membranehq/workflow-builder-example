@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Workflow, History } from 'lucide-react'
+import { Workflow, History } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 export function Header() {
@@ -12,14 +12,14 @@ export function Header() {
   const navRef = useRef<HTMLDivElement>(null)
 
   const navItems = [
-    { href: '/', label: 'Overview', icon: LayoutDashboard },
     { href: '/workflows', label: 'Workflows', icon: Workflow },
     { href: '/runs', label: 'Runs', icon: History },
   ]
 
   const isActive = (href: string) => {
-    if (href === '/') {
-      return pathname === '/'
+    // Special case: root path redirects to /workflows, so treat both as workflows
+    if (href === '/workflows') {
+      return pathname === '/' || pathname.startsWith('/workflows')
     }
     return pathname.startsWith(href)
   }

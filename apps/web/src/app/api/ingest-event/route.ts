@@ -8,8 +8,8 @@ import {
   type WorkflowNode,
 } from '@repo/shared'
 import { Workflow } from '@/models/workflow'
-import { getAuthFromRequest } from '@/lib/server-auth'
-import { generateIntegrationToken } from '@/lib/integration-token'
+import { verifyIntegrationAppToken } from '@/lib/integration-app-auth'
+import { generateCustomerAccessToken } from '@/lib/integration-token'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,6 +23,12 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+  const tokenVerificationResult = await verifyIntegrationAppToken(request)
+
+  if (!tokenVerificationResult) {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+  }
+
   try {
     await connectToDatabase()
 
@@ -56,9 +62,18 @@ export async function POST(request: NextRequest) {
 
     console.log('Ingesting event for workflow:', workflowId, 'Event data:', eventData)
 
+    // Get userId from the workflow
+    const userId = workflow.userId
+
+    const membraneAccessToken = generateCustomerAccessToken({
+      id: userId,
+      name: `user-${userId}`,
+    })
+
     // Create a workflow run record before starting execution
     const workflowRun = await WorkflowRun.create({
       workflowId: workflowId,
+      userId: userId,
       status: 'running',
       input: eventData, // Use the entire request body as trigger input
       nodesSnapshot: workflow.nodes, // Capture snapshot of nodes at execution time
@@ -74,15 +89,12 @@ export async function POST(request: NextRequest) {
 
     // Create Temporal client and start the workflow
     const client = await createTemporalClient()
-    const auth = getAuthFromRequest(request)
-
-    const membraneToken = await generateIntegrationToken(auth)
 
     const temporalWorkflowId = `ingest-${workflowId}-${Date.now()}`
 
     // Start the workflow execution asynchronously
     await client.workflow.start(executeWorkflow, {
-      args: [workflow.nodes as WorkflowNode[], membraneToken, eventData, workflowRun._id.toString()],
+      args: [workflow.nodes as WorkflowNode[], membraneAccessToken, eventData, workflowRun._id.toString()],
       taskQueue: TEMPORAL_CONFIG.TASK_QUEUE_NAME,
       workflowId: temporalWorkflowId,
     })
