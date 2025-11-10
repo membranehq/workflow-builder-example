@@ -44,6 +44,6 @@ export function formatTimeAgo(dateString: string): string {
 }
 
 export function getEventIngestUrl(workflowId: string) {
-  const hostname = process.env.NEXT_PUBLIC_APP_HOST_NAME || ''
+  const hostname = process.env.APP_HOST_NAME || ''
   return `${hostname}/api/ingest-event?workflowId=${workflowId}`
 }
