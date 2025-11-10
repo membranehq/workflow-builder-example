@@ -85,6 +85,32 @@ Events are received at the `/api/ingest-event` endpoint, which:
 - **Event Ingestion Endpoint**: [`apps/web/src/app/api/ingest-event/route.ts`](apps/web/src/app/api/ingest-event/route.ts) - Handles incoming webhook events and triggers workflow execution
 - **Event Trigger Configuration UI**: [`apps/web/src/app/workflows/[id]/components/configs/event-trigger-config.tsx`](apps/web/src/app/workflows/[id]/components/configs/event-trigger-config.tsx) - The UI component for configuring event triggers
 
+## How Membrane Actions work
+
+This workflow builder also allows you to add action nodes that perform operations on integrated services (like creating records, sending messages, etc.). Here's how Membrane actions are integrated:
+
+### Action Configuration
+
+Actions are precreated on Membrane for each integration (e.g., "Create Contact" for Salesforce, "Send Email" for Gmail). When building a workflow:
+
+1. **Action Selection** - Users select an integration and browse available precreated actions from that integration through the Membrane SDK
+2. **Input Mapping** - Users configure the action's input parameters, which can reference data from previous workflow steps using variable substitution
+3. **Schema Validation** - The action's input and output schemas are fetched from Membrane to ensure proper data flow
+
+### Action Execution
+
+When a workflow runs:
+
+1. The Temporal workflow processes each node in sequence
+2. When it encounters a Membrane action node, it executes the configured action on Membrane
+3. The action performs the operation on the target integration (e.g., creates a Salesforce contact)
+4. The action's output is captured and made available to subsequent workflow nodes
+5. Results are stored in the workflow run record for auditing and debugging
+
+### Code References
+
+- **Action Configuration UI**: [`apps/web/src/app/workflows/[id]/components/configs/membrane-action-config.tsx`](apps/web/src/app/workflows/[id]/components/configs/membrane-action-config.tsx) - The UI component for configuring Membrane actions, including integration selection, action selection, and input mapping
+
 ## License
 
 MIT
