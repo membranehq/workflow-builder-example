@@ -1,13 +1,17 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Workflow, History } from 'lucide-react'
+import { Workflow, History, Github } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useAuth } from '@/contexts/auth-context'
+import { Avatar } from '@/components/ui/avatar'
 
 export function Header() {
   const pathname = usePathname()
+  const { user } = useAuth()
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
   const navRef = useRef<HTMLDivElement>(null)
 
@@ -41,8 +45,13 @@ export function Header() {
   return (
     <header className='bg-white dark:bg-gray-800 py-4'>
       <nav className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        <div className='flex justify-center items-center'>
-          {/* Centered Navigation */}
+        <div className='flex justify-between items-center'>
+          {/* Left: Logo */}
+          <div className='flex-shrink-0 flex items-center'>
+            <Image src="/logo.png" alt="Membrane Logo" width={28} height={28} className="sm:w-8 sm:h-8" />
+          </div>
+
+          {/* Center: Navigation */}
           <div className='relative inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700/50 p-1 rounded-full'>
             {/* Sliding indicator */}
             <div
@@ -76,6 +85,25 @@ export function Header() {
                 )
               })}
             </div>
+          </div>
+
+          {/* Right: GitHub and Profile */}
+          <div className='flex items-center space-x-2 sm:space-x-4'>
+            <a
+              href="https://github.com/membranehq/workflow-builder-example"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+              aria-label="View on GitHub"
+            >
+              <Github className="w-4 h-4" />
+              <span className="hidden sm:inline">GitHub</span>
+            </a>
+            {user && (
+              <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
+                <Avatar email={user.email} size="sm" />
+              </div>
+            )}
           </div>
         </div>
       </nav>
